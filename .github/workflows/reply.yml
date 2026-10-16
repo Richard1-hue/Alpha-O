@@ -6,15 +6,34 @@ on:
 
 permissions:
   issues: write
+  models: read
 
 jobs:
   reply:
     runs-on: ubuntu-latest
     steps:
-      - name: Post a reply
+      - name: Ask the AI and reply
         env:
           GH_TOKEN: ${{ github.token }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
         run: |
-          gh issue comment "$ISSUE_NUMBER" --repo "${{ github.repository }}" --body "Hello! I am Alpha-O. You asked: $ISSUE_TITLE. Real AI answers are coming soon."
+          QUESTION="$ISSUE_TITLE. $ISSUE_BODY"
+          PAYLOAD=$(jq -n --arg q "$QUESTION" '{
+            model: "openai/gpt-4.1-mini",
+            messages: [
+              {role: "system", content: "You are Alpha-O, a friendly helper. Answer clearly and briefly in simple language."},
+              {role: "user", content: $q}
+            ]
+          }')
+          RESPONSE=$(curl -s -X POST https://models.github.ai/inference/chat/completions \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD")
+          ANSWER=$(echo "$RESPONSE" | jq -r '.choices[0].message.content // empty')
+          if [ -z "$ANSWER" ]; then
+            echo "$RESPONSE"
+            ANSWER="Sorry, I could not get an answer right now. Please try again later."
+          fi
+          gh issue comment "$ISSUE_NUMBER" --repo "${{ github.repository }}" --body "$ANSWER"
