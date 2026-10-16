@@ -21,7 +21,7 @@ jobs:
         run: |
           QUESTION="$ISSUE_TITLE. $ISSUE_BODY"
           PAYLOAD=$(jq -n --arg q "$QUESTION" '{
-            systemInstruction: {parts: [{text: "You are Alpha-O, a friendly helper. Answer clearly and briefly in simple language."}]},
+            systemInstruction: {parts: [{text: "You are Alpha-O, a friendly tech mentor for beginner developers. Explain in simple words, give one short real-life example, keep answers under 500 words, and end with one practice question."}]},
             contents: [{parts: [{text: $q}]}]
           }')
           RESPONSE=$(curl -sS -w "\nHTTP_STATUS:%{http_code}" -X POST \
