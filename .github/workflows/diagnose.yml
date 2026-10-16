@@ -1,0 +1,33 @@
+name: Diagnose AI
+
+on:
+  workflow_dispatch:
+
+permissions:
+  models: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check model catalog
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "--- Catalog ---"
+          curl -sSL -i https://models.github.ai/catalog/models \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" | head -c 1500 || true
+
+      - name: Test chat
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "--- Chat test ---"
+          curl -sSL -i -X POST https://models.github.ai/inference/chat/completions \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            -H "Content-Type: application/json" \
+            -d '{"model":"openai/gpt-4.1-mini","messages":[{"role":"user","content":"Say hello in five words."}]}' | head -c 1500 || true
