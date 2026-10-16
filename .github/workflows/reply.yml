@@ -27,13 +27,16 @@ jobs:
               {role: "user", content: $q}
             ]
           }')
-          RESPONSE=$(curl -s -X POST https://models.github.ai/inference/chat/completions \
+          RESPONSE=$(curl -sS -w "\nHTTP_STATUS:%{http_code}" -X POST https://models.github.ai/inference/chat/completions \
             -H "Authorization: Bearer $GH_TOKEN" \
             -H "Content-Type: application/json" \
             -d "$PAYLOAD")
-          ANSWER=$(echo "$RESPONSE" | jq -r '.choices[0].message.content // empty')
+          STATUS="${RESPONSE##*HTTP_STATUS:}"
+          BODY="${RESPONSE%$'\n'HTTP_STATUS:*}"
+          echo "Status: $STATUS"
+          echo "Body: $BODY"
+          ANSWER=$(echo "$BODY" | jq -r '.choices[0].message.content // empty' 2>/dev/null || true)
           if [ -z "$ANSWER" ]; then
-            echo "$RESPONSE"
             ANSWER="Sorry, I could not get an answer right now. Please try again later."
           fi
           gh issue comment "$ISSUE_NUMBER" --repo "${{ github.repository }}" --body "$ANSWER"
