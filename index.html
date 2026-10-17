@@ -69,7 +69,7 @@ button:focus-visible,#q:focus-visible{outline:2px solid var(--accent);outline-of
 footer{text-align:center;color:var(--muted);font-size:12.5px;padding:8px 16px 14px}
 #voice{display:none;position:fixed;inset:0;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:6}
 #voice.on{display:flex}
-#face{width:min(480px,90vw,56vh);aspect-ratio:1;display:grid;place-items:center;color:var(--muted);text-align:center;animation:aura 3s ease-in-out infinite}
+#face{width:min(560px,92vw,60vh);aspect-ratio:1;display:grid;place-items:center;color:var(--muted);text-align:center;animation:aura 3s ease-in-out infinite}
 #face canvas{display:block;max-width:100%}
 #status{color:var(--muted);font-size:17px;min-height:26px;text-align:center;padding:0 20px}
 #mic.live{background:var(--accent);color:#fff}
@@ -78,6 +78,15 @@ footer{text-align:center;color:var(--muted);font-size:12.5px;padding:8px 16px 14
 @keyframes ghost{0%,100%{box-shadow:0 0 0 rgba(16,163,127,0)}50%{box-shadow:0 0 16px rgba(16,163,127,.4)}}
 @media(max-width:800px){aside{position:fixed;inset:0 auto 0 0;z-index:5;width:280px;box-shadow:0 0 40px rgba(0,0,0,.6)}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+.msg.bot{flex:1}.cp{align-self:flex-start;opacity:0}.row:hover .cp,.cp:focus-visible{opacity:1}
+@media(hover:none){.cp{opacity:1}}
+#tip{position:fixed;display:none;z-index:20;background:#0d0d0d;color:#fff;font-size:13px;padding:5px 10px;border-radius:8px;border:1px solid #333;pointer-events:none;white-space:nowrap}
+.vw{position:relative}
+#vmenu{position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:6px;min-width:190px;z-index:8;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.vopt{display:block;width:100%;text-align:left;border-radius:8px;background:none;border-color:transparent;padding:8px 12px}
+.vopt.on{background:rgba(16,163,127,.2)}
+.stp{margin-left:10px;color:var(--muted);font-style:italic;vertical-align:middle}.dots{display:inline-block}
+.row.bot:not(:last-child) .rg{display:none}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
@@ -85,7 +94,7 @@ footer{text-align:center;color:var(--muted);font-size:12.5px;padding:8px 16px 14
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="defs"></defs></svg>
 <aside>
   <div class="sh"><span class="brand"><svg class="lg" viewBox="0 0 64 64"><use href="#logo"/></svg>Alpha-O</span>
-    <span><button class="ib" id="srch" data-ic="search" aria-label="Search chats"></button><button class="ib" id="fold" data-ic="panel" aria-label="Hide sidebar"></button></span></div>
+    <span><button class="ib" id="srch" data-tip="Search chats" data-ic="search" aria-label="Search chats"></button><button class="ib" id="fold" data-tip="Close sidebar" data-ic="panel" aria-label="Hide sidebar"></button></span></div>
   <input id="q" placeholder="Search chats" hidden>
   <button id="newchat"><span data-ic="plus"></span>New chat</button>
   <div id="list"></div>
@@ -93,15 +102,15 @@ footer{text-align:center;color:var(--muted);font-size:12.5px;padding:8px 16px 14
 </aside>
 <main>
   <div class="top">
-    <div class="bar"><button class="ib" id="menu" data-ic="panel" aria-label="Show sidebar"></button><h2>Alpha-O</h2></div>
-    <div class="bar"><button class="ib" id="newTop" data-ic="plus" aria-label="New chat"></button><button id="voiceBtn" aria-label="Voice mode">Voice</button></div>
+    <div class="bar"><button class="ib" id="menu" data-tip="Open sidebar" data-ic="panel" aria-label="Show sidebar"></button><h2>Alpha-O</h2></div>
+    <div class="bar"><button class="ib" id="newTop" data-tip="New chat" data-ic="plus" aria-label="New chat"></button></div>
   </div>
   <div id="chat" aria-live="polite"></div>
   <div id="comp">
-    <div id="chip"><span id="fname"></span><button id="clearfile" aria-label="Remove file">x</button></div>
+    <div id="chip"><span id="fname"></span><button id="clearfile" data-tip="Remove file" aria-label="Remove file">x</button></div>
     <div id="box">
       <textarea id="input" rows="1" placeholder="Ask Alpha-O anything or write your request..."></textarea>
-      <div class="tools"><button class="ib" id="attach" data-ic="clip" aria-label="Attach a file"></button><span class="sp"></span><button class="ib" id="voiceBtn2" data-ic="wave" aria-label="Voice mode"></button><button id="send" data-ic="up" aria-label="Send"></button></div>
+      <div class="tools"><button class="ib" id="attach" data-tip="Attach a file" data-ic="clip" aria-label="Attach a file"></button><span class="sp"></span><button class="ib" id="voiceBtn2" data-tip="Voice mode" data-ic="wave" aria-label="Voice mode"></button><button id="send" data-tip="Send message" data-ic="up" aria-label="Send"></button></div>
     </div>
     <footer><span id="copy"></span> Alpha-O can make mistakes. Check important information.</footer>
   </div>
@@ -110,13 +119,16 @@ footer{text-align:center;color:var(--muted);font-size:12.5px;padding:8px 16px 14
 <div id="voice">
   <div id="face" role="img" aria-label="3D robot face"></div>
   <div id="status">Tap the mic and speak</div>
-  <div class="bar"><button id="mic">Start talking</button><button id="closeVoice">Close</button></div>
+  <div class="bar"><span class="vw"><button class="ib" id="vpick" data-ic="person" data-tip="Choose voice" aria-label="Choose voice"></button><div id="vmenu" hidden></div></span><button id="mic" data-tip="Speak to Alpha-O">Start talking</button><button id="closeVoice" data-tip="Close voice mode">Close</button></div>
 </div>
 <script>
 const OWNER = "Ituze Richard";
 const LOGO_INNER = '<defs><radialGradient id="gH" cx="35%" cy="28%" r="80%"><stop offset="0" stop-color="#fff"/><stop offset=".55" stop-color="#c9ccd1"/><stop offset="1" stop-color="#6b7078"/></radialGradient><radialGradient id="gE" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#fff3c9"/><stop offset=".5" stop-color="#ffc86b"/><stop offset="1" stop-color="#e08a1e"/></radialGradient><linearGradient id="gV" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2d33"/><stop offset="1" stop-color="#07080a"/></linearGradient><radialGradient id="gB" cx="50%" cy="30%" r="80%"><stop offset="0" stop-color="#3a3f48"/><stop offset="1" stop-color="#0d0e11"/></radialGradient></defs><circle cx="32" cy="32" r="31" fill="url(#gB)"/><ellipse cx="32" cy="55" rx="14" ry="2.6" fill="#000" opacity=".4"/><line x1="32" y1="9" x2="32" y2="15" stroke="#9aa0a8" stroke-width="2" stroke-linecap="round"/><circle cx="32" cy="8" r="3" fill="url(#gE)"/><rect x="9" y="29" width="4" height="10" rx="2" fill="url(#gE)"/><rect x="51" y="29" width="4" height="10" rx="2" fill="url(#gE)"/><rect x="12" y="15" width="40" height="36" rx="14" fill="url(#gH)"/><rect x="17" y="23" width="30" height="20" rx="9" fill="url(#gV)"/><circle cx="25.5" cy="33" r="3.8" fill="url(#gE)"/><circle cx="38.5" cy="33" r="3.8" fill="url(#gE)"/><path d="M27 39.5Q32 43 37 39.5" fill="none" stroke="#ffc86b" stroke-width="1.8" stroke-linecap="round"/><ellipse cx="23" cy="19.5" rx="8" ry="2.6" fill="#fff" opacity=".55"/>';
 const LOGO_USE = '<svg viewBox="0 0 64 64" aria-hidden="true"><use href="#logo"/></svg>';
 const IC = {chat:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>',search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',panel:'<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/>',plus:'<path d="M12 5v14M5 12h14"/>',clip:'<path d="m21 11-8.5 8.5a5 5 0 0 1-7-7L14 4a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L15 7"/>',wave:'<path d="M4 10v4M8 6v12M12 3v18M16 7v10M20 10v4"/>',up:'<path d="M12 19V5M5 12l7-7 7 7"/>',pin:'<path d="M12 17v5M9 3h6l-1 6 3 3H7l3-3z"/>',trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'};
+IC.refresh = '<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/>';
+IC.copy = '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/>';
+IC.person = '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>';
 const ic = n => '<svg viewBox="0 0 24 24" aria-hidden="true">' + IC[n] + '</svg>';
 const API_URL = "https://alpha-o-api.ituzerichard6.workers.dev/"; // your backend link
 const $ = id => document.getElementById(id);
@@ -153,7 +165,15 @@ function add(text, who){
   const m = document.createElement("div"); m.className = "msg " + who;
   if (who === "bot"){ const a = document.createElement("div"); a.className = "av"; a.innerHTML = LOGO_USE; r.appendChild(a); }
   if (text){ if (who === "bot") m.innerHTML = md(text); else m.textContent = text; }
-  r.appendChild(m); $("chat").appendChild(r); $("chat").scrollTop = $("chat").scrollHeight;
+  r.appendChild(m);
+  if (who === "bot"){
+    const b = document.createElement("button"); b.className = "ib cp"; b.dataset.tip = "Copy"; b.innerHTML = ic("copy");
+    b.onclick = () => { if (navigator.clipboard) navigator.clipboard.writeText(m.innerText); b.dataset.tip = "Copied"; setTimeout(() => { showTip(b); b.dataset.tip = "Copy"; }, 0); };
+    r.appendChild(b);
+    const g = document.createElement("button"); g.className = "ib cp rg"; g.dataset.tip = "Regenerate response"; g.innerHTML = ic("refresh"); g.onclick = regen;
+    r.appendChild(g);
+  }
+  $("chat").appendChild(r); $("chat").scrollTop = $("chat").scrollHeight;
   return m;
 }
 function typeInto(el, text){
@@ -186,19 +206,34 @@ async function ask(){
   if (!r.ok || !j.reply) throw new Error(j.error || "No reply");
   return j.reply;
 }
+let lastFile = null;
 async function send(text, spoken){
   text = text.trim(); if (!text || busy) return;
   busy = true; const w = $("welcome"); if (w) w.remove();
   add(text + (file ? "  [" + file.name + "]" : ""), "you");
   history.push({role:"user", text, file: file ? file.name : ""});
-  const m = add("", "bot"); m.innerHTML = '<span class="dots"><i></i><i></i><i></i></span>';
-  setFace("thinking", "Thinking...");
+  lastFile = file; file = null; $("chip").style.display = "none"; $("file").value = "";
+  await answer(spoken);
+}
+async function answer(spoken){
+  busy = true; file = lastFile;
+  const m = add("", "bot"), labels = file ? ["Reading your file...", "Thinking..."] : ["Thinking..."], timers = [];
+  const show = txt => { m.innerHTML = '<span class="dots"><i></i><i></i><i></i></span><span class="stp">' + txt + '</span>'; setFace("thinking", txt); };
+  show(labels[0]);
+  if (labels.length > 1) timers.push(setTimeout(() => show(labels[1]), 1500));
+  timers.push(setTimeout(() => show("Still working on it..."), 7000), setTimeout(() => show("Taking longer than usual..."), 20000));
   let reply;
   try { reply = await ask(); } catch(e){ reply = "Sorry, I could not reach my brain. " + e.message; }
+  timers.forEach(clearTimeout); file = null;
   history.push({role:"model", text:reply}); saveChat();
-  file = null; $("chip").style.display = "none"; $("file").value = "";
   busy = false; typeInto(m, reply);
   if (spoken) speak(reply); else if (voiceOn) setFace("", "Tap the mic to reply");
+}
+async function regen(){
+  if (busy || !history.length || history[history.length - 1].role !== "model") return;
+  history.pop();
+  const rows = $("chat").querySelectorAll(".row.bot"); rows[rows.length - 1].remove();
+  await answer(false);
 }
 $("send").onclick = () => { const v = $("input").value; $("input").value = ""; $("input").style.height = ""; send(v, false); };
 $("input").onkeydown = e => { if (e.key === "Enter" && !e.shiftKey){ e.preventDefault(); $("send").click(); } };
@@ -226,7 +261,7 @@ function emotion(t){
   if (/\?/.test(t)) return "curious";
   return "";
 }
-var mood = "";
+var mood = "", greet = 0;
 function mouthFor(c){ mood = c; }
 function listen(){
   if (!voiceOn || busy || listening) return;
@@ -258,9 +293,9 @@ function speak(text){
   speechSynthesis.cancel();
   setTimeout(() => {
     if (tok !== spk) return;
-    const v = speechSynthesis.getVoices().find(x => /^en/i.test(x.lang));
+    const P = cur(), v = pickVoice(P.g);
     chunks.forEach((c, i) => {
-      const u = new SpeechSynthesisUtterance(c); u.lang = "en-US"; if (v) u.voice = v;
+      const u = new SpeechSynthesisUtterance(c); u.lang = "en-US"; if (v) u.voice = v; u.pitch = P.pitch; u.rate = P.rate;
       u.onstart = () => { if (tok === spk){ $("face").setAttribute("class", "speaking " + emo); $("status").textContent = "Speaking..."; } };
       if (i === chunks.length - 1) u.onend = u.onerror = () => { if (tok !== spk) return; setFace(emo, "Tap the mic to reply"); if (voiceOn) setTimeout(listen, 500); };
       speechSynthesis.speak(u);
@@ -268,7 +303,7 @@ function speak(text){
   }, 120);
 }
 function unlockSound(){ if (window.speechSynthesis){ const u = new SpeechSynthesisUtterance(" "); u.volume = 0; speechSynthesis.speak(u); } }
-$("voiceBtn").onclick = () => { voiceOn = true; unlockSound(); $("voice").classList.add("on"); setFace("", "Tap the mic and speak"); mouthFor(""); };
+$("voiceBtn2").onclick = () => { voiceOn = true; greet = 1; unlockSound(); $("voice").classList.add("on"); setFace("", "Tap the mic and speak"); mouthFor(""); };
 $("mic").onclick = () => { spk++; if (window.speechSynthesis) speechSynthesis.cancel(); unlockSound(); if (listening){ rec.stop(); } else { setFace("", "Tap the mic and speak"); listen(); } };
 $("closeVoice").onclick = () => { voiceOn = false; spk++; $("voice").classList.remove("on"); if (window.speechSynthesis) speechSynthesis.cancel(); try { rec && rec.abort(); } catch(e){} };
  
@@ -280,7 +315,7 @@ $("closeVoice").onclick = () => { voiceOn = false; spk++; $("voice").classList.r
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   box.appendChild(renderer.domElement);
   const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(35, 1, 0.1, 50);
-  cam.position.set(0, 0, 9);
+  cam.position.set(0, -.5, 11.5); cam.lookAt(0, -.5, 0);
   scene.add(new THREE.AmbientLight(0x8c94b5, 0.9));
   const key = new THREE.DirectionalLight(0xffffff, 1.1); key.position.set(3, 4, 6); scene.add(key);
   const glow = new THREE.PointLight(0xffc86b, 1.2, 14); glow.position.set(0, 0, 4); scene.add(glow);
@@ -304,11 +339,21 @@ $("closeVoice").onclick = () => { voiceOn = false; spk++; $("voice").classList.r
   const tip = S(.13, amber, 1, 1, 1); tip.position.y = 2; hd.add(tip);
   const neck = new THREE.Mesh(new THREE.CylinderGeometry(.5, .6, .4, 24), dark); neck.position.y = -1.6; rob.add(neck);
   const body = S(1.2, shell, 1.35, .55, .8); body.position.y = -2.3; rob.add(body);
+  const arms = [-1, 1].map(s => {
+    const g = new THREE.Group(); g.position.set(s * 1.75, -1.95, 0); rob.add(g);
+    g.add(S(.27, shell, 1, 1, 1));
+    const up = new THREE.Mesh(new THREE.CylinderGeometry(.14, .12, .8, 16), shell); up.position.y = -.4; g.add(up);
+    const el = new THREE.Group(); el.position.y = -.8; g.add(el);
+    el.add(S(.18, grey, 1, 1, 1));
+    const fo = new THREE.Mesh(new THREE.CylinderGeometry(.12, .1, .75, 16), shell); fo.position.y = -.38; el.add(fo);
+    const hand = S(.2, amber, 1, 1, .8); hand.position.y = -.85; el.add(hand);
+    return {g: g, el: el, s: s, a: .35, f: 0, e: -.2};
+  });
   const L = (a, b, k) => a + (b - a) * k;
   const clock = new THREE.Clock();
-  let tx = 0, ty = 0, blink = 0, nextBlink = 2;
+  let tx = 0, ty = 0, blink = 0, nextBlink = 2, greetEnd = -1;
   addEventListener("pointermove", e => { tx = (e.clientX / innerWidth - .5) * .9; ty = (e.clientY / innerHeight - .5) * .5; });
-  function resize(){ const s = Math.min(480, innerWidth * .9, innerHeight * .56); renderer.setSize(s, s); }
+  function resize(){ const s = Math.min(560, innerWidth * .92, innerHeight * .6); renderer.setSize(s, s); }
   resize(); addEventListener("resize", resize);
   (function frame(){
     requestAnimationFrame(frame);
@@ -332,6 +377,23 @@ $("closeVoice").onclick = () => { voiceOn = false; spk++; $("voice").classList.r
     talk.scale.y = .3 + .7 * Math.abs(Math.sin(t * 13));
     arc.rotation.z = smile ? Math.PI : 0; arc.position.y = smile ? .15 : -.3;
     amber.emissiveIntensity = .9 + .35 * Math.sin(t * 2.2) + (speaking ? .4 : 0);
+    if (greet){ greetEnd = t + 2.6; greet = 0; }
+    const w = Math.sin(t * 3.1), w2 = Math.sin(t * 2.3 + 1.6), w3 = Math.sin(t * 4.2), sw = Math.sin(t * 1.4);
+    let tgt = [[.35 + .04 * sw, 0, -.2], [.35 - .04 * sw, 0, -.2]];
+    if (t < greetEnd) tgt[1] = [2 + .3 * Math.sin(t * 9), 0, -.5 + .3 * Math.sin(t * 9)];
+    else if (thinking) tgt = [[.3, 0, -.2], [.2, -.2, -2.2 + .08 * w3]];
+    else if (listening) tgt = [[.55, -.1, -.7], [.55, -.1, -.7]];
+    else if (speaking){
+      if (mood === "happy") tgt = [[1.8 + .25 * w3, 0, -.4], [1.8 + .25 * Math.sin(t * 4.2 + 1), 0, -.4]];
+      else if (mood === "sad") tgt = [[.2, 0, -.3 + .1 * w], [.2, 0, -.3 + .1 * w2]];
+      else if (mood === "curious") tgt = [[.4, 0, -.4], [.9 + .1 * w, -.2, -1.6 + .3 * w3]];
+      else tgt = [[.5 + .35 * w, -.1 + .15 * w2, -.9 + .5 * w2], [.5 + .35 * w2, -.1 + .15 * w, -.9 + .5 * w]];
+    }
+    arms.forEach((A, i) => {
+      const T = tgt[i];
+      A.a = L(A.a, T[0], .1); A.f = L(A.f, T[1], .1); A.e = L(A.e, T[2], .1);
+      A.g.rotation.z = A.s * A.a; A.g.rotation.x = A.f; A.el.rotation.x = A.e;
+    });
     renderer.render(scene, cam);
   })();
 })();
@@ -357,8 +419,8 @@ function renderSide(){
     items.forEach(c => {
       const r = document.createElement("div"); r.className = "ci" + (c.id === curId ? " on" : "");
       const t = document.createElement("span"); t.className = "ct"; t.textContent = c.title; t.onclick = () => loadChat(c.id);
-      const p = document.createElement("button"); p.className = "ib"; p.title = c.pin ? "Unpin" : "Pin"; p.innerHTML = ic("pin"); p.onclick = () => { c.pin = !c.pin; persist(); renderSide(); };
-      const d = document.createElement("button"); d.className = "ib"; d.title = "Delete"; d.innerHTML = ic("trash");
+      const p = document.createElement("button"); p.className = "ib"; p.dataset.tip = c.pin ? "Unpin" : "Pin"; p.innerHTML = ic("pin"); p.onclick = () => { c.pin = !c.pin; persist(); renderSide(); };
+      const d = document.createElement("button"); d.className = "ib"; d.dataset.tip = "Delete"; d.innerHTML = ic("trash");
       d.onclick = () => { if (confirm("Delete this chat?")){ chats = chats.filter(x => x.id !== c.id); persist(); if (c.id === curId) newChat(); else renderSide(); } };
       r.append(t, p, d); box.appendChild(r);
     });
@@ -388,8 +450,61 @@ $("fold").onclick = () => document.body.classList.add("fold");
 $("menu").onclick = () => document.body.classList.remove("fold");
 $("srch").onclick = () => { $("q").hidden = !$("q").hidden; if (!$("q").hidden) $("q").focus(); else { $("q").value = ""; renderSide(); } };
 $("q").oninput = renderSide;
-$("voiceBtn2").onclick = $("voiceBtn").onclick;
+ 
+const PRESETS = [
+  {id:"female", label:"Female", g:"f", pitch:1, rate:1},
+  {id:"male", label:"Male", g:"m", pitch:1, rate:1},
+  {id:"girl", label:"Girl (kid)", g:"f", pitch:1.7, rate:1.05},
+  {id:"boy", label:"Boy (kid)", g:"m", pitch:1.45, rate:1.05},
+  {id:"deep", label:"Deep voice", g:"m", pitch:.6, rate:.92},
+  {id:"calm", label:"Calm and slow", g:"f", pitch:.9, rate:.85},
+  {id:"robot", label:"Robot", g:"m", pitch:.35, rate:.95}
+];
+let vp = "female"; try { vp = localStorage.getItem("alphaO_voice") || "female"; } catch(e){}
+const FEM = /female|zira|aria|jenny|samantha|hazel|susan|karen|moira|tessa|victoria|sonia|libby|natasha|clara|emma|amy|joanna|salli|kimberly|ivy|zoe|serena|fiona|catherine|allison|ava/i;
+const MAL = /(^|\W)male|david|mark|guy|daniel|alex|fred|george|james|ryan|thomas|brian|arthur|oliver|liam|davis|eric|roger|matthew|joey|justin/i;
+function cur(){ return PRESETS.find(x => x.id === vp) || PRESETS[0]; }
+function pickVoice(g){
+  if (!window.speechSynthesis) return null;
+  const all = speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang));
+  const hit = all.filter(v => (g === "f" ? FEM.test(v.name) : MAL.test(v.name) && !/female/i.test(v.name)));
+  const pool = hit.length ? hit : all;
+  return pool.find(v => v.localService) || pool[0] || null;
+}
+function sample(){
+  if (!window.speechSynthesis) return;
+  spk++; speechSynthesis.cancel();
+  const P = cur(), v = pickVoice(P.g), u = new SpeechSynthesisUtterance("Hello! I am Alpha-O.");
+  u.lang = "en-US"; if (v) u.voice = v; u.pitch = P.pitch; u.rate = P.rate;
+  setTimeout(() => speechSynthesis.speak(u), 100);
+}
+function renderVMenu(){
+  $("vmenu").innerHTML = "";
+  PRESETS.forEach(p => {
+    const b = document.createElement("button"); b.className = "vopt" + (p.id === vp ? " on" : ""); b.textContent = (p.id === vp ? "\u2713 " : "") + p.label;
+    b.onclick = () => { vp = p.id; try { localStorage.setItem("alphaO_voice", vp); } catch(e){} $("vmenu").hidden = true; sample(); };
+    $("vmenu").appendChild(b);
+  });
+}
+$("vpick").onclick = e => { e.stopPropagation(); $("vmenu").hidden = !$("vmenu").hidden; if (!$("vmenu").hidden) renderVMenu(); };
+document.addEventListener("click", () => { $("vmenu").hidden = true; });
+addEventListener("keydown", e => { if (e.key === "Escape"){ if (!$("vmenu").hidden) $("vmenu").hidden = true; else if (voiceOn) $("closeVoice").click(); } });
+ 
+const tip = document.createElement("div"); tip.id = "tip"; document.body.appendChild(tip);
+function showTip(el){
+  const t = el.dataset.tip; if (!t) return;
+  tip.textContent = t; tip.style.display = "block";
+  const r = el.getBoundingClientRect(), w = tip.offsetWidth;
+  tip.style.left = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), innerWidth - w - 8) + "px";
+  let y = r.top - tip.offsetHeight - 8; if (y < 8) y = r.bottom + 8; tip.style.top = y + "px";
+}
+document.addEventListener("pointerover", e => { const el = e.target.closest("[data-tip]"); if (el) showTip(el); });
+document.addEventListener("pointerout", e => { if (e.target.closest("[data-tip]")) tip.style.display = "none"; });
+document.addEventListener("focusin", e => { const el = e.target.closest("[data-tip]"); if (el && e.target.matches(":focus-visible")) showTip(el); });
+document.addEventListener("focusout", () => { tip.style.display = "none"; });
+document.addEventListener("click", () => { tip.style.display = "none"; });
 newChat();
 </script>
 </body>
 </html>
+ 
