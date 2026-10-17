@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alpha-O</title>
+<style>
+:root{--bg:#0d1020;--side:#0a0d1a;--panel:#151a2f;--line:#252c48;--text:#e8ebf7;--muted:#8c94b5;--accent:#7c9cff;--eye:#ffc86b}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font-family:"Segoe UI",system-ui,sans-serif;display:flex}
+aside{width:260px;background:var(--side);border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;gap:16px}
+.brand{font-size:22px;font-weight:600;display:flex;align-items:center;gap:10px}
+.logo{width:14px;height:14px;border-radius:50%;background:var(--eye);box-shadow:0 0 12px var(--eye);animation:ghost 3.5s ease-in-out infinite}
+aside p{color:var(--muted);font-size:14px;line-height:1.6;margin:0}
+main{flex:1;display:flex;flex-direction:column;min-width:0;height:100%}
+.top{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-bottom:1px solid var(--line)}
+.top h2{font-size:16px;margin:0;font-weight:500;color:var(--muted)}
+.bar{display:flex;gap:8px}
+#newTop{display:none}
+button{position:relative;overflow:hidden;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:9px 14px;font-size:15px;cursor:pointer;font-family:inherit;transition:transform .25s,box-shadow .25s,border-color .25s}
+button::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.2) 50%,transparent 70%);transform:translateX(-130%)}
+button:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,156,255,.15),0 8px 20px rgba(124,156,255,.28)}
+button:hover::after{transform:translateX(130%);transition:transform .7s}
+button:active{transform:translateY(0)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#voiceBtn,#send{animation:ghost 3.5s ease-in-out infinite}
+#send{background:var(--accent);color:#0d1020;border-color:var(--accent);font-weight:600}
+#newchat{width:100%}
+#chat{flex:1;overflow-y:auto;padding:24px 16px}
+.row{width:100%;max-width:760px;margin:0 auto 18px;display:flex;gap:12px}
+.row.you{justify-content:flex-end}
+.av{width:34px;height:34px;border-radius:50%;background:var(--eye);color:#0d1020;display:grid;place-items:center;font-weight:700;flex:none}
+.msg{line-height:1.7;overflow-wrap:anywhere;min-width:0}
+.msg.you{background:var(--accent);color:#0d1020;padding:10px 14px;border-radius:14px 14px 4px 14px;max-width:80%;white-space:pre-wrap}
+.msg.bot{font-family:Georgia,"Times New Roman",serif;font-size:17px;padding-top:4px}
+.msg p{margin:0 0 .7em}.msg ul,.msg ol{margin:0 0 .7em;padding-left:1.4em}.msg h4{margin:.4em 0;font-size:18px}
+.msg a{color:var(--accent)}
+.msg code{background:var(--panel);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-family:Consolas,monospace;font-size:.9em}
+.msg pre{background:var(--side);border:1px solid var(--line);border-radius:8px;padding:12px;overflow-x:auto}
+.msg pre code{border:0;padding:0;background:none}
+.dots i{display:inline-block;width:8px;height:8px;margin:8px 3px 0;border-radius:50%;background:var(--muted);animation:dot 1.2s infinite}
+.dots i:nth-child(2){animation-delay:.2s}.dots i:nth-child(3){animation-delay:.4s}
+#chip{display:none;width:100%;max-width:760px;margin:0 auto;padding:0 16px 8px;font-size:14px;color:var(--muted)}
+#chip button{padding:2px 8px;margin-left:6px}
+#row{display:flex;gap:8px;width:100%;max-width:760px;margin:0 auto;padding:0 16px 8px}
+#input{flex:1;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:12px;font-size:16px;font-family:inherit}
+footer{text-align:center;color:var(--muted);font-size:12.5px;padding:2px 16px 14px}
+#voice{display:none;position:fixed;inset:0;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;gap:18px;z-index:5}
+#voice.on{display:flex}
+#face{width:min(340px,80vw);aspect-ratio:1;display:grid;place-items:center;color:var(--muted);text-align:center;animation:aura 3s ease-in-out infinite}
+#face canvas{display:block;max-width:100%}
+#status{color:var(--muted);font-size:17px;min-height:26px;text-align:center;padding:0 20px}
+#mic.live{background:var(--accent);color:#0d1020}
+@keyframes blink{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}
+@keyframes talk{from{transform:scaleY(.3)}to{transform:scaleY(1)}}
+@keyframes dot{0%,80%,100%{opacity:.3;transform:translateY(0)}40%{opacity:1;transform:translateY(-5px)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+@keyframes aura{0%,100%{filter:drop-shadow(0 0 10px rgba(255,200,107,.2));opacity:.92}50%{filter:drop-shadow(0 0 26px rgba(255,200,107,.55));opacity:1}}
+@keyframes ghost{0%,100%{box-shadow:0 0 0 rgba(124,156,255,0)}50%{box-shadow:0 0 16px rgba(124,156,255,.4)}}
+@media(max-width:800px){aside{display:none}#newTop{display:inline-block}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+<aside>
+  <div class="brand"><span class="logo"></span>Alpha-O</div>
+  <button id="newchat">New chat</button>
+  <p>Ask a question, attach a file to analyse, or open Voice mode to talk with the robot.</p>
+</aside>
+<main>
+  <div class="top">
+    <h2>Conversation</h2>
+    <div class="bar"><button id="newTop">New chat</button><button id="voiceBtn" aria-label="Voice mode">Voice</button></div>
+  </div>
+  <div id="chat" aria-live="polite"></div>
+  <div id="chip"><span id="fname"></span><button id="clearfile" aria-label="Remove file">x</button></div>
+  <div id="row">
+    <button id="attach" aria-label="Attach a file">Attach</button>
+    <input id="input" placeholder="Message Alpha-O" autocomplete="off">
+    <button id="send">Send</button>
+    <input type="file" id="file" hidden accept="image/*,.txt,.md,.csv,.json,.js,.py,.html,.css,.cs">
+  </div>
+  <footer><span id="copy"></span> Alpha-O can make mistakes. Check important information.</footer>
+</main>
+
+<div id="voice">
+  <div id="face" role="img" aria-label="3D robot face"></div>
+  <div id="status">Tap the mic and speak</div>
+  <div class="bar"><button id="mic">Start talking</button><button id="closeVoice">Close</button></div>
+</div>
+
+<script>
+const OWNER = "Richard1-hue";
+const API_URL = "https://alpha-o-api.ituzerichard6.workers.dev/"; // your backend link
+const $ = id => document.getElementById(id);
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let history = [], file = null, voiceOn = false, listening = false, busy = false, spk = 0, rec = null;
+$("copy").textContent = "\u00A9 " + new Date().getFullYear() + " " + OWNER + ".";
+
+function md(src){
+  const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  const inl = s => esc(s).replace(/`([^`]+)`/g,"<code>$1</code>").replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>")
+    .replace(/(^|[^*\w])\*([^*\n]+)\*/g,"$1<em>$2</em>")
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s"]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+  let out = "", para = [], list = "", code = null;
+  const fp = () => { if (para.length){ out += "<p>" + para.join("<br>") + "</p>"; para = []; } };
+  const fl = () => { if (list){ out += "</" + list + ">"; list = ""; } };
+  for (const ln of src.split("\n")){
+    if (/^\s*```/.test(ln)){
+      if (code === null){ fp(); fl(); code = []; } else { out += "<pre><code>" + esc(code.join("\n")) + "</code></pre>"; code = null; }
+      continue;
+    }
+    if (code !== null){ code.push(ln); continue; }
+    let m;
+    if (m = ln.match(/^\s*[-*]\s+(.*)/)){ fp(); if (list !== "ul"){ fl(); out += "<ul>"; list = "ul"; } out += "<li>" + inl(m[1]) + "</li>"; }
+    else if (m = ln.match(/^\s*\d+[.)]\s+(.*)/)){ fp(); if (list !== "ol"){ fl(); out += "<ol>"; list = "ol"; } out += "<li>" + inl(m[1]) + "</li>"; }
+    else if (m = ln.match(/^#{1,4}\s+(.*)/)){ fp(); fl(); out += "<h4>" + inl(m[1]) + "</h4>"; }
+    else if (!ln.trim()){ fp(); fl(); }
+    else { fl(); para.push(inl(ln)); }
+  }
+  if (code !== null) out += "<pre><code>" + esc(code.join("\n")) + "</code></pre>";
+  fp(); fl(); return out;
+}
+function add(text, who){
+  const r = document.createElement("div"); r.className = "row " + who;
+  const m = document.createElement("div"); m.className = "msg " + who;
+  if (who === "bot"){ const a = document.createElement("div"); a.className = "av"; a.textContent = "A"; r.appendChild(a); }
+  if (text){ if (who === "bot") m.innerHTML = md(text); else m.textContent = text; }
+  r.appendChild(m); $("chat").appendChild(r); $("chat").scrollTop = $("chat").scrollHeight;
+  return m;
+}
+function typeInto(el, text){
+  el.innerHTML = md(text);
+  if (reduce) return;
+  const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), nodes = []; let n;
+  while (n = w.nextNode()) nodes.push([n, n.nodeValue]);
+  nodes.forEach(x => x[0].nodeValue = "");
+  const total = nodes.reduce((a, x) => a + x[1].length, 0), step = Math.max(1, Math.ceil(total / 300));
+  let i = 0, k = 0;
+  const t = setInterval(() => {
+    let c = step;
+    while (c > 0 && k < nodes.length){
+      const s = nodes[k][1], take = Math.min(c, s.length - i);
+      i += take; c -= take; nodes[k][0].nodeValue = s.slice(0, i);
+      if (i >= s.length){ k++; i = 0; }
+    }
+    $("chat").scrollTop = $("chat").scrollHeight;
+    if (k >= nodes.length) clearInterval(t);
+  }, 18);
+}
+function newChat(){
+  history = []; file = null; $("chip").style.display = "none"; $("chat").innerHTML = "";
+  typeInto(add("", "bot"), "Hello! I am **Alpha-O**. Ask me anything, or attach a file for me to read.");
+}
+async function ask(){
+  if (!API_URL){
+    const f = file ? " I also received your file *" + file.name + "*." : "";
+    return "**Demo mode:** I heard \"" + history[history.length-1].text + "\"." + f + " Connect a backend to get real AI answers.";
+  }
+  const r = await fetch(API_URL, {method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({messages: history.slice(-12), file})});
+  const j = await r.json();
+  if (!r.ok || !j.reply) throw new Error(j.error || "No reply");
+  return j.reply;
+}
+async function send(text, spoken){
+  text = text.trim(); if (!text || busy) return;
+  busy = true; add(text + (file ? "  [" + file.name + "]" : ""), "you");
+  history.push({role:"user", text});
+  const m = add("", "bot"); m.innerHTML = '<span class="dots"><i></i><i></i><i></i></span>';
+  setFace("thinking", "Thinking...");
+  let reply;
+  try { reply = await ask(); } catch(e){ reply = "Sorry, I could not reach my brain. " + e.message; }
+  history.push({role:"model", text:reply});
+  file = null; $("chip").style.display = "none"; $("file").value = "";
+  busy = false; typeInto(m, reply);
+  if (spoken) speak(reply); else if (voiceOn) setFace("", "Tap the mic to reply");
+}
+$("send").onclick = () => { const v = $("input").value; $("input").value = ""; send(v, false); };
+$("input").onkeydown = e => { if (e.key === "Enter") $("send").click(); };
+$("newchat").onclick = $("newTop").onclick = newChat;
+
+$("attach").onclick = () => $("file").click();
+$("clearfile").onclick = () => { file = null; $("file").value = ""; $("chip").style.display = "none"; };
+$("file").onchange = () => {
+  const f = $("file").files[0]; if (!f) return;
+  if (f.size > 4e6){ add("That file is over 4 MB. Choose a smaller one.", "bot"); $("file").value = ""; return; }
+  const rd = new FileReader(), isImg = f.type.startsWith("image/");
+  rd.onload = () => {
+    file = isImg ? {name:f.name, mime:f.type, base64:rd.result.split(",")[1]} : {name:f.name, mime:f.type || "text/plain", text:rd.result};
+    $("fname").textContent = "Attached: " + f.name; $("chip").style.display = "block";
+  };
+  isImg ? rd.readAsDataURL(f) : rd.readAsText(f);
+};
+
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+function setFace(cls, msg){ $("face").setAttribute("class", cls); if (msg !== undefined) $("status").textContent = msg; }
+function emotion(t){
+  if (/sorry|unfortunately|cannot|can't|error/i.test(t)) return "sad";
+  if (/!|great|glad|happy|congrat|welcome/i.test(t)) return "happy";
+  if (/\?/.test(t)) return "curious";
+  return "";
+}
+var mood = "";
+function mouthFor(c){ mood = c; }
+function listen(){
+  if (!voiceOn || busy || listening) return;
+  if (!SR){ setFace("", "Voice input needs Chrome or Edge. You can still hear replies."); return; }
+  try { rec && rec.abort(); } catch(e){}
+  rec = new SR(); rec.lang = "en-US"; rec.interimResults = false; rec.maxAlternatives = 1;
+  let got = false;
+  rec.onstart = () => { listening = true; $("mic").classList.add("live"); $("mic").textContent = "Listening..."; setFace("listening", "Listening..."); mouthFor(""); };
+  rec.onresult = e => { got = true; const t = e.results[0][0].transcript; setFace("thinking", "You said: " + t); send(t, true); };
+  rec.onerror = e => {
+    const m = (e.error === "not-allowed" || e.error === "service-not-allowed") ? "Microphone blocked. Allow it in your browser, then tap the mic."
+      : e.error === "network" ? "Speech recognition needs an internet connection."
+      : e.error === "no-speech" ? "I did not hear anything. Tap the mic to try again." : "Voice error (" + e.error + "). Tap the mic to retry.";
+    got = true; setFace("", m);
+  };
+  rec.onend = () => {
+    listening = false; $("mic").classList.remove("live"); $("mic").textContent = "Start talking";
+    if (!got) setFace("", "I did not hear anything. Tap the mic to try again.");
+  };
+  try { rec.start(); } catch(e){ listening = false; }
+}
+function speak(text){
+  const tok = ++spk, emo = emotion(text); mouthFor(emo);
+  if (!window.speechSynthesis){ setFace(emo, "Voice output is not supported in this browser."); return; }
+  const clean = text.replace(/```[\s\S]*?```/g, " code block. ").replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/[*#`_>~]/g, "").replace(/\s+/g, " ").trim();
+  const parts = clean.match(/[^.!?]+[.!?]*\s*/g) || [clean], chunks = []; let cur = "";
+  parts.forEach(p => { if (cur && (cur + p).length > 200){ chunks.push(cur); cur = p; } else cur += p; });
+  if (cur) chunks.push(cur);
+  speechSynthesis.cancel();
+  setTimeout(() => {
+    if (tok !== spk) return;
+    const v = speechSynthesis.getVoices().find(x => /^en/i.test(x.lang));
+    chunks.forEach((c, i) => {
+      const u = new SpeechSynthesisUtterance(c); u.lang = "en-US"; if (v) u.voice = v;
+      u.onstart = () => { if (tok === spk){ $("face").setAttribute("class", "speaking " + emo); $("status").textContent = "Speaking..."; } };
+      if (i === chunks.length - 1) u.onend = u.onerror = () => { if (tok !== spk) return; setFace(emo, "Tap the mic to reply"); if (voiceOn) setTimeout(listen, 500); };
+      speechSynthesis.speak(u);
+    });
+  }, 120);
+}
+function unlockSound(){ if (window.speechSynthesis){ const u = new SpeechSynthesisUtterance(" "); u.volume = 0; speechSynthesis.speak(u); } }
+$("voiceBtn").onclick = () => { voiceOn = true; unlockSound(); $("voice").classList.add("on"); setFace("", "Tap the mic and speak"); mouthFor(""); };
+$("mic").onclick = () => { spk++; if (window.speechSynthesis) speechSynthesis.cancel(); unlockSound(); if (listening){ rec.stop(); } else { setFace("", "Tap the mic and speak"); listen(); } };
+$("closeVoice").onclick = () => { voiceOn = false; spk++; $("voice").classList.remove("on"); if (window.speechSynthesis) speechSynthesis.cancel(); try { rec && rec.abort(); } catch(e){} };
+
+(function(){
+  const box = $("face");
+  if (!window.THREE){ box.textContent = "3D robot unavailable. Check your internet connection."; return; }
+  let renderer;
+  try { renderer = new THREE.WebGLRenderer({antialias:true, alpha:true}); } catch(e){ box.textContent = "3D is not supported on this device."; return; }
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  box.appendChild(renderer.domElement);
+  const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(35, 1, 0.1, 50);
+  cam.position.set(0, 0, 9);
+  scene.add(new THREE.AmbientLight(0x8c94b5, 0.9));
+  const key = new THREE.DirectionalLight(0xffffff, 1.1); key.position.set(3, 4, 6); scene.add(key);
+  const glow = new THREE.PointLight(0xffc86b, 1.2, 14); glow.position.set(0, 0, 4); scene.add(glow);
+  const M = (c, o) => new THREE.MeshStandardMaterial(Object.assign({color:c, roughness:.35, metalness:.55}, o || {}));
+  const shell = M(0x2a3358), dark = M(0x0b0e1c, {roughness:.2, metalness:.3}), grey = M(0x8c94b5);
+  const amber = M(0xffc86b, {emissive:0xffc86b, emissiveIntensity:1, roughness:.4, metalness:0});
+  const S = (r, mat, sx, sy, sz) => { const m = new THREE.Mesh(new THREE.SphereGeometry(r, 40, 28), mat); m.scale.set(sx, sy, sz); return m; };
+  const rob = new THREE.Group(), hd = new THREE.Group(); scene.add(rob); rob.add(hd);
+  hd.add(S(1.5, shell, 1.2, 1, .95));
+  const plate = S(1, dark, 1.5, 1, .55); plate.position.z = .95; hd.add(plate);
+  const eyes = [-.62, .62].map(x => { const e = S(.28, amber, 1, 1.3, .45); e.position.set(x, .22, 1.45); hd.add(e); return e; });
+  const brow = x => { const b = new THREE.Mesh(new THREE.BoxGeometry(.55, .07, .07), grey); b.position.set(x, .72, 1.36); hd.add(b); return b; };
+  const bl = brow(-.62), br = brow(.62);
+  const mg = new THREE.Group(); mg.position.set(0, -.45, 1.48); hd.add(mg);
+  const line = new THREE.Mesh(new THREE.BoxGeometry(.6, .07, .07), amber);
+  const arc = new THREE.Mesh(new THREE.TorusGeometry(.38, .05, 12, 32, Math.PI), amber);
+  const talk = S(.3, amber, 1, 1, .3);
+  mg.add(line, arc, talk);
+  [-1, 1].forEach(x => { const ear = new THREE.Mesh(new THREE.CylinderGeometry(.3, .3, .3, 24), amber); ear.rotation.z = Math.PI / 2; ear.position.set(x * 1.85, 0, 0); hd.add(ear); });
+  const ant = new THREE.Mesh(new THREE.CylinderGeometry(.04, .04, .5, 12), grey); ant.position.y = 1.7; hd.add(ant);
+  const tip = S(.13, amber, 1, 1, 1); tip.position.y = 2; hd.add(tip);
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(.5, .6, .4, 24), dark); neck.position.y = -1.6; rob.add(neck);
+  const body = S(1.2, shell, 1.35, .55, .8); body.position.y = -2.3; rob.add(body);
+  const L = (a, b, k) => a + (b - a) * k;
+  const clock = new THREE.Clock();
+  let tx = 0, ty = 0, blink = 0, nextBlink = 2;
+  addEventListener("pointermove", e => { tx = (e.clientX / innerWidth - .5) * .9; ty = (e.clientY / innerHeight - .5) * .5; });
+  function resize(){ const s = Math.min(340, innerWidth * .8); renderer.setSize(s, s); }
+  resize(); addEventListener("resize", resize);
+  (function frame(){
+    requestAnimationFrame(frame);
+    if (!$("voice").classList.contains("on")) return;
+    const t = clock.getElapsedTime(), cl = box.classList;
+    const speaking = cl.contains("speaking"), thinking = cl.contains("thinking"), listening = cl.contains("listening");
+    rob.position.y = .2 + Math.sin(t * 1.4) * .18;
+    hd.rotation.y = L(hd.rotation.y, thinking ? -.5 : tx, .08);
+    hd.rotation.x = L(hd.rotation.x, thinking ? -.2 : ty, .08);
+    hd.rotation.z = L(hd.rotation.z, mood === "curious" ? .12 : mood === "sad" ? -.05 : 0, .1);
+    if (t > nextBlink){ blink = 1; nextBlink = t + 2 + Math.random() * 3; }
+    blink = Math.max(0, blink - .12);
+    const lid = 1 - .9 * Math.sin(blink * Math.PI);
+    const ey = (mood === "happy" ? .6 : mood === "sad" ? .95 : 1.3) * lid * (thinking ? .7 : 1), ex = listening ? 1.15 : 1;
+    eyes.forEach(e => e.scale.set(ex, ey * ex, .45));
+    bl.rotation.z = L(bl.rotation.z, mood === "sad" ? .35 : 0, .15);
+    br.rotation.z = L(br.rotation.z, mood === "sad" ? -.35 : mood === "curious" ? .15 : 0, .15);
+    br.position.y = L(br.position.y, mood === "curious" ? .87 : .72, .15);
+    const smile = mood === "happy" && !speaking, frown = mood === "sad" && !speaking;
+    talk.visible = speaking; arc.visible = smile || frown; line.visible = !speaking && !smile && !frown;
+    talk.scale.y = .3 + .7 * Math.abs(Math.sin(t * 13));
+    arc.rotation.z = smile ? Math.PI : 0; arc.position.y = smile ? .15 : -.3;
+    amber.emissiveIntensity = .9 + .35 * Math.sin(t * 2.2) + (speaking ? .4 : 0);
+    renderer.render(scene, cam);
+  })();
+})();
+newChat();
+</script>
+</body>
+</html>
