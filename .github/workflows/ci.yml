@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate HTML and embedded JavaScript
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Validate all inline JavaScript blocks in index.html
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ ! -f index.html ]; then
+            echo "::error::index.html not found in the repository root."
+            exit 1
+          fi
+
+          node - <<'NODE'
+          const fs = require("fs");
+          const path = require("path");
+          const { spawnSync } = require("child_process");
+
+          const htmlPath = "index.html";
+
+          if (!fs.existsSync(htmlPath)) {
+            console.error("::error::index.html is missing.");
+            process.exit(1);
+          }
+
+          const html = fs.readFileSync(htmlPath, "utf8");
+          const matches = [...html.matchAll(/<script\b(?![^>]*\ssrc\s*=)([^>]*)>([\s\S]*?)<\/script>/gi)];
+
+          if (matches.length === 0) {
+            console.error("::error::No inline JavaScript blocks found in index.html.");
+            process.exit(1);
+          }
+
+          const tempFiles = [];
+
+          try {
+            for (const [index, match] of matches.entries()) {
+              const tempPath = path.join(process.cwd(), `.tmp-inline-check-${index}.js`);
+              tempFiles.push(tempPath);
+              fs.writeFileSync(tempPath, match[2], "utf8");
+            }
+
+            for (const tempPath of tempFiles) {
+              const result = spawnSync(process.execPath, ["--check", tempPath], {
+                stdio: "inherit",
+              });
+
+              if (result.status !== 0) {
+                process.exit(result.status === null ? 1 : result.status);
+              }
+            }
+          } finally {
+            for (const tempPath of tempFiles) {
+              try {
+                fs.unlinkSync(tempPath);
+              } catch (error) {
+                // Best-effort cleanup; ignore cleanup failures while preserving the main validation result.
+              }
+            }
+          }
+          NODE
+
+      - name: Validate HTML structure
+        shell: bash
+        run: |
+          npx --yes htmlhint@0.16.4 index.html
