@@ -30,7 +30,7 @@ main::before{content:"";position:absolute;top:-140px;right:-100px;width:560px;he
 .top h2{font-size:16px;margin:0 0 0 6px;font-weight:500;color:var(--muted)}
 .bar{display:flex;gap:8px;align-items:center}
 #menu,#newTop{display:none}body.fold #menu,body.fold #newTop{display:inline-grid}
-button{position:relative;overflow:hidden;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:9px 14px;font-size:15px;cursor:pointer;font-family:inherit;transition:transform .25s,box-shadow .25s,border-color .25s}
+button{position:relative;overflow:hidden;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:9px 14px;font-size:15px;cursor:pointer;font-family:inherit}
 button::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.16) 50%,transparent 70%);transform:translateX(-130%)}
 button:hover{transform:translateY(-1px);border-color:#5c5c5c;box-shadow:0 6px 18px rgba(16,163,127,.22)}
 button:hover::after{transform:translateX(130%);transition:transform .7s}
@@ -82,7 +82,7 @@ footer{text-align:center;color:var(--muted);font-size:12.5px;padding:8px 16px 14
 @media(hover:none){.cp{opacity:1}}
 #tip{position:fixed;display:none;z-index:20;background:#0d0d0d;color:#fff;font-size:13px;padding:5px 10px;border-radius:8px;border:1px solid #333;pointer-events:none;white-space:nowrap}
 .vw{position:relative}
-#vmenu{position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:6px;min-width:190px;z-index:8;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+#vmenu{position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:6px;min-width:190px;z-index:8;}
 .vopt{display:block;width:100%;text-align:left;border-radius:8px;background:none;border-color:transparent;padding:8px 12px}
 .vopt.on{background:rgba(16,163,127,.2)}
 .stp{margin-left:10px;color:var(--muted);font-style:italic;vertical-align:middle}.dots{display:inline-block}
@@ -114,12 +114,13 @@ footer{text-align:center;color:var(--muted);font-size:12.5px;padding:8px 16px 14
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="defs"></defs></svg>
 <aside>
-  <div class="sh"><span class="brand"><svg class="lg" viewBox="0 0 64 64"><use href="#logo"/></svg>Alpha-O<span class="ver">v4.5</span></span>
-    <span><button class="ib" id="srch" data-tip="Search chats" data-ic="search" aria-label="Search chats"></button><button class="ib" id="fold" data-tip="Close sidebar" data-ic="panel" aria-label="Hide sidebar"></button></span></div>
+  <div class="sh"><span class="brand"><svg class="lg" viewbox="0 0 64 64"><use href="#logo"/></svg>Alpha-O<span class="ver">v4.5</span></span>
+    <span><button class="ib" id="srch" data-tip="Search chats" data-ic="search" aria-label="Search chats"></button><button class="ib" id="fold" data-tip="Close sidebar" data-ic="panel" aria-label="Close sidebar"></button></span>
+  </div>
   <input id="q" placeholder="Search chats" hidden>
   <button id="newchat"><span data-ic="plus"></span>New chat</button>
   <div id="list"></div>
-  </aside>
+</aside>
 <main>
   <div class="top">
     <div class="bar"><button class="ib" id="menu" data-tip="Open sidebar" data-ic="panel" aria-label="Show sidebar"></button><h2>Alpha-O <span class="ver">v4.5</span></h2></div>
@@ -130,7 +131,7 @@ footer{text-align:center;color:var(--muted);font-size:12.5px;padding:8px 16px 14
     <div id="chip"><span id="fname"></span><button id="clearfile" data-tip="Remove file" aria-label="Remove file">x</button></div>
     <div id="box">
       <textarea id="input" rows="1" placeholder="Ask Alpha-O anything or write your request..."></textarea>
-      <div class="tools"><button class="ib" id="attach" data-tip="Attach a file" data-ic="clip" aria-label="Attach a file"></button><span class="sp"></span><button class="ib" id="voiceBtn2" data-tip="Voice mode" data-ic="wave" aria-label="Voice mode"></button><button id="send" data-tip="Send message" data-ic="up" aria-label="Send"></button></div>
+      <div class="tools"><button class="ib" id="attach" data-tip="Attach a file" data-ic="clip" aria-label="Attach a file"></button><span class="sp"></span><button class="ib" id="voiceBtn2" data-tip="Voice mode" data-ic="mic" aria-label="Voice mode"></button><button id="send" data-tip="Send" aria-label="Send message"><svg viewbox="0 0 24 24" aria-hidden="true"><path d="M4 12.5 18 4l-2.5 14-4.2-4.6-7.3-2.9z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg></button></div>
     </div>
     <footer><span id="copy"></span> Alpha-O can make mistakes. Check important information.</footer>
   </div>
@@ -139,26 +140,20 @@ footer{text-align:center;color:var(--muted);font-size:12.5px;padding:8px 16px 14
 <div id="voice">
   <div id="face" role="img" aria-label="3D robot face"></div>
   <div id="status">Tap the mic and speak</div>
-  <div class="bar"><span class="vw"><button class="ib" id="vpick" data-ic="person" data-tip="Choose voice" aria-label="Choose voice"></button><div id="vmenu" hidden></div></span><button id="mic" data-tip="Speak to Alpha-O">Start talking</button><button id="closeVoice" data-tip="Close voice mode">Close</button></div>
+  <div class="bar"><span class="vw"><button class="ib" id="vpick" data-ic="person" data-tip="Choose voice" aria-label="Choose voice"></button><div id="vmenu" hidden></div></span><button id="mic" class="ib" data-tip="Start listening" aria-label="Start listening">Start talking</button><button id="closeVoice" class="ib" data-tip="Close voice mode" aria-label="Close voice mode">Close</button></div>
 </div>
 <script>
 const OWNER = "Ituze Richard";
-const LOGO_INNER = '<defs><radialGradient id="gH" cx="35%" cy="28%" r="80%"><stop offset="0" stop-color="#fff"/><stop offset=".55" stop-color="#c9ccd1"/><stop offset="1" stop-color="#6b7078"/></radialGradient><radialGradient id="gE" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#fff3c9"/><stop offset=".5" stop-color="#ffc86b"/><stop offset="1" stop-color="#e08a1e"/></radialGradient><linearGradient id="gV" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2d33"/><stop offset="1" stop-color="#07080a"/></linearGradient><radialGradient id="gB" cx="50%" cy="30%" r="80%"><stop offset="0" stop-color="#3a3f48"/><stop offset="1" stop-color="#0d0e11"/></radialGradient></defs><circle cx="32" cy="32" r="31" fill="url(#gB)"/><ellipse cx="32" cy="55" rx="14" ry="2.6" fill="#000" opacity=".4"/><line x1="32" y1="9" x2="32" y2="15" stroke="#9aa0a8" stroke-width="2" stroke-linecap="round"/><circle cx="32" cy="8" r="3" fill="url(#gE)"/><rect x="9" y="29" width="4" height="10" rx="2" fill="url(#gE)"/><rect x="51" y="29" width="4" height="10" rx="2" fill="url(#gE)"/><rect x="12" y="15" width="40" height="36" rx="14" fill="url(#gH)"/><rect x="17" y="23" width="30" height="20" rx="9" fill="url(#gV)"/><circle cx="25.5" cy="33" r="3.8" fill="url(#gE)"/><circle cx="38.5" cy="33" r="3.8" fill="url(#gE)"/><path d="M27 39.5Q32 43 37 39.5" fill="none" stroke="#ffc86b" stroke-width="1.8" stroke-linecap="round"/><ellipse cx="23" cy="19.5" rx="8" ry="2.6" fill="#fff" opacity=".55"/>';
-const LOGO_USE = '<svg viewBox="0 0 64 64" aria-hidden="true"><use href="#logo"/></svg>';
-const IC = {chat:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>',search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',panel:'<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/>',plus:'<path d="M12 5v14M5 12h14"/>',clip:'<path d="m21 11-8.5 8.5a5 5 0 0 1-7-7L14 4a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L15 7"/>',wave:'<path d="M4 10v4M8 6v12M12 3v18M16 7v10M20 10v4"/>',up:'<path d="M12 19V5M5 12l7-7 7 7"/>',pin:'<path d="M12 17v5M9 3h6l-1 6 3 3H7l3-3z"/>',trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'};
-IC.refresh = '<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/>';
-IC.pen = '<path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>';
-IC.speaker = '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/>';
-IC.clock = '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>';
-IC.copy = '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/>';
-IC.person = '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>';
-const ic = n => '<svg viewBox="0 0 24 24" aria-hidden="true">' + IC[n] + '</svg>';
+const LOGO_INNER = '<defs><radialGradient id="gH" cx="35%" cy="28%" r="80%"><stop offset="0" stop-color="#fff"/><stop offset=".55" stop-color="#c9ccd1"/><stop offset="1" stop-color="#6b7078"/></radialGradient><g fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c1.7-4.3 8.6-6 12.8-2.4 2.2 1.8 3.3 4.7 2.8 7.7-.7 3.8-3.9 6.9-7.6 7.7-3.6.7-7.8-.4-10-3.7-2.5-3.7-1.7-8.4 2-9.3z" fill="url(#gH)" stroke="none"/><path d="M16 31l7.6-10.5L31 26l4.3 3.1L47 20l3 3.3-11.4 15.3L30 44 16 31z"/><path d="M14 21l-3.5 3.7 7.3 4.5-2.9 2.8-8.7-4.9 7.8-5.1z"/><path d="M29 11l6.5 2.8M39 8l3.5 3M27 18l4.5 2"/></g></defs>';
+const LOGO_USE = '<svg viewbox="0 0 64 64" aria-hidden="true"><use href="#logo"/></svg>';
+const IC = {chat:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>',search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',panel:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 11h8M8 15h8"/>',plus:'<path d="M12 5v14M5 12h14"/>',mic:'<path d="M12 3a3 3 0 0 1 3 3v7a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"/><path d="M6 12.5A6 6 0 0 0 18 12.5"/><path d="M12 18v3"/><path d="M9 21h6"/>',clip:'<path d="M8 12.5 15 6a3 3 0 1 1 4.2 4.3L12.5 17a5 5 0 1 1-7.1-7.1l7.6-7.6"/>',trash:'<path d="M5 7h14"/><path d="M7 7l1 11a2 2 0 0 0 2 2h5a2 2 0 0 0 2-2l1-11"/><path d="M10 7V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2"/>',pin:'<path d="M14 4l-9 9 3 3 9-9"/><path d="M12 16l-7 7"/><path d="M16 4l4 4"/>',refresh:'<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/>',pen:'<path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>',speaker:'<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',copy:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/>',person:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>'};
+const ic = n => '<svg viewbox="0 0 24 24" aria-hidden="true">' + IC[n] + '</svg>';
 const API_URL = "https://alpha-o-api.ituzerichard6.workers.dev/"; // your backend link
 const $ = id => document.getElementById(id);
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 let history = [], file = null, voiceOn = false, listening = false, busy = false, spk = 0, rec = null;
 $("copy").textContent = "\u00A9 " + new Date().getFullYear() + " " + OWNER + ".";
- 
+
 function md(src){
   const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
   const inl = s => esc(s).replace(/`([^`]+)`/g,"<code>$1</code>").replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>")
@@ -267,7 +262,7 @@ $("send").onclick = () => { const v = $("input").value; $("input").value = ""; $
 $("input").onkeydown = e => { if (e.key === "Enter" && !e.shiftKey){ e.preventDefault(); $("send").click(); } };
 $("input").oninput = () => { const t = $("input"); t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, 200) + "px"; };
 $("newchat").onclick = $("newTop").onclick = newChat;
- 
+
 $("attach").onclick = () => $("file").click();
 $("clearfile").onclick = () => { file = null; $("file").value = ""; $("chip").style.display = "none"; };
 $("file").onchange = () => {
@@ -280,7 +275,7 @@ $("file").onchange = () => {
   };
   isImg ? rd.readAsDataURL(f) : rd.readAsText(f);
 };
- 
+
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 function setFace(cls, msg){ $("face").setAttribute("class", cls); if (msg !== undefined) $("status").textContent = msg; }
 function emotion(t){
@@ -326,7 +321,7 @@ function speak(text){
       const u = new SpeechSynthesisUtterance(c); u.lang = "en-US"; if (v) u.voice = v; u.pitch = P.pitch; u.rate = P.rate;
       u.onstart = () => { if (tok === spk){ $("face").setAttribute("class", "speaking " + emo); $("status").textContent = "Speaking..."; } };
       if (i === chunks.length - 1) u.onend = u.onerror = () => { if (tok !== spk) return; setFace(emo, "Tap the mic to reply"); if (voiceOn) setTimeout(listen, 500); };
-      u.addEventListener("error", e => { if (tok === spk && e.error && e.error !== "interrupted" && e.error !== "canceled") $("status").textContent = "Sound problem (" + e.error + "). Tap the mic to continue."; });
+      u.addEventListener("error", e => { if (tok === spk && e.error && e.error !== "interrupted" && e.error !== "canceled") $("status").textContent = "Sound problem (" + e.error + "). Tap the mic to retry."; });
       window._utts.push(u); speechSynthesis.speak(u);
     });
   }, 120);
@@ -335,7 +330,7 @@ function unlockSound(){ if (window.speechSynthesis){ const u = new SpeechSynthes
 $("voiceBtn2").onclick = () => { voiceOn = true; greet = 1; unlockSound(); $("voice").classList.add("on"); setFace("", "Tap the mic and speak"); mouthFor(""); };
 $("mic").onclick = () => { spk++; if (window.speechSynthesis) speechSynthesis.cancel(); unlockSound(); if (listening){ rec.stop(); } else { setFace("", "Tap the mic and speak"); listen(); } };
 $("closeVoice").onclick = () => { voiceOn = false; spk++; $("voice").classList.remove("on"); if (window.speechSynthesis) speechSynthesis.cancel(); try { rec && rec.abort(); } catch(e){} };
- 
+
 (function(){
   const box = $("face");
   if (!window.THREE){ box.textContent = "3D robot unavailable. Check your internet connection."; return; }
@@ -452,7 +447,7 @@ $("closeVoice").onclick = () => { voiceOn = false; spk++; $("voice").classList.r
     renderer.render(scene, cam);
   })();
 })();
- 
+
 let chats = [], curId = null;
 try { chats = JSON.parse(localStorage.getItem("alphaO_chats") || "[]"); } catch(e){ chats = []; }
 function persist(){ try { localStorage.setItem("alphaO_chats", JSON.stringify(chats)); } catch(e){} }
@@ -466,7 +461,7 @@ function saveChat(){
 function renderSide(){
   const q = $("q").value.toLowerCase(), box = $("list"); box.innerHTML = "";
   const day = 864e5, t0 = new Date().setHours(0,0,0,0);
-  const groups = [["Pinned", c => c.pin], ["Today", c => !c.pin && c.ts >= t0], ["Yesterday", c => !c.pin && c.ts < t0 && c.ts >= t0 - day], ["Previous 7 days", c => !c.pin && c.ts < t0 - day && c.ts >= t0 - 7 * day], ["Older", c => !c.pin && c.ts < t0 - 7 * day]];
+  const groups = [["Pinned", c => c.pin], ["Today", c => !c.pin && c.ts >= t0], ["Yesterday", c => !c.pin && c.ts < t0 && c.ts >= t0 - day], ["Previous 7 days", c => !c.pin && c.ts < t0 - day && c.ts >= t0 - day * 7], ["Older", c => !c.pin && c.ts < t0 - day * 7]];
   groups.forEach(g => {
     const items = chats.filter(c => g[1](c) && (!q || c.title.toLowerCase().includes(q) || c.msgs.some(m => m.text.toLowerCase().includes(q)))).sort((a, b) => b.ts - a.ts);
     if (!items.length) return;
@@ -490,22 +485,22 @@ function loadChat(id){
 }
 function newChat(){
   history = []; file = null; curId = Date.now().toString(36); $("chip").style.display = "none"; $("input").value = "";
-  $("chat").innerHTML = '<div id="welcome"><svg class="lg big" viewBox="0 0 64 64"><use href="#logo"/></svg><p>Welcome to Alpha-O</p><h2>How can I assist you?</h2><div class="cards"></div></div>';
+  $("chat").innerHTML = '<div id="welcome"><svg class="lg big" viewbox="0 0 64 64"><use href="#logo"/></svg><p>Welcome to Alpha-O</p><h2>How can I assist you?</h2><div class="cards"></div></div>';
   ["Write a to-do list for my day", "Explain what an API is in simple words", "Help me plan a small coding project"].forEach(t => {
     const b = document.createElement("button"); b.className = "card"; b.textContent = t; b.onclick = () => send(t, false); document.querySelector(".cards").appendChild(b);
   });
   renderSide(); closeSide();
 }
 if (innerWidth < 800) document.body.classList.add("fold");
-$("defs").innerHTML = '<symbol id="logo" viewBox="0 0 64 64">' + LOGO_INNER + '</symbol>';
+$("defs").innerHTML = '<symbol id="logo" viewbox="0 0 64 64">' + LOGO_INNER + '</symbol>';
 document.querySelectorAll("[data-ic]").forEach(e => e.innerHTML = ic(e.dataset.ic));
 const fav = document.createElement("link"); fav.rel = "icon";
-fav.href = "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">' + LOGO_INNER + '</svg>'); document.head.appendChild(fav);
+fav.href = "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 64 64">' + LOGO_INNER + '</svg>'); document.head.appendChild(fav);
 $("fold").onclick = () => document.body.classList.add("fold");
 $("menu").onclick = () => document.body.classList.remove("fold");
 $("srch").onclick = () => { $("q").hidden = !$("q").hidden; if (!$("q").hidden) $("q").focus(); else { $("q").value = ""; renderSide(); } };
 $("q").oninput = renderSide;
- 
+
 const PRESETS = [
   {id:"female", label:"Female", g:"f", pitch:1, rate:1},
   {id:"male", label:"Male", g:"m", pitch:1, rate:1},
@@ -544,7 +539,7 @@ function renderVMenu(){
 $("vpick").onclick = e => { e.stopPropagation(); $("vmenu").hidden = !$("vmenu").hidden; if (!$("vmenu").hidden) renderVMenu(); };
 document.addEventListener("click", () => { $("vmenu").hidden = true; });
 addEventListener("keydown", e => { if (e.key === "Escape"){ if (!$("vmenu").hidden) $("vmenu").hidden = true; else if (voiceOn) $("closeVoice").click(); } });
- 
+
 const tip = document.createElement("div"); tip.id = "tip"; document.body.appendChild(tip);
 function showTip(el){
   const t = el.dataset.tip; if (!t) return;
@@ -595,4 +590,3 @@ newChat();
 </script>
 </body>
 </html>
- 
