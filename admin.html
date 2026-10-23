@@ -7,117 +7,279 @@
   <style>
     :root {
       --bg: #121212;
-      --panel: #1b1b1b;
-      --panel-2: #212121;
-      --line: #2f2f2f;
-      --text: #f2f2f2;
-      --muted: #a7a7a7;
+      --side: #171717;
+      --panel: #1c1c1c;
+      --panel-2: #202020;
+      --line: #2d2d2d;
+      --text: #f0f0f0;
+      --muted: #9f9f9f;
       --accent: #10a37f;
-      --success: #2ec27e;
-      --warning: #f7c948;
+      --accent-2: #179d8b;
+      --accent-soft: rgba(16,163,127,0.16);
+      --success: #35d39a;
       --danger: #ff6b6b;
+      --warning: #f7c948;
       --shadow: rgba(0,0,0,0.28);
+      --shadow-soft: rgba(16,163,127,0.18);
+      --white-soft: rgba(255,255,255,0.04);
     }
 
     * { box-sizing: border-box; }
     html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); font-family: "Segoe UI", system-ui, sans-serif; }
-    body { padding: 28px; }
+    body { padding: 24px; }
+    .wrap { max-width: 1280px; margin: 0 auto; }
 
-    .wrap { max-width: 1300px; margin: 0 auto; }
     .topbar {
       display: flex; align-items: center; justify-content: space-between;
-      gap: 16px; margin-bottom: 22px;
+      gap: 18px; margin-bottom: 26px;
     }
-    .title { font-size: clamp(1.8rem, 3vw, 2.6rem); margin: 0; }
-    .subtitle { color: var(--muted); margin-top: 6px; }
+
+    .brand {
+      display: flex; align-items: center; gap: 12px;
+    }
+
+    .logo {
+      width: 42px; height: 42px; border-radius: 12px;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.18), rgba(16,163,127,0.28));
+      border: 1px solid rgba(255,255,255,0.08);
+      display: grid; place-items: center;
+      box-shadow: 0 10px 24px var(--shadow-soft);
+      font-weight: 700; color: var(--accent);
+      font-size: 18px;
+    }
+
+    .title-wrap h1 {
+      margin: 0; font-size: clamp(1.8rem, 3vw, 2.7rem); letter-spacing: -0.05em;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      margin-top: 4px; color: var(--muted); font-size: 14px;
+    }
+
+    .toolbar {
+      display: flex; align-items: center; gap: 12px;
+      flex-wrap: wrap;
+    }
+
     .button {
-      appearance: none; border: 1px solid var(--line); background: var(--panel); color: var(--text);
-      border-radius: 12px; padding: 10px 16px; font: inherit; cursor: pointer;
+      appearance: none; border: 1px solid var(--line); border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      color: var(--text); padding: 10px 14px; cursor: pointer; font: inherit;
+      transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
     }
-    .button:hover { border-color: #5d5d5d; }
+
+    .button:hover {
+      border-color: rgba(255,255,255,0.2);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+    }
+
+    .button.primary {
+      background: linear-gradient(135deg, rgba(16,163,127,.18), rgba(16,163,127,.08));
+      border-color: rgba(16,163,127,.42);
+      color: #d8fff5;
+    }
 
     .stats {
       display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 16px; margin-bottom: 18px;
     }
+
     .stat {
-      background: linear-gradient(180deg, var(--panel), var(--panel-2));
-      border: 1px solid var(--line); border-radius: 18px; padding: 18px 18px 16px;
-      box-shadow: 0 10px 26px var(--shadow);
+      position: relative;
+      background: linear-gradient(180deg, rgba(27,27,27,1), rgba(23,23,23,1));
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px 18px 16px;
+      box-shadow: 0 12px 26px var(--shadow);
+      overflow: hidden;
     }
+
+    .stat::before {
+      content: "";
+      position: absolute; inset: 0 auto auto 0;
+      width: 100%; height: 3px;
+      background: linear-gradient(90deg, rgba(16,163,127,1), rgba(122,255,213,0.2));
+    }
+
     .stat small {
-      display: block; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; font-size: 11px; margin-bottom: 8px;
+      display: block; letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+      font-size: 11px; margin-bottom: 10px;
     }
+
     .stat strong {
-      display: block; font-size: clamp(1.7rem, 2vw, 2.4rem); font-weight: 700;
+      display: block; font-size: clamp(1.9rem, 2vw, 2.5rem); font-weight: 700; letter-spacing: -0.06em;
     }
-    .stat .trend {
+
+    .trend {
       margin-top: 8px; font-size: 12px; color: var(--muted);
     }
 
-    .grid {
-      display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; margin-top: 18px;
-    }
-    .panel {
-      background: linear-gradient(180deg, var(--panel), var(--panel-2));
-      border: 1px solid var(--line); border-radius: 18px; padding: 18px; box-shadow: 0 10px 26px var(--shadow);
-    }
-    .panel h3 {
-      margin: 0 0 14px; font-size: 1.1rem;
+    .row {
+      display: grid; grid-template-columns: 1.4fr .95fr; gap: 18px; margin-top: 18px;
     }
 
-    .hour-grid {
-      display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 8px; align-items: end; height: 180px; margin-top: 10px;
+    .panel {
+      background: linear-gradient(180deg, rgba(28,28,28,1), rgba(23,23,23,1));
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 12px 30px var(--shadow);
     }
-    .hour-col {
-      background: linear-gradient(180deg, rgba(16,163,127,0.95), rgba(16,163,127,0.3));
-      border-radius: 10px 10px 0 0;
-      min-height: 6px; position: relative;
-      transition: transform .2s ease;
+
+    .panel-header {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      margin-bottom: 18px;
     }
-    .hour-col span {
-      position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%);
+
+    .panel-header h3 {
+      margin: 0; font-size: 1.08rem; font-weight: 600;
+    }
+
+    .mini-tag {
+      border: 1px solid var(--line); background: rgba(255,255,255,0.02); color: var(--muted);
+      border-radius: 999px; padding: 4px 10px; font-size: 11px;
+    }
+
+    .line-chart {
+      width: 100%; height: 220px; border-radius: 14px; background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+      border: 1px solid rgba(255,255,255,0.04);
+      padding: 10px;
+    }
+
+    .donut-box {
+      display: flex; align-items: center; justify-content: center; min-height: 220px;
+      position: relative;
+    }
+
+    .donut {
+      width: 170px; height: 170px; border-radius: 50%;
+      background: conic-gradient(var(--accent) 0 72%, #2f2f2f 72% 100%);
+      position: relative; box-shadow: inset 0 0 30px rgba(0,0,0,0.18);
+    }
+
+    .donut::before {
+      content: "";
+      position: absolute; inset: 20px;
+      background: var(--panel);
+      border-radius: 50%;
+      border: 1px solid var(--line);
+    }
+
+    .donut-center {
+      position: absolute; inset: 0; display: grid; place-items: center; text-align: center;
+      font-weight: 700;
+    }
+
+    .donut-center .big { font-size: 1.8rem; }
+    .donut-center .small { font-size: 11px; color: var(--muted); }
+
+    .bar-chart {
+      display: flex; align-items: end; gap: 8px; height: 180px;
+      padding-top: 12px;
+      position: relative;
+    }
+
+    .bar-wrap {
+      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 10px;
+      height: 100%;
+    }
+
+    .bar {
+      width: 100%; max-width: 18px; border-radius: 9px 9px 0 0;
+      background: linear-gradient(180deg, rgba(52,211,154,.95), rgba(16,163,127,.3));
+      box-shadow: inset 0 0 16px rgba(255,255,255,0.06);
+      min-height: 10px;
+    }
+
+    .bar-label {
       font-size: 10px; color: var(--muted);
     }
-    .hour-col:hover { transform: translateY(-2px); }
 
-    table {
-      width: 100%; border-collapse: collapse; font-size: 14px;
-    }
-    th, td {
-      padding: 10px 8px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top;
-    }
-    th { color: var(--muted); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
-    .tag {
-      display: inline-block; padding: 4px 8px; border-radius: 999px; border: 1px solid var(--line); font-size: 11px;
-    }
-    .tag.success { background: rgba(46,194,126,0.15); color: #b7f2d3; }
-    .tag.fail { background: rgba(255,107,107,0.12); color: #ffb3b3; }
-
-    ul.list {
+    .list {
       list-style: none; padding: 0; margin: 0; display: grid; gap: 10px;
     }
-    ul.list li {
-      display: flex; align-items: center; justify-content: space-between; gap: 10px;
-      padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,0.02);
+
+    .list li {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 11px 12px; border: 1px solid var(--line); border-radius: 12px;
+      background: rgba(255,255,255,0.02);
     }
+
+    .list .left {
+      display: flex; flex-direction: column; gap: 2px; min-width: 0;
+    }
+
+    .list .name {
+      font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .list .meta {
+      color: var(--muted); font-size: 12px;
+    }
+
+    .list .count {
+      font-weight: 700; font-size: 15px;
+      color: #d8fff5;
+    }
+
+    table {
+      width: 100%; border-collapse: collapse; overflow: hidden;
+      font-size: 14px;
+    }
+
+    th, td {
+      padding: 12px 10px; border-bottom: 1px solid var(--line);
+      text-align: left; vertical-align: top;
+    }
+
+    th {
+      font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+    }
+
+    td.prompt {
+      max-width: 360px; color: var(--text);
+      white-space: normal; word-break: break-word;
+    }
+
+    .status {
+      display: inline-block; padding: 4px 9px; border-radius: 999px; font-size: 11px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.02);
+    }
+
+    .status.success {
+      color: #c8ffe8; background: rgba(53,211,154,0.12); border-color: rgba(53,211,154,0.22);
+    }
+
+    .status.failed {
+      color: #ffd0d0; background: rgba(255,107,107,0.12); border-color: rgba(255,107,107,0.22);
+    }
+
     .muted { color: var(--muted); }
 
-    @media (max-width: 900px) {
-      .grid { grid-template-columns: 1fr; }
+    @media (max-width: 980px) {
+      .row { grid-template-columns: 1fr; }
       body { padding: 18px; }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="topbar">
-      <div>
-        <h1 class="title">Alpha-O Admin Dashboard</h1>
-        <div class="subtitle">Traffic, requests, activity, and response metrics</div>
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">A</div>
+        <div class="title-wrap">
+          <h1>Alpha-O</h1>
+          <div class="subtitle">Analytics dashboard</div>
+        </div>
       </div>
-      <button class="button" id="resetBtn">Reset demo data</button>
-    </div>
+      <div class="toolbar">
+        <button class="button" id="refreshBtn">Refresh</button>
+        <button class="button primary" id="resetBtn">Reset demo data</button>
+      </div>
+    </header>
 
     <section class="stats">
       <div class="stat">
@@ -147,21 +309,57 @@
       </div>
     </section>
 
-    <section class="grid">
+    <div class="row">
       <div class="panel">
-        <h3>Hourly activity</h3>
-        <div class="hour-grid" id="hourGrid"></div>
+        <div class="panel-header">
+          <h3>Requests over time</h3>
+          <span class="mini-tag">Last 7 days</span>
+        </div>
+        <svg id="lineChart" class="line-chart" viewBox="0 0 700 220" preserveAspectRatio="none" aria-label="Requests trend chart"></svg>
       </div>
 
       <div class="panel">
-        <h3>Traffic summary</h3>
-        <ul class="list" id="trafficSummary"></ul>
+        <div class="panel-header">
+          <h3>Response health</h3>
+          <span class="mini-tag">Current</span>
+        </div>
+        <div class="donut-box">
+          <div class="donut" id="donutChart">
+            <div class="donut-center">
+              <div>
+                <div class="big" id="donutValue">0%</div>
+                <div class="small">success</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </section>
+    </div>
 
-    <section class="grid">
+    <div class="row">
       <div class="panel">
-        <h3>Recent requests</h3>
+        <div class="panel-header">
+          <h3>Hourly traffic</h3>
+          <span class="mini-tag" id="busiestHourLabel">0:00</span>
+        </div>
+        <div class="bar-chart" id="hourBars"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <h3>Top prompts</h3>
+          <span class="mini-tag">Most repeated</span>
+        </div>
+        <ul class="list" id="topPrompts"></ul>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top: 18px;">
+      <div class="panel" style="grid-column: 1 / -1;">
+        <div class="panel-header">
+          <h3>Recent requests</h3>
+          <span class="mini-tag" id="recentCount">0 entries</span>
+        </div>
         <table>
           <thead>
             <tr>
@@ -174,40 +372,35 @@
           <tbody id="requestTable"></tbody>
         </table>
       </div>
-
-      <div class="panel">
-        <h3>Top prompts</h3>
-        <ul class="list" id="topPrompts"></ul>
-      </div>
-    </section>
+    </div>
   </div>
 
   <script>
     const STORAGE_KEY = "alphaO_analytics";
-    const MAX_ITEMS = 2500;
 
     function loadAnalytics() {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) {
-          return { visits: [], requests: [] };
-        }
+        if (!raw) return { visits: [], requests: [] };
         const parsed = JSON.parse(raw);
-        return { visits: Array.isArray(parsed.visits) ? parsed.visits : [], requests: Array.isArray(parsed.requests) ? parsed.requests : [] };
+        return {
+          visits: Array.isArray(parsed.visits) ? parsed.visits : [],
+          requests: Array.isArray(parsed.requests) ? parsed.requests : []
+        };
       } catch (error) {
         return { visits: [], requests: [] };
       }
     }
 
-    function formatTime(ts) {
-      const d = new Date(ts);
-      return d.toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
-    }
-
     function shortPrompt(prompt) {
       const text = (prompt || "").trim();
       if (!text) return "No prompt";
-      return text.length > 60 ? text.slice(0, 60) + "..." : text;
+      return text.length > 72 ? text.slice(0, 72) + "..." : text;
+    }
+
+    function formatTime(ts) {
+      const d = new Date(ts);
+      return d.toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
     }
 
     function uniqueVisitors(visits) {
@@ -216,13 +409,109 @@
       return set.size;
     }
 
-    function calcHourlyData(items) {
+    function getHourCounts(items) {
       const counts = new Array(24).fill(0);
       items.forEach(item => {
         const hour = new Date(item.ts).getHours();
         counts[hour] += 1;
       });
       return counts;
+    }
+
+    function makeLineChart(points, maxValue) {
+      const svg = document.getElementById("lineChart");
+      if (!svg) return;
+      svg.innerHTML = "";
+
+      const width = 700; const height = 220; const padding = 28;
+      const innerWidth = width - padding * 2;
+      const innerHeight = height - padding * 2;
+
+      const grid = [0, 0.25, 0.5, 0.75, 1].map(p => {
+        const y = padding + innerHeight * (1 - p);
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", padding);
+        line.setAttribute("x2", width - padding);
+        line.setAttribute("y1", y);
+        line.setAttribute("y2", y);
+        line.setAttribute("stroke", "rgba(255,255,255,0.08)");
+        line.setAttribute("stroke-width", "1");
+        svg.appendChild(line);
+      });
+
+      const pathData = points.map((value, index) => {
+        const x = padding + (index / (points.length - 1)) * innerWidth;
+        const y = padding + innerHeight - (value / maxValue) * innerHeight;
+        return `${index === 0 ? "M" : "L"}${x},${y}`;
+      }).join(" ");
+
+      const areaData = `${pathData} L ${width - padding},${height - padding} L ${padding},${height - padding} Z`;
+
+      const area = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      area.setAttribute("d", areaData);
+      area.setAttribute("fill", "rgba(16,163,127,0.12)");
+      svg.appendChild(area);
+
+      const line = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      line.setAttribute("d", pathData);
+      line.setAttribute("fill", "none");
+      line.setAttribute("stroke", "#4fe0b2");
+      line.setAttribute("stroke-width", "3");
+      line.setAttribute("stroke-linecap", "round");
+      line.setAttribute("stroke-linejoin", "round");
+      svg.appendChild(line);
+
+      const dots = points.map((value, index) => {
+        const x = padding + (index / (points.length - 1)) * innerWidth;
+        const y = padding + innerHeight - (value / maxValue) * innerHeight;
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("cx", x);
+        circle.setAttribute("cy", y);
+        circle.setAttribute("r", "4");
+        circle.setAttribute("fill", "#d7fff3");
+        circle.setAttribute("stroke", "#10a37f");
+        circle.setAttribute("stroke-width", "2");
+        return circle;
+      });
+      dots.forEach(dot => svg.appendChild(dot));
+
+      const labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]; 
+      labels.forEach((label, index) => {
+        const x = padding + (index / (labels.length - 1)) * innerWidth;
+        const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        txt.setAttribute("x", x);
+        txt.setAttribute("y", height - 8);
+        txt.setAttribute("fill", "rgba(255,255,255,0.6)");
+        txt.setAttribute("font-size", "11");
+        txt.setAttribute("text-anchor", "middle");
+        txt.textContent = label;
+        svg.appendChild(txt);
+      });
+    }
+
+    function renderHourlyBars(items) {
+      const hourCounts = getHourCounts(items);
+      const maxValue = Math.max(...hourCounts, 1);
+      const bars = document.getElementById("hourBars");
+      bars.innerHTML = "";
+
+      hourCounts.forEach((count, index) => {
+        const wrap = document.createElement("div");
+        wrap.className = "bar-wrap";
+
+        const bar = document.createElement("div");
+        bar.className = "bar";
+        bar.style.height = `${Math.max(10, (count / maxValue) * 100)}%`;
+        bar.title = `${index}:00 — ${count} events`;
+
+        const label = document.createElement("div");
+        label.className = "bar-label";
+        label.textContent = `${index}`;
+
+        wrap.appendChild(bar);
+        wrap.appendChild(label);
+        bars.appendChild(wrap);
+      });
     }
 
     function renderStats() {
@@ -233,72 +522,42 @@
       const totalVisits = visits.length;
       const totalRequests = requests.length;
       const successCount = requests.filter(r => r.ok).length;
-      const avgResponse = requests.length ? (requests.reduce((sum, item) => sum + (Number(item.duration) || 0), 0) / requests.length) / 1000 : 0;
-
-      const unique = uniqueVisitors(visits);
       const successRate = totalRequests ? (successCount / totalRequests) * 100 : 0;
+      const avgResponse = totalRequests ? requests.reduce((sum, item) => sum + (Number(item.duration) || 0), 0) / totalRequests / 1000 : 0;
+      const unique = uniqueVisitors(visits);
 
       document.getElementById("totalVisits").textContent = totalVisits;
       document.getElementById("uniqueVisitors").textContent = unique;
       document.getElementById("totalRequests").textContent = totalRequests;
-      document.getElementById("successRate").textContent = Math.round(successRate) + "%";
-      document.getElementById("avgResponse").textContent = avgResponse.toFixed(1) + "s";
+      document.getElementById("successRate").textContent = `${Math.round(successRate)}%`;
+      document.getElementById("avgResponse").textContent = `${avgResponse.toFixed(1)}s`;
 
       document.getElementById("visitTrend").textContent = totalVisits ? "Tracked from current session data" : "No visits yet";
       document.getElementById("visitorTrend").textContent = unique ? "Distinct visitors recorded" : "No visitor IDs yet";
       document.getElementById("requestTrend").textContent = totalRequests ? "Requests captured successfully" : "No requests yet";
-      document.getElementById("successTrend").textContent = totalRequests ? successCount + " successful" : "No successful requests";
+      document.getElementById("successTrend").textContent = totalRequests ? `${successCount} successful` : "No successful requests";
       document.getElementById("responseTrend").textContent = totalRequests ? "Average request time" : "Waiting for activity";
 
-      const hourCounts = calcHourlyData([...visits, ...requests]);
-      const hourGrid = document.getElementById("hourGrid");
-      hourGrid.innerHTML = "";
+      const donut = document.getElementById("donutChart");
+      donut.style.background = `conic-gradient(var(--accent) 0 ${Math.max(0, Math.min(100, successRate))}%, rgba(255,255,255,0.08) ${Math.max(0, Math.min(100, successRate))}% 100%)`;
+      document.getElementById("donutValue").textContent = `${Math.round(successRate)}%`;
 
-      const maxVal = Math.max(...hourCounts, 1);
-      hourCounts.forEach((count, index) => {
-        const column = document.createElement("div");
-        column.className = "hour-col";
-        column.style.height = Math.max(10, (count / maxVal) * 100) + "%";
-        column.title = `${index}:00 — ${count} events`;
-        const label = document.createElement("span");
-        label.textContent = index;
-        column.appendChild(label);
-        hourGrid.appendChild(column);
-      });
-
-      const trafficSummary = document.getElementById("trafficSummary");
-      trafficSummary.innerHTML = "";
-      const summaryItems = [
-        { label: "Page views", value: totalVisits },
-        { label: "AI requests", value: totalRequests },
-        { label: "Successful replies", value: successCount },
-        { label: "Failed requests", value: totalRequests - successCount },
-        { label: "Busiest hour", value: getBusiestHour([...visits, ...requests]) }
-      ];
-
-      summaryItems.forEach(item => {
-        const li = document.createElement("li");
-        li.innerHTML = `<span>${item.label}</span><strong>${item.value}</strong>`;
-        trafficSummary.appendChild(li);
-      });
-
-      const requestTable = document.getElementById("requestTable");
-      requestTable.innerHTML = "";
-      const recent = [...requests].reverse().slice(0, 8);
-      if (!recent.length) {
-        requestTable.innerHTML = `<tr><td colspan="4" class="muted">No request activity yet.</td></tr>`;
-      } else {
-        recent.forEach(item => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${formatTime(item.ts)}</td>
-            <td>${shortPrompt(item.prompt)}</td>
-            <td><span class="tag ${item.ok ? "success" : "fail"}">${item.ok ? "Success" : "Failed"}</span></td>
-            <td>${((Number(item.duration) || 0) / 1000).toFixed(1)}s</td>
-          `;
-          requestTable.appendChild(tr);
-        });
+      const entries = [];
+      const today = new Date();
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - i);
+        const key = date.toISOString().slice(0, 10);
+        const count = requests.filter(r => r.dateKey === key).length;
+        entries.push(count);
       }
+
+      const maxTrend = Math.max(...entries, 1);
+      makeLineChart(entries, maxTrend);
+      renderHourlyBars([...visits, ...requests]);
+
+      const highestHour = getBusiestHour([...visits, ...requests]);
+      document.getElementById("busiestHourLabel").textContent = highestHour;
 
       const topPrompts = document.getElementById("topPrompts");
       topPrompts.innerHTML = "";
@@ -309,14 +568,42 @@
         counts[text] = (counts[text] || 0) + 1;
       });
 
-      const sortedPromptEntries = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 6);
-      if (!sortedPromptEntries.length) {
-        topPrompts.innerHTML = '<li><span class="muted">No prompts recorded yet</span></li>';
-      } else {
-        sortedPromptEntries.forEach(([prompt, count]) => {
+      Object.entries(counts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .forEach(([prompt, count]) => {
           const li = document.createElement("li");
-          li.innerHTML = `<span>${shortPrompt(prompt)}</span><strong>${count}</strong>`;
+          li.innerHTML = `
+            <div class="left">
+              <div class="name">${shortPrompt(prompt)}</div>
+              <div class="meta">Repeated request</div>
+            </div>
+            <div class="count">${count}</div>
+          `;
           topPrompts.appendChild(li);
+        });
+
+      if (!topPrompts.children.length) {
+        topPrompts.innerHTML = '<li><span class="muted">No prompts recorded yet</span></li>';
+      }
+
+      const requestTable = document.getElementById("requestTable");
+      requestTable.innerHTML = "";
+      const recent = [...requests].reverse().slice(0, 8);
+      document.getElementById("recentCount").textContent = `${recent.length} entries`;
+
+      if (!recent.length) {
+        requestTable.innerHTML = '<tr><td colspan="4" class="muted">No request activity yet.</td></tr>';
+      } else {
+        recent.forEach(item => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${formatTime(item.ts)}</td>
+            <td class="prompt">${shortPrompt(item.prompt)}</td>
+            <td><span class="status ${item.ok ? "success" : "failed"}">${item.ok ? "Success" : "Failed"}</span></td>
+            <td>${((Number(item.duration) || 0) / 1000).toFixed(1)}s</td>
+          `;
+          requestTable.appendChild(tr);
         });
       }
     }
@@ -331,6 +618,7 @@
       return `${maxHour}:00`;
     }
 
+    document.getElementById("refreshBtn").addEventListener("click", renderStats);
     document.getElementById("resetBtn").addEventListener("click", () => {
       if (confirm("Clear all stored analytics data?")) {
         localStorage.removeItem(STORAGE_KEY);
