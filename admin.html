@@ -6,55 +6,123 @@
   <title>Alpha-O Admin Dashboard</title>
   <style>
     :root {
-      --bg: #121212;
-      --side: #171717;
-      --panel: #1c1c1c;
-      --panel-2: #202020;
-      --line: #2d2d2d;
-      --text: #f0f0f0;
-      --muted: #9f9f9f;
-      --accent: #10a37f;
-      --accent-2: #179d8b;
-      --accent-soft: rgba(16,163,127,0.16);
+      --bg: #0b0f14;
+      --bg-2: #111b20;
+      --side: #131a1d;
+      --panel: rgba(19, 26, 29, 0.92);
+      --panel-2: rgba(24, 32, 36, 0.95);
+      --line: rgba(148, 163, 184, 0.15);
+      --line-strong: rgba(115, 225, 197, 0.35);
+      --text: #edf6f7;
+      --muted: #9caab2;
+      --accent: #40e0b0;
+      --accent-2: #4cc9f0;
+      --accent-soft: rgba(64, 224, 176, 0.18);
       --success: #35d39a;
       --danger: #ff6b6b;
       --warning: #f7c948;
-      --shadow: rgba(0,0,0,0.28);
-      --shadow-soft: rgba(16,163,127,0.18);
+      --shadow: rgba(0, 0, 0, 0.32);
+      --shadow-soft: rgba(64, 224, 176, 0.18);
       --white-soft: rgba(255,255,255,0.04);
+      --glow: rgba(76, 201, 240, 0.25);
     }
 
     * { box-sizing: border-box; }
-    html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); font-family: "Segoe UI", system-ui, sans-serif; }
+    html, body { margin: 0; min-height: 100%; background:
+      radial-gradient(circle at top left, rgba(64,224,176,0.10), transparent 30%),
+      radial-gradient(circle at bottom right, rgba(76,201,240,0.10), transparent 25%),
+      var(--bg); color: var(--text); font-family: "Segoe UI", system-ui, sans-serif; }
     body { padding: 24px; }
     .wrap { max-width: 1280px; margin: 0 auto; }
 
     .topbar {
       display: flex; align-items: center; justify-content: space-between;
       gap: 18px; margin-bottom: 26px;
+      flex-wrap: wrap;
     }
 
     .brand {
-      display: flex; align-items: center; gap: 12px;
+      display: flex; align-items: center; gap: 14px;
+      min-width: 0;
     }
 
-    .logo {
-      width: 42px; height: 42px; border-radius: 12px;
-      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.18), rgba(16,163,127,0.28));
-      border: 1px solid rgba(255,255,255,0.08);
+    .logo-shell {
+      position: relative;
       display: grid; place-items: center;
-      box-shadow: 0 10px 24px var(--shadow-soft);
-      font-weight: 700; color: var(--accent);
-      font-size: 18px;
+      width: 52px; height: 52px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(76,201,240,0.18), rgba(64,224,176,0.28));
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 18px 36px var(--shadow-soft);
+      overflow: hidden;
+    }
+
+    .logo-shell::before {
+      content: "";
+      position: absolute; inset: 0;
+      background: linear-gradient(120deg, transparent 25%, rgba(255,255,255,0.18), transparent 75%);
+      transform: translateX(-120%);
+      transition: transform 0.7s ease;
+    }
+
+    .brand:hover .logo-shell::before {
+      transform: translateX(120%);
+    }
+
+    .logo-mark {
+      position: relative;
+      z-index: 1;
+      width: 30px; height: 30px;
+      display: grid; place-items: center;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #dffefa, rgba(64,224,176,0.32) 25%, rgba(18,36,40,0.4));
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: inset 0 0 20px rgba(255,255,255,0.08);
+      color: var(--accent);
+      font-weight: 800;
+      font-size: 15px;
+      letter-spacing: -0.08em;
+    }
+
+    .logo-mark::after {
+      content: "";
+      position: absolute; inset: -7px;
+      border-radius: 50%;
+      border: 1px solid rgba(64,224,176,0.35);
+      opacity: 0.7;
     }
 
     .title-wrap h1 {
       margin: 0; font-size: clamp(1.8rem, 3vw, 2.7rem); letter-spacing: -0.05em;
       font-weight: 700;
+      line-height: 1;
     }
 
     .subtitle {
       margin-top: 4px; color: var(--muted); font-size: 14px;
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+
+    .live-pill {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 4px 9px; border-radius: 999px;
+      background: rgba(53,211,154,0.08);
+      border: 1px solid rgba(53,211,154,0.2);
+      color: #d1ffed;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .live-dot {
+      width: 8px; height: 8px; background: var(--success); border-radius: 50%;
+      box-shadow: 0 0 16px rgba(53,211,154,0.8);
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.5); opacity: 0.65; }
     }
 
     .toolbar {
@@ -66,19 +134,56 @@
       appearance: none; border: 1px solid var(--line); border-radius: 12px;
       background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
       color: var(--text); padding: 10px 14px; cursor: pointer; font: inherit;
-      transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
+      position: relative; overflow: hidden;
+    }
+
+    .button::before {
+      content: "";
+      position: absolute; inset: 0;
+      background: linear-gradient(120deg, transparent 10%, rgba(255,255,255,0.12), transparent 90%);
+      transform: translateX(-120%);
+      transition: transform .6s ease;
+    }
+
+    .button:hover::before {
+      transform: translateX(120%);
     }
 
     .button:hover {
       border-color: rgba(255,255,255,0.2);
-      transform: translateY(-1px);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+      transform: translateY(-2px) scale(1.01);
+      box-shadow: 0 12px 22px rgba(0,0,0,0.2);
     }
 
     .button.primary {
-      background: linear-gradient(135deg, rgba(16,163,127,.18), rgba(16,163,127,.08));
-      border-color: rgba(16,163,127,.42);
+      background: linear-gradient(135deg, rgba(64,224,176,.18), rgba(76,201,240,.08));
+      border-color: rgba(64,224,176,.42);
       color: #d8fff5;
+    }
+
+    .ghost-hover {
+      position: relative;
+      overflow: hidden;
+      transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+    }
+
+    .ghost-hover:hover {
+      transform: translateY(-3px);
+      border-color: rgba(64,224,176,.3);
+      box-shadow: 0 18px 28px rgba(15,20,24,0.34), 0 0 0 1px rgba(64,224,176,0.08);
+    }
+
+    .ghost-hover::before {
+      content: "";
+      position: absolute; inset: 0;
+      background: linear-gradient(120deg, transparent 10%, rgba(255,255,255,0.08), transparent 90%);
+      transform: translateX(-120%);
+      transition: transform .7s ease;
+    }
+
+    .ghost-hover:hover::before {
+      transform: translateX(120%);
     }
 
     .stats {
@@ -94,13 +199,14 @@
       padding: 18px 18px 16px;
       box-shadow: 0 12px 26px var(--shadow);
       overflow: hidden;
+      min-height: 150px;
     }
 
     .stat::before {
       content: "";
       position: absolute; inset: 0 auto auto 0;
       width: 100%; height: 3px;
-      background: linear-gradient(90deg, rgba(16,163,127,1), rgba(122,255,213,0.2));
+      background: linear-gradient(90deg, rgba(64,224,176,1), rgba(76,201,240,0.35));
     }
 
     .stat small {
@@ -121,16 +227,31 @@
     }
 
     .panel {
-      background: linear-gradient(180deg, rgba(28,28,28,1), rgba(23,23,23,1));
+      background: linear-gradient(180deg, rgba(28,28,28,0.98), rgba(23,23,23,1));
       border: 1px solid var(--line);
       border-radius: 18px;
       padding: 18px;
       box-shadow: 0 12px 30px var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .panel::after {
+      content: "";
+      position: absolute; inset: auto 0 0 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(64,224,176,0.4), transparent);
+      opacity: 0;
+      transition: opacity .2s ease;
+    }
+
+    .panel:hover::after {
+      opacity: 1;
     }
 
     .panel-header {
       display: flex; align-items: center; justify-content: space-between; gap: 12px;
       margin-bottom: 18px;
+      position: relative; z-index: 1;
     }
 
     .panel-header h3 {
@@ -140,6 +261,24 @@
     .mini-tag {
       border: 1px solid var(--line); background: rgba(255,255,255,0.02); color: var(--muted);
       border-radius: 999px; padding: 4px 10px; font-size: 11px;
+    }
+
+    .chip-row {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .chip {
+      appearance: none; background: rgba(255,255,255,0.02); border: 1px solid var(--line);
+      color: var(--muted); padding: 7px 10px; border-radius: 999px; font-size: 11px;
+      letter-spacing: .06em; text-transform: uppercase; cursor: pointer; transition: all .2s ease;
+    }
+
+    .chip.active, .chip:hover {
+      border-color: rgba(64,224,176,.28);
+      color: #ddfff6;
+      background: rgba(64,224,176,.08);
+      box-shadow: inset 0 0 18px rgba(64,224,176,.05);
     }
 
     .line-chart {
@@ -156,7 +295,13 @@
     .donut {
       width: 170px; height: 170px; border-radius: 50%;
       background: conic-gradient(var(--accent) 0 72%, #2f2f2f 72% 100%);
-      position: relative; box-shadow: inset 0 0 30px rgba(0,0,0,0.18);
+      position: relative; box-shadow: inset 0 0 30px rgba(0,0,0,0.18), 0 18px 30px rgba(11,15,20,0.45);
+      transition: transform .22s ease, box-shadow .22s ease;
+    }
+
+    .donut:hover {
+      transform: scale(1.04);
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.18), 0 22px 40px rgba(11,15,20,0.5), 0 0 30px rgba(64,224,176,.08);
     }
 
     .donut::before {
@@ -191,6 +336,14 @@
       background: linear-gradient(180deg, rgba(52,211,154,.95), rgba(16,163,127,.3));
       box-shadow: inset 0 0 16px rgba(255,255,255,0.06);
       min-height: 10px;
+      transition: transform .18s ease, filter .18s ease;
+      cursor: pointer;
+    }
+
+    .bar:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.12);
+      box-shadow: 0 8px 18px rgba(64,224,176,0.16);
     }
 
     .bar-label {
@@ -205,6 +358,13 @@
       display: flex; align-items: center; justify-content: space-between; gap: 12px;
       padding: 11px 12px; border: 1px solid var(--line); border-radius: 12px;
       background: rgba(255,255,255,0.02);
+      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+    }
+
+    .list li:hover {
+      transform: translateX(2px);
+      border-color: rgba(64,224,176,.24);
+      background: rgba(64,224,176,0.04);
     }
 
     .list .left {
@@ -243,6 +403,14 @@
       white-space: normal; word-break: break-word;
     }
 
+    tbody tr {
+      transition: background .16s ease, transform .16s ease;
+    }
+
+    tbody tr:hover {
+      background: rgba(255,255,255,0.02);
+    }
+
     .status {
       display: inline-block; padding: 4px 9px; border-radius: 999px; font-size: 11px;
       border: 1px solid var(--line);
@@ -268,41 +436,52 @@
 <body>
   <div class="wrap">
     <header class="topbar">
-      <div class="brand">
-        <div class="logo">A</div>
+      <div class="brand ghost-hover" style="padding: 10px 12px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.01);">
+        <div class="logo-shell" aria-label="Alpha-O logo">
+          <div class="logo-mark">A</div>
+        </div>
         <div class="title-wrap">
           <h1>Alpha-O</h1>
-          <div class="subtitle">Analytics dashboard</div>
+          <div class="subtitle">
+            <span>Analytics dashboard</span>
+            <span class="live-pill"><span class="live-dot"></span> Live</span>
+          </div>
         </div>
       </div>
       <div class="toolbar">
-        <button class="button" id="refreshBtn">Refresh</button>
-        <button class="button primary" id="resetBtn">Reset demo data</button>
+        <button class="button ghost-hover" id="refreshBtn">Refresh</button>
+        <button class="button primary ghost-hover" id="resetBtn">Reset demo data</button>
       </div>
     </header>
 
+    <div class="chip-row" aria-label="Date range filters">
+      <button class="chip active" data-range="7">7 days</button>
+      <button class="chip" data-range="30">30 days</button>
+      <button class="chip" data-range="90">90 days</button>
+    </div>
+
     <section class="stats">
-      <div class="stat">
+      <div class="stat ghost-hover">
         <small>Total visits</small>
         <strong id="totalVisits">0</strong>
         <div class="trend" id="visitTrend">—</div>
       </div>
-      <div class="stat">
+      <div class="stat ghost-hover">
         <small>Unique visitors</small>
         <strong id="uniqueVisitors">0</strong>
         <div class="trend" id="visitorTrend">—</div>
       </div>
-      <div class="stat">
+      <div class="stat ghost-hover">
         <small>Requests</small>
         <strong id="totalRequests">0</strong>
         <div class="trend" id="requestTrend">—</div>
       </div>
-      <div class="stat">
+      <div class="stat ghost-hover">
         <small>Success rate</small>
         <strong id="successRate">0%</strong>
         <div class="trend" id="successTrend">—</div>
       </div>
-      <div class="stat">
+      <div class="stat ghost-hover">
         <small>Avg response</small>
         <strong id="avgResponse">0s</strong>
         <div class="trend" id="responseTrend">—</div>
@@ -310,15 +489,15 @@
     </section>
 
     <div class="row">
-      <div class="panel">
+      <div class="panel ghost-hover">
         <div class="panel-header">
           <h3>Requests over time</h3>
-          <span class="mini-tag">Last 7 days</span>
+          <span class="mini-tag" id="rangeLabel">Last 7 days</span>
         </div>
         <svg id="lineChart" class="line-chart" viewBox="0 0 700 220" preserveAspectRatio="none" aria-label="Requests trend chart"></svg>
       </div>
 
-      <div class="panel">
+      <div class="panel ghost-hover">
         <div class="panel-header">
           <h3>Response health</h3>
           <span class="mini-tag">Current</span>
@@ -337,7 +516,7 @@
     </div>
 
     <div class="row">
-      <div class="panel">
+      <div class="panel ghost-hover">
         <div class="panel-header">
           <h3>Hourly traffic</h3>
           <span class="mini-tag" id="busiestHourLabel">0:00</span>
@@ -345,7 +524,7 @@
         <div class="bar-chart" id="hourBars"></div>
       </div>
 
-      <div class="panel">
+      <div class="panel ghost-hover">
         <div class="panel-header">
           <h3>Top prompts</h3>
           <span class="mini-tag">Most repeated</span>
@@ -355,7 +534,7 @@
     </div>
 
     <div class="row" style="margin-top: 18px;">
-      <div class="panel" style="grid-column: 1 / -1;">
+      <div class="panel ghost-hover" style="grid-column: 1 / -1;">
         <div class="panel-header">
           <h3>Recent requests</h3>
           <span class="mini-tag" id="recentCount">0 entries</span>
@@ -377,6 +556,7 @@
 
   <script>
     const STORAGE_KEY = "alphaO_analytics";
+    let rangeSelection = "7";
 
     function loadAnalytics() {
       try {
@@ -416,6 +596,12 @@
         counts[hour] += 1;
       });
       return counts;
+    }
+
+    function getRangeEntries(requests, days) {
+      const now = Date.now();
+      const cutoff = now - (days * 24 * 60 * 60 * 1000);
+      return requests.filter(item => new Date(item.ts).getTime() >= cutoff);
     }
 
     function makeLineChart(points, maxValue) {
@@ -475,7 +661,7 @@
       });
       dots.forEach(dot => svg.appendChild(dot));
 
-      const labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]; 
+      const labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
       labels.forEach((label, index) => {
         const x = padding + (index / (labels.length - 1)) * innerWidth;
         const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -516,8 +702,16 @@
 
     function renderStats() {
       const analytics = loadAnalytics();
-      const visits = analytics.visits;
-      const requests = analytics.requests;
+      let visits = analytics.visits;
+      let requests = analytics.requests;
+
+      if (rangeSelection !== "all") {
+        requests = getRangeEntries(requests, Number(rangeSelection));
+        visits = visits.filter(item => {
+          const diff = Date.now() - new Date(item.ts).getTime();
+          return diff <= Number(rangeSelection) * 24 * 60 * 60 * 1000;
+        });
+      }
 
       const totalVisits = visits.length;
       const totalRequests = requests.length;
@@ -544,7 +738,8 @@
 
       const entries = [];
       const today = new Date();
-      for (let i = 6; i >= 0; i--) {
+      const rangeDays = Number(rangeSelection) || 7;
+      for (let i = rangeDays - 1; i >= 0; i--) {
         const date = new Date(today);
         date.setDate(today.getDate() - i);
         const key = date.toISOString().slice(0, 10);
@@ -553,6 +748,7 @@
       }
 
       const maxTrend = Math.max(...entries, 1);
+      document.getElementById("rangeLabel").textContent = `Last ${rangeDays} days`;
       makeLineChart(entries, maxTrend);
       renderHourlyBars([...visits, ...requests]);
 
@@ -624,6 +820,15 @@
         localStorage.removeItem(STORAGE_KEY);
         renderStats();
       }
+    });
+
+    document.querySelectorAll(".chip").forEach(button => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll(".chip").forEach(chip => chip.classList.remove("active"));
+        button.classList.add("active");
+        rangeSelection = button.dataset.range;
+        renderStats();
+      });
     });
 
     renderStats();
