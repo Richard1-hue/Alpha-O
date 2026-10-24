@@ -30,7 +30,7 @@ main::before{content:"";position:absolute;top:-140px;right:-100px;width:560px;he
 .top h2{font-size:16px;margin:0 0 0 6px;font-weight:500;color:var(--muted)}
 .bar{display:flex;gap:8px;align-items:center}
 #menu,#newTop{display:none}body.fold #menu,body.fold #newTop{display:inline-grid}
-button{position:relative;overflow:hidden;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:9px 14px;font-size:15px;cursor:pointer;font-family:inherit}
+button{position:relative;overflow:hidden;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:9px 14px;font-size:15px;cursor:pointer;font-family:inherit;transition:transform .25s,box-shadow .25s,border-color .25s}
 button::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.16) 50%,transparent 70%);transform:translateX(-130%)}
 button:hover{transform:translateY(-1px);border-color:#5c5c5c;box-shadow:0 6px 18px rgba(16,163,127,.22)}
 button:hover::after{transform:translateX(130%);transition:transform .7s}
@@ -82,7 +82,7 @@ footer{text-align:center;color:var(--muted);font-size:12.5px;padding:8px 16px 14
 @media(hover:none){.cp{opacity:1}}
 #tip{position:fixed;display:none;z-index:20;background:#0d0d0d;color:#fff;font-size:13px;padding:5px 10px;border-radius:8px;border:1px solid #333;pointer-events:none;white-space:nowrap}
 .vw{position:relative}
-#vmenu{position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:6px;min-width:190px;z-index:8;}
+#vmenu{position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:6px;min-width:190px;z-index:8;box-shadow:0 10px 30px rgba(0,0,0,.5)}
 .vopt{display:block;width:100%;text-align:left;border-radius:8px;background:none;border-color:transparent;padding:8px 12px}
 .vopt.on{background:rgba(16,163,127,.2)}
 .stp{margin-left:10px;color:var(--muted);font-style:italic;vertical-align:middle}.dots{display:inline-block}
@@ -108,66 +108,157 @@ footer{text-align:center;color:var(--muted);font-size:12.5px;padding:8px 16px 14
 .edit textarea{background:none;color:var(--text);border:0;outline:none;resize:vertical;font:inherit;font-size:16px;width:100%;min-width:240px}
 .edit .bar{justify-content:flex-end}
 .pri{background:var(--text);color:#171717;border-color:var(--text)}
+/* --- robot v2 / voice background --- */
+.rv2c{position:absolute;inset:0;width:100%;height:100%;z-index:1}
+#voice.rv2{background:#000}
+#voice.rv2>*:not(canvas):not(#ghosts){position:relative;z-index:2}
+#voice.rv2 #status{color:#b9bcc6}#voice.rv2 #face{animation:none;width:min(780px,96vw,calc(100vh - 200px))}
+/* --- theme, settings, extras --- */
+[data-theme="light"]{--bg:#fff;--side:#f4f4f6;--panel:#f0f0f3;--line:#d9d9df;--text:#1b1b1f;--muted:#6a6a74;--accent:#0d8a6a}
+[data-theme="light"] #send,[data-theme="light"] .pri{color:#fff}
+[data-theme="light"] .ts2{color:#1a7f37}[data-theme="light"] .tn{color:#b35900}[data-theme="light"] .tk{color:#6f42c1}[data-theme="light"] .tc{color:#6a737d}
+.ov2{position:fixed;inset:0;background:rgba(0,0,0,.55);display:grid;place-items:center;z-index:9;padding:16px}
+.mod{background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:16px;width:min(460px,100%);max-height:88vh;overflow:auto;padding:16px 20px 20px}
+.mh{display:flex;justify-content:space-between;align-items:center;font-size:18px}
+.mod h4{margin:16px 0 6px;font-size:13px;color:var(--muted);font-weight:600}
+.mod .note{margin:0;font-size:13.5px;line-height:1.55;color:var(--muted)}
+.seg{display:flex;gap:6px}.seg button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.mod select{width:100%;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:9px;font-size:15px;font-family:inherit}
+.sw{display:flex;gap:10px;align-items:center;margin-top:10px;font-size:14.5px}
+.dng{margin-top:8px;color:#ff6b6b;border-color:#ff6b6b;background:transparent}
+.shr{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:999px;font-size:14px}
+.shr svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#stop{width:36px;height:36px;padding:0;border-radius:50%;display:grid;place-items:center;background:var(--text);color:var(--bg);border-color:var(--text)}
+#toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:20}
+#toast.on{opacity:1}
+footer a{color:var(--muted)}
+.cb{border:1px solid var(--line);border-radius:10px;margin:0 0 .8em;overflow:hidden}
+.cb pre{border:0;border-radius:0;margin:0}
+.ch{display:flex;justify-content:space-between;align-items:center;background:var(--panel);padding:4px 10px;font-size:12px;color:var(--muted)}
+.cpb{padding:2px 10px;font-size:12px}
+.tc{color:#7f8aa3}.ts2{color:#8fe08f}.tn{color:#f2b36b}.tk{color:#b79bff}
+.tw{overflow-x:auto;margin:0 0 .8em}.msg table{border-collapse:collapse;min-width:60%}.msg th,.msg td{border:1px solid var(--line);padding:6px 10px;text-align:left}.msg th{background:var(--panel)}
+.fcard{display:inline-flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 12px;max-width:260px;margin-bottom:6px}
+.fcard.im{padding:0;overflow:hidden;width:72px;height:72px}.fcard img{width:100%;height:100%;object-fit:cover;display:block}
+.fi{width:36px;height:36px;border-radius:8px;background:#5b6cf0;display:grid;place-items:center;flex:none}
+.fi svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.fn{display:flex;flex-direction:column;min-width:0}.fn b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fn i{font-style:normal;font-size:12px;color:var(--muted)}
+#fname{display:inline-flex}#chip{align-items:center;gap:8px}
+.src{font-size:13px;color:var(--muted);margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.src a{color:var(--text);border:1px solid var(--line);border-radius:999px;padding:2px 10px;text-decoration:none}.src a:hover{border-color:var(--accent)}
+/* --- sidebar alignment --- */
+.sh{padding:2px 0 0 6px;gap:8px}.brand{white-space:nowrap;min-width:0}
+.srow{display:flex;align-items:center;gap:6px}
+.srow #newchat{flex:1;width:auto;min-width:0}
+.sh .ib,.srow .ib{flex:none;width:36px;height:36px;padding:0}
+/* --- voice mode: soft blurred shapes drifting in the background --- */
+#ghosts{display:none;position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+#voice.rv2 #ghosts{display:block}
+.gst{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.5) 0%,rgba(255,255,255,0) 68%);opacity:0;filter:blur(calc(var(--bs) * 1px));animation:gfloat 16s ease-in-out infinite}
+.g1{left:4%;top:58%;width:220px;height:220px;--bs:14}
+.g2{left:74%;top:10%;width:150px;height:150px;--bs:8;animation-delay:-4s;animation-duration:13s}
+.g3{left:56%;top:62%;width:300px;height:300px;--bs:22;animation-delay:-9s;animation-duration:21s}
+.g4{left:14%;top:8%;width:120px;height:120px;--bs:6;animation-delay:-2s;animation-duration:12s}
+.g5{left:38%;top:2%;width:200px;height:200px;--bs:18;animation-delay:-7s;animation-duration:18s}
+.g6{left:84%;top:52%;width:110px;height:110px;--bs:5;animation-delay:-11s;animation-duration:14s}
+@keyframes gfloat{0%{opacity:0;transform:translate(0,40px) scale(.9)}25%{opacity:.3}50%{opacity:.45;transform:translate(40px,-40px) scale(1.12)}80%{opacity:.25}100%{opacity:0;transform:translate(-30px,-90px) scale(.95)}}
+@media(prefers-reduced-motion:reduce){.gst{opacity:.25!important}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="defs"></defs></svg>
 <aside>
-  <div class="sh"><span class="brand"><svg class="lg" viewbox="0 0 64 64"><use href="#logo"/></svg>Alpha-O<span class="ver">v4.5</span></span>
-    <span><button class="ib" id="srch" data-tip="Search chats" data-ic="search" aria-label="Search chats"></button><button class="ib" id="fold" data-tip="Close sidebar" data-ic="panel" aria-label="Close sidebar"></button></span>
-  </div>
+  <div class="sh"><span class="brand"><svg class="lg" viewBox="0 0 64 64"><use href="#logo"/></svg>Alpha-O<span class="ver">v5.0</span></span><button class="ib" id="fold" data-tip="Close sidebar" data-ic="panel" aria-label="Hide sidebar"></button></div>
+  <div class="srow"><button id="newchat"><span data-ic="plus"></span>New chat</button><button class="ib" id="srch" data-tip="Search chats" data-ic="search" aria-label="Search chats"></button><button class="ib" id="gear" data-tip="Settings" data-ic="gear" aria-label="Settings"></button></div>
   <input id="q" placeholder="Search chats" hidden>
-  <button id="newchat"><span data-ic="plus"></span>New chat</button>
   <div id="list"></div>
-</aside>
+  </aside>
 <main>
   <div class="top">
-    <div class="bar"><button class="ib" id="menu" data-tip="Open sidebar" data-ic="panel" aria-label="Show sidebar"></button><h2>Alpha-O <span class="ver">v4.5</span></h2></div>
-    <div class="bar"><button class="ib" id="newTop" data-tip="New chat" data-ic="plus" aria-label="New chat"></button></div>
+    <div class="bar"><button class="ib" id="menu" data-tip="Open sidebar" data-ic="panel" aria-label="Show sidebar"></button><h2>Alpha-O <span class="ver">v5.0</span></h2></div>
+    <div class="bar"><button class="shr" id="share" data-tip="Share chat"><span data-ic="share"></span>Share</button><button class="ib" id="newTop" data-tip="New chat" data-ic="plus" aria-label="New chat"></button></div>
   </div>
   <div id="chat" aria-live="polite"></div>
   <div id="comp">
     <div id="chip"><span id="fname"></span><button id="clearfile" data-tip="Remove file" aria-label="Remove file">x</button></div>
     <div id="box">
       <textarea id="input" rows="1" placeholder="Ask Alpha-O anything or write your request..."></textarea>
-      <div class="tools"><button class="ib" id="attach" data-tip="Attach a file" data-ic="clip" aria-label="Attach a file"></button><span class="sp"></span><button class="ib" id="voiceBtn2" data-tip="Voice mode" data-ic="mic" aria-label="Voice mode"></button><button id="send" data-tip="Send" aria-label="Send message"><svg viewbox="0 0 24 24" aria-hidden="true"><path d="M4 12.5 18 4l-2.5 14-4.2-4.6-7.3-2.9z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg></button></div>
+      <div class="tools"><button class="ib" id="attach" data-tip="Attach a file" data-ic="clip" aria-label="Attach a file"></button><span class="sp"></span><button class="ib" id="voiceBtn2" data-tip="Voice mode" data-ic="wave" aria-label="Voice mode"></button><button id="stop" data-tip="Stop" data-ic="stop" aria-label="Stop" hidden></button><button id="send" data-tip="Send message" data-ic="up" aria-label="Send"></button></div>
     </div>
-    <footer><span id="copy"></span> Alpha-O can make mistakes. Check important information.</footer>
+    <footer><span id="copy"></span> Alpha-O can make mistakes. Check important information. <a href="#" id="priv">Privacy</a></footer>
   </div>
   <input type="file" id="file" hidden accept="image/*,.txt,.md,.csv,.json,.js,.py,.html,.css,.cs">
 </main>
+<div id="toast" role="status"></div>
+<div class="ov2" id="set" hidden><div class="mod" role="dialog" aria-label="Settings">
+  <div class="mh"><b>Settings</b><button class="ib" id="setx" data-ic="x" data-tip="Close" aria-label="Close"></button></div>
+  <h4>Theme</h4><div class="seg" id="segT"><button data-v="dark">Dark</button><button data-v="light">Light</button><button data-v="system">System</button></div>
+  <h4>Voice</h4><select id="selV" aria-label="Voice"></select>
+  <label class="sw"><input type="checkbox" id="swShort"> Short spoken answers in voice mode</label>
+  <label class="sw"><input type="checkbox" id="swSearch"> Search the web for answers (uses more free allowance)</label>
+  <h4>Privacy</h4><p class="note">Chats are saved only in this browser. To answer, your messages go through a Cloudflare Worker to Google Gemini, Groq, or Cloudflare Workers AI. Please do not share passwords or private information.</p>
+  <button class="dng" id="clrAll">Clear all history</button>
+  <h4>Keyboard shortcuts</h4><p class="note">Ctrl+K new chat, Ctrl+/ message box, Ctrl+B sidebar, Ctrl+, settings, Ctrl+Shift+V voice mode, Esc close.</p>
+</div></div>
 <div id="voice">
+  <div id="ghosts" aria-hidden="true"><i class="gst g1"></i><i class="gst g2"></i><i class="gst g3"></i><i class="gst g4"></i><i class="gst g5"></i><i class="gst g6"></i></div>
   <div id="face" role="img" aria-label="3D robot face"></div>
   <div id="status">Tap the mic and speak</div>
-  <div class="bar"><span class="vw"><button class="ib" id="vpick" data-ic="person" data-tip="Choose voice" aria-label="Choose voice"></button><div id="vmenu" hidden></div></span><button id="mic" class="ib" data-tip="Start listening" aria-label="Start listening">Start talking</button><button id="closeVoice" class="ib" data-tip="Close voice mode" aria-label="Close voice mode">Close</button></div>
+  <div class="bar"><span class="vw"><button class="ib" id="vpick" data-ic="person" data-tip="Choose voice" aria-label="Choose voice"></button><div id="vmenu" hidden></div></span><button id="mic" data-tip="Speak to Alpha-O">Start talking</button><button id="closeVoice" data-tip="Close voice mode">Close</button></div>
 </div>
 <script>
 const OWNER = "Ituze Richard";
-const LOGO_INNER = '<defs><radialGradient id="gH" cx="35%" cy="28%" r="80%"><stop offset="0" stop-color="#fff"/><stop offset=".55" stop-color="#c9ccd1"/><stop offset="1" stop-color="#6b7078"/></radialGradient><g fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c1.7-4.3 8.6-6 12.8-2.4 2.2 1.8 3.3 4.7 2.8 7.7-.7 3.8-3.9 6.9-7.6 7.7-3.6.7-7.8-.4-10-3.7-2.5-3.7-1.7-8.4 2-9.3z" fill="url(#gH)" stroke="none"/><path d="M16 31l7.6-10.5L31 26l4.3 3.1L47 20l3 3.3-11.4 15.3L30 44 16 31z"/><path d="M14 21l-3.5 3.7 7.3 4.5-2.9 2.8-8.7-4.9 7.8-5.1z"/><path d="M29 11l6.5 2.8M39 8l3.5 3M27 18l4.5 2"/></g></defs>';
-const LOGO_USE = '<svg viewbox="0 0 64 64" aria-hidden="true"><use href="#logo"/></svg>';
-const IC = {chat:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>',search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',panel:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 11h8M8 15h8"/>',plus:'<path d="M12 5v14M5 12h14"/>',mic:'<path d="M12 3a3 3 0 0 1 3 3v7a3 3 0 1 1-6 0V6a3 3 0 0 1 3-3z"/><path d="M6 12.5A6 6 0 0 0 18 12.5"/><path d="M12 18v3"/><path d="M9 21h6"/>',clip:'<path d="M8 12.5 15 6a3 3 0 1 1 4.2 4.3L12.5 17a5 5 0 1 1-7.1-7.1l7.6-7.6"/>',trash:'<path d="M5 7h14"/><path d="M7 7l1 11a2 2 0 0 0 2 2h5a2 2 0 0 0 2-2l1-11"/><path d="M10 7V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2"/>',pin:'<path d="M14 4l-9 9 3 3 9-9"/><path d="M12 16l-7 7"/><path d="M16 4l4 4"/>',refresh:'<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/>',pen:'<path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>',speaker:'<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',copy:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/>',person:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>'};
-const ic = n => '<svg viewbox="0 0 24 24" aria-hidden="true">' + IC[n] + '</svg>';
+const S = {theme: "dark", short: true, search: false};
+const LOGO_INNER = '<defs><radialGradient id="gH" cx="35%" cy="28%" r="80%"><stop offset="0" stop-color="#fff"/><stop offset=".55" stop-color="#c9ccd1"/><stop offset="1" stop-color="#6b7078"/></radialGradient><radialGradient id="gE" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#fff3c9"/><stop offset=".5" stop-color="#ffc86b"/><stop offset="1" stop-color="#e08a1e"/></radialGradient><linearGradient id="gV" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2d33"/><stop offset="1" stop-color="#07080a"/></linearGradient><radialGradient id="gB" cx="50%" cy="30%" r="80%"><stop offset="0" stop-color="#3a3f48"/><stop offset="1" stop-color="#0d0e11"/></radialGradient></defs><circle cx="32" cy="32" r="31" fill="url(#gB)"/><ellipse cx="32" cy="55" rx="14" ry="2.6" fill="#000" opacity=".4"/><line x1="32" y1="9" x2="32" y2="15" stroke="#9aa0a8" stroke-width="2" stroke-linecap="round"/><circle cx="32" cy="8" r="3" fill="url(#gE)"/><rect x="9" y="29" width="4" height="10" rx="2" fill="url(#gE)"/><rect x="51" y="29" width="4" height="10" rx="2" fill="url(#gE)"/><rect x="12" y="15" width="40" height="36" rx="14" fill="url(#gH)"/><rect x="17" y="23" width="30" height="20" rx="9" fill="url(#gV)"/><circle cx="25.5" cy="33" r="3.8" fill="url(#gE)"/><circle cx="38.5" cy="33" r="3.8" fill="url(#gE)"/><path d="M27 39.5Q32 43 37 39.5" fill="none" stroke="#ffc86b" stroke-width="1.8" stroke-linecap="round"/><ellipse cx="23" cy="19.5" rx="8" ry="2.6" fill="#fff" opacity=".55"/>';
+const LOGO_USE = '<svg viewBox="0 0 64 64" aria-hidden="true"><use href="#logo"/></svg>';
+const IC = {chat:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>',search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',panel:'<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/>',plus:'<path d="M12 5v14M5 12h14"/>',clip:'<path d="m21 11-8.5 8.5a5 5 0 0 1-7-7L14 4a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L15 7"/>',wave:'<path d="M4 10v4M8 6v12M12 3v18M16 7v10M20 10v4"/>',up:'<path d="M12 19V5M5 12l7-7 7 7"/>',pin:'<path d="M12 17v5M9 3h6l-1 6 3 3H7l3-3z"/>',trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'};
+IC.refresh = '<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/>';
+IC.pen = '<path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>';
+IC.speaker = '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/>';
+IC.clock = '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>';
+IC.x = '<path d="M6 6l12 12M18 6 6 18"/>';
+IC.gear = '<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/>';
+IC.share = '<path d="M12 15V4M8 8l4-4 4 4"/><path d="M5 13v6a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-6"/>';
+IC.download = '<path d="M12 4v11M8 11l4 4 4-4"/><path d="M5 19h14"/>';
+IC.stop = '<rect x="7" y="7" width="10" height="10" rx="2" style="fill:currentColor"/>';
+IC.file = '<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/>';
+IC.copy = '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/>';
+IC.person = '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>';
+const ic = n => '<svg viewBox="0 0 24 24" aria-hidden="true">' + IC[n] + '</svg>';
 const API_URL = "https://alpha-o-api.ituzerichard6.workers.dev/"; // your backend link
 const $ = id => document.getElementById(id);
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 let history = [], file = null, voiceOn = false, listening = false, busy = false, spk = 0, rec = null;
 $("copy").textContent = "\u00A9 " + new Date().getFullYear() + " " + OWNER + ".";
 
+const HLR = /(\/\/.*|#.*)|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*')|\b(\d+(?:\.\d+)?)\b|\b(function|const|let|var|return|if|else|for|while|class|import|from|export|new|try|catch|async|await|def|in|is|not|and|or|None|True|False|true|false|null|public|private|static|void|int|string|using|namespace|foreach|elif|yield|this|self)\b/g;
+function hl(h, lg){
+  const hash = /^(py|python|yaml|yml|sh|bash|shell|rb|ruby|ps1|toml)$/i.test(lg || "");
+  return h.replace(HLR, (m, c, st, n) => c ? ((c[0] === "#" && !hash) ? m : '<span class="tc">' + m + '</span>') : st ? '<span class="ts2">' + m + '</span>' : n ? '<span class="tn">' + m + '</span>' : '<span class="tk">' + m + '</span>');
+}
 function md(src){
   const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
   const inl = s => esc(s).replace(/`([^`]+)`/g,"<code>$1</code>").replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>")
     .replace(/(^|[^*\w])\*([^*\n]+)\*/g,"$1<em>$2</em>")
     .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s"]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
-  let out = "", para = [], list = "", code = null;
+  let out = "", para = [], list = "", code = null, lang = "";
+  const cb = (lg, ls) => '<div class="cb"><div class="ch"><span>' + esc(lg || "code") + '</span><button class="cpb">Copy</button></div><pre><code>' + hl(esc(ls.join("\n")), lg) + "</code></pre></div>";
   const fp = () => { if (para.length){ out += "<p>" + para.join("<br>") + "</p>"; para = []; } };
   const fl = () => { if (list){ out += "</" + list + ">"; list = ""; } };
-  for (const ln of src.split("\n")){
+  const lines = src.split("\n");
+  for (let li = 0; li < lines.length; li++){ const ln = lines[li];
     if (/^\s*```/.test(ln)){
-      if (code === null){ fp(); fl(); code = []; } else { out += "<pre><code>" + esc(code.join("\n")) + "</code></pre>"; code = null; }
+      if (code === null){ fp(); fl(); code = []; lang = (ln.match(/```\s*([\w#+-]*)/) || [])[1] || ""; } else { out += cb(lang, code); code = null; }
       continue;
     }
     if (code !== null){ code.push(ln); continue; }
+    if (/^\s*\|.*\|\s*$/.test(ln) && /^\s*\|?[\s:|-]*-[\s:|-]*\|?\s*$/.test(lines[li + 1] || "")){
+      const cells = r => r.trim().replace(/^\||\|$/g, "").split("|").map(x => inl(x.trim()));
+      fp(); fl(); let t = '<div class="tw"><table><thead><tr>' + cells(ln).map(x => "<th>" + x + "</th>").join("") + "</tr></thead><tbody>";
+      li += 2; while (li < lines.length && /^\s*\|.*\|\s*$/.test(lines[li])){ t += "<tr>" + cells(lines[li]).map(x => "<td>" + x + "</td>").join("") + "</tr>"; li++; }
+      li--; out += t + "</tbody></table></div>"; continue;
+    }
     let m;
     if (m = ln.match(/^\s*[-*]\s+(.*)/)){ fp(); if (list !== "ul"){ fl(); out += "<ul>"; list = "ul"; } out += "<li>" + inl(m[1]) + "</li>"; }
     else if (m = ln.match(/^\s*\d+[.)]\s+(.*)/)){ fp(); if (list !== "ol"){ fl(); out += "<ol>"; list = "ol"; } out += "<li>" + inl(m[1]) + "</li>"; }
@@ -175,11 +266,11 @@ function md(src){
     else if (!ln.trim()){ fp(); fl(); }
     else { fl(); para.push(inl(ln)); }
   }
-  if (code !== null) out += "<pre><code>" + esc(code.join("\n")) + "</code></pre>";
+  if (code !== null) out += cb(lang, code);
   fp(); fl(); return out;
 }
 function stamp(ts){ const d = new Date(ts || Date.now()); return {t: d.toLocaleTimeString([], {hour: "numeric", minute: "2-digit"}), full: d.toLocaleString([], {weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit"})}; }
-function add(text, who, ts, idx){
+function add(text, who, ts, idx, fi){
   const r = document.createElement("div"); r.className = "row " + who;
   const m = document.createElement("div"); m.className = "msg " + who;
   const col = document.createElement("div"); col.className = "col " + who;
@@ -195,10 +286,11 @@ function add(text, who, ts, idx){
   }
   if (who === "you") mk("pen", "Edit message", () => editMsg(r, m));
   const st = stamp(ts), tm = document.createElement("span"); tm.className = "tm"; tm.dataset.tip = st.full; tm.innerHTML = ic("clock"); tm.tabIndex = 0; act.appendChild(tm);
-  col.append(m, act); r.appendChild(col); $("chat").appendChild(r); $("chat").scrollTop = $("chat").scrollHeight;
+  if (fi) col.append(fileCardEl(fi)); col.append(m, act); r.appendChild(col); $("chat").appendChild(r); $("chat").scrollTop = $("chat").scrollHeight;
   return m;
 }
 function typeInto(el, text){
+  finishTyping();
   el.innerHTML = md(text);
   if (reduce) return;
   const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), nodes = []; let n;
@@ -206,7 +298,7 @@ function typeInto(el, text){
   nodes.forEach(x => x[0].nodeValue = "");
   const total = nodes.reduce((a, x) => a + x[1].length, 0), step = Math.max(1, Math.ceil(total / 300));
   let i = 0, k = 0;
-  const t = setInterval(() => {
+  typeNodes = nodes; const t = typeTimer = setInterval(() => {
     let c = step;
     while (c > 0 && k < nodes.length){
       const s = nodes[k][1], take = Math.min(c, s.length - i);
@@ -214,7 +306,7 @@ function typeInto(el, text){
       if (i >= s.length){ k++; i = 0; }
     }
     $("chat").scrollTop = $("chat").scrollHeight;
-    if (k >= nodes.length) clearInterval(t);
+    if (k >= nodes.length){ clearInterval(t); typeTimer = null; }
   }, 18);
 }
 async function ask(){
@@ -222,34 +314,35 @@ async function ask(){
     const f = file ? " I also received your file *" + file.name + "*." : "";
     return "**Demo mode:** I heard \"" + history[history.length-1].text + "\"." + f + " Connect a backend to get real AI answers.";
   }
+  ctl = new AbortController();
   const r = await fetch(API_URL, {method:"POST", headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({messages: history, file})});
-  const j = await r.json();
-  if (!r.ok || !j.reply) throw new Error(j.error || "No reply");
-  return j.reply;
+    body: JSON.stringify({messages: history.map(m => ({role: m.role, text: m.text})), file, search: S.search, voice: askVoice}), signal: ctl.signal});
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.reply) throw new Error(j.error || "I couldn’t get an answer right now. Please try again.");
+  lastSources = j.sources || []; return j.reply;
 }
-let lastFile = null;
+let lastFile = null, ctl = null, typeTimer = null, typeNodes = [], lastSources = [], askVoice = false, fInfo = null;
 async function send(text, spoken){
   text = text.trim(); if (!text || busy) return;
   busy = true; const w = $("welcome"); if (w) w.remove();
   const now = Date.now();
-  add(text + (file ? "  [" + file.name + "]" : ""), "you", now, history.length);
-  history.push({role:"user", text, file: file ? file.name : "", ts: now});
-  lastFile = file; file = null; $("chip").style.display = "none"; $("file").value = "";
+  add(text, "you", now, history.length, fInfo);
+  history.push({role:"user", text, file: file ? file.name : "", fi: fInfo, ts: now});
+  lastFile = file; file = null; fInfo = null; $("chip").style.display = "none"; $("file").value = "";
   await answer(spoken);
 }
 async function answer(spoken){
-  busy = true; file = lastFile;
+  busy = true; file = lastFile; askVoice = !!spoken && S.short;
   const m = add("", "bot"), labels = file ? ["Reading your file...", "Thinking..."] : ["Thinking..."], timers = [];
   const show = txt => { m.innerHTML = '<span class="dots"><i></i><i></i><i></i></span><span class="stp">' + txt + '</span>'; setFace("thinking", txt); };
   m.closest(".row").classList.add("loading"); show(labels[0]);
   if (labels.length > 1) timers.push(setTimeout(() => show(labels[1]), 1500));
   timers.push(setTimeout(() => show("Still working on it..."), 7000), setTimeout(() => show("Taking longer than usual..."), 20000));
-  let reply;
-  try { reply = await ask(); } catch(e){ reply = "Sorry, I could not reach my brain. " + e.message; }
+  let reply; lastSources = [];
+  try { reply = await ask(); } catch(e){ reply = friendly(e); }
   timers.forEach(clearTimeout); file = null; m.closest(".row").classList.remove("loading");
-  history.push({role:"model", text:reply, ts:Date.now()}); saveChat();
-  busy = false; typeInto(m, reply);
+  const srcs = lastSources; history.push({role:"model", text:reply, ts:Date.now(), src: srcs}); saveChat();
+  busy = false; typeInto(m, reply); addSources(m, srcs);
   if (spoken) speak(reply); else if (voiceOn) setFace("", "Tap the mic to reply");
 }
 async function regen(){
@@ -264,14 +357,14 @@ $("input").oninput = () => { const t = $("input"); t.style.height = "auto"; t.st
 $("newchat").onclick = $("newTop").onclick = newChat;
 
 $("attach").onclick = () => $("file").click();
-$("clearfile").onclick = () => { file = null; $("file").value = ""; $("chip").style.display = "none"; };
+$("clearfile").onclick = () => { fInfo = null; file = null; $("file").value = ""; $("chip").style.display = "none"; };
 $("file").onchange = () => {
   const f = $("file").files[0]; if (!f) return;
   if (f.size > 4e6){ add("That file is over 4 MB. Choose a smaller one.", "bot"); $("file").value = ""; return; }
   const rd = new FileReader(), isImg = f.type.startsWith("image/");
   rd.onload = () => {
     file = isImg ? {name:f.name, mime:f.type, base64:rd.result.split(",")[1]} : {name:f.name, mime:f.type || "text/plain", text:rd.result};
-    $("fname").textContent = "Attached: " + f.name; $("chip").style.display = "block";
+    fInfo = {name: f.name, mime: f.type, thumb: ""}; chipRender(); if (isImg) thumbOf(rd.result, t => { if (fInfo){ fInfo.thumb = t; chipRender(); } });
   };
   isImg ? rd.readAsDataURL(f) : rd.readAsText(f);
 };
@@ -321,17 +414,17 @@ function speak(text){
       const u = new SpeechSynthesisUtterance(c); u.lang = "en-US"; if (v) u.voice = v; u.pitch = P.pitch; u.rate = P.rate;
       u.onstart = () => { if (tok === spk){ $("face").setAttribute("class", "speaking " + emo); $("status").textContent = "Speaking..."; } };
       if (i === chunks.length - 1) u.onend = u.onerror = () => { if (tok !== spk) return; setFace(emo, "Tap the mic to reply"); if (voiceOn) setTimeout(listen, 500); };
-      u.addEventListener("error", e => { if (tok === spk && e.error && e.error !== "interrupted" && e.error !== "canceled") $("status").textContent = "Sound problem (" + e.error + "). Tap the mic to retry."; });
+      u.addEventListener("error", e => { if (tok === spk && e.error && e.error !== "interrupted" && e.error !== "canceled") $("status").textContent = "Sound problem (" + e.error + "). Tap the mic to continue."; });
       window._utts.push(u); speechSynthesis.speak(u);
     });
   }, 120);
 }
 function unlockSound(){ if (window.speechSynthesis){ const u = new SpeechSynthesisUtterance(" "); u.volume = 0; speechSynthesis.speak(u); } }
-$("voiceBtn2").onclick = () => { voiceOn = true; greet = 1; unlockSound(); $("voice").classList.add("on"); setFace("", "Tap the mic and speak"); mouthFor(""); };
+$("voiceBtn2").onclick = () => { voiceOn = true; greet = 1; unlockSound(); $("voice").classList.add("on"); setFace("", "Tap the mic and speak"); mouthFor(""); robotStart(); };
 $("mic").onclick = () => { spk++; if (window.speechSynthesis) speechSynthesis.cancel(); unlockSound(); if (listening){ rec.stop(); } else { setFace("", "Tap the mic and speak"); listen(); } };
-$("closeVoice").onclick = () => { voiceOn = false; spk++; $("voice").classList.remove("on"); if (window.speechSynthesis) speechSynthesis.cancel(); try { rec && rec.abort(); } catch(e){} };
+$("closeVoice").onclick = () => { voiceOn = false; spk++; $("voice").classList.remove("on"); if (window.speechSynthesis) speechSynthesis.cancel(); try { rec && rec.abort(); } catch(e){} robotStop(); };
 
-(function(){
+function robotLegacy(){
   const box = $("face");
   if (!window.THREE){ box.textContent = "3D robot unavailable. Check your internet connection."; return; }
   let renderer;
@@ -446,7 +539,7 @@ $("closeVoice").onclick = () => { voiceOn = false; spk++; $("voice").classList.r
     });
     renderer.render(scene, cam);
   })();
-})();
+}
 
 let chats = [], curId = null;
 try { chats = JSON.parse(localStorage.getItem("alphaO_chats") || "[]"); } catch(e){ chats = []; }
@@ -456,12 +549,12 @@ function saveChat(){
   if (!history.length) return;
   let c = chats.find(x => x.id === curId);
   if (!c){ c = {id: curId, title: history[0].text.slice(0, 40), ts: Date.now(), pin: false, msgs: []}; chats.unshift(c); }
-  c.msgs = history; c.ts = Date.now(); c.title = history[0].text.slice(0, 40); persist(); renderSide();
+  c.msgs = history; c.ts = Date.now(); if (!c.custom) c.title = history[0].text.slice(0, 40); persist(); renderSide();
 }
 function renderSide(){
   const q = $("q").value.toLowerCase(), box = $("list"); box.innerHTML = "";
   const day = 864e5, t0 = new Date().setHours(0,0,0,0);
-  const groups = [["Pinned", c => c.pin], ["Today", c => !c.pin && c.ts >= t0], ["Yesterday", c => !c.pin && c.ts < t0 && c.ts >= t0 - day], ["Previous 7 days", c => !c.pin && c.ts < t0 - day && c.ts >= t0 - day * 7], ["Older", c => !c.pin && c.ts < t0 - day * 7]];
+  const groups = [["Pinned", c => c.pin], ["Today", c => !c.pin && c.ts >= t0], ["Yesterday", c => !c.pin && c.ts < t0 && c.ts >= t0 - day], ["Previous 7 days", c => !c.pin && c.ts < t0 - day && c.ts >= t0 - 7 * day], ["Older", c => !c.pin && c.ts < t0 - 7 * day]];
   groups.forEach(g => {
     const items = chats.filter(c => g[1](c) && (!q || c.title.toLowerCase().includes(q) || c.msgs.some(m => m.text.toLowerCase().includes(q)))).sort((a, b) => b.ts - a.ts);
     if (!items.length) return;
@@ -472,7 +565,10 @@ function renderSide(){
       const p = document.createElement("button"); p.className = "ib"; p.dataset.tip = c.pin ? "Unpin" : "Pin"; p.innerHTML = ic("pin"); p.onclick = () => { c.pin = !c.pin; persist(); renderSide(); };
       const d = document.createElement("button"); d.className = "ib"; d.dataset.tip = "Delete"; d.innerHTML = ic("trash");
       d.onclick = () => { if (confirm("Delete this chat?")){ chats = chats.filter(x => x.id !== c.id); persist(); if (c.id === curId) newChat(); else renderSide(); } };
-      r.append(t, p, d); box.appendChild(r);
+      const rn = document.createElement("button"); rn.className = "ib"; rn.dataset.tip = "Rename"; rn.innerHTML = ic("pen");
+      rn.onclick = () => { const v = prompt("Rename chat", c.title); if (v && v.trim()){ c.title = v.trim().slice(0, 60); c.custom = true; persist(); renderSide(); } };
+      const ex = document.createElement("button"); ex.className = "ib"; ex.dataset.tip = "Export"; ex.innerHTML = ic("download"); ex.onclick = () => exportChat(c);
+      r.append(t, rn, ex, p, d); box.appendChild(r);
     });
   });
   if (!box.children.length) box.innerHTML = '<div class="gh">No chats yet</div>';
@@ -480,22 +576,22 @@ function renderSide(){
 function loadChat(id){
   const c = chats.find(x => x.id === id); if (!c) return;
   curId = id; history = c.msgs; file = null; $("chip").style.display = "none"; $("chat").innerHTML = "";
-  history.forEach((m, k) => m.role === "user" ? add(m.text + (m.file ? "  [" + m.file + "]" : ""), "you", m.ts, k) : add(m.text, "bot", m.ts));
+  history.forEach((m, k) => { if (m.role === "user") add(m.text, "you", m.ts, k, m.fi || (m.file ? {name: m.file} : null)); else addSources(add(m.text, "bot", m.ts), m.src); });
   renderSide(); closeSide();
 }
 function newChat(){
   history = []; file = null; curId = Date.now().toString(36); $("chip").style.display = "none"; $("input").value = "";
-  $("chat").innerHTML = '<div id="welcome"><svg class="lg big" viewbox="0 0 64 64"><use href="#logo"/></svg><p>Welcome to Alpha-O</p><h2>How can I assist you?</h2><div class="cards"></div></div>';
+  $("chat").innerHTML = '<div id="welcome"><svg class="lg big" viewBox="0 0 64 64"><use href="#logo"/></svg><p>Welcome to Alpha-O</p><h2>How can I assist you?</h2><div class="cards"></div></div>';
   ["Write a to-do list for my day", "Explain what an API is in simple words", "Help me plan a small coding project"].forEach(t => {
     const b = document.createElement("button"); b.className = "card"; b.textContent = t; b.onclick = () => send(t, false); document.querySelector(".cards").appendChild(b);
   });
   renderSide(); closeSide();
 }
 if (innerWidth < 800) document.body.classList.add("fold");
-$("defs").innerHTML = '<symbol id="logo" viewbox="0 0 64 64">' + LOGO_INNER + '</symbol>';
+$("defs").innerHTML = '<symbol id="logo" viewBox="0 0 64 64">' + LOGO_INNER + '</symbol>';
 document.querySelectorAll("[data-ic]").forEach(e => e.innerHTML = ic(e.dataset.ic));
 const fav = document.createElement("link"); fav.rel = "icon";
-fav.href = "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 64 64">' + LOGO_INNER + '</svg>'); document.head.appendChild(fav);
+fav.href = "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">' + LOGO_INNER + '</svg>'); document.head.appendChild(fav);
 $("fold").onclick = () => document.body.classList.add("fold");
 $("menu").onclick = () => document.body.classList.remove("fold");
 $("srch").onclick = () => { $("q").hidden = !$("q").hidden; if (!$("q").hidden) $("q").focus(); else { $("q").value = ""; renderSide(); } };
@@ -576,6 +672,176 @@ function editMsg(row, m){
   ok.onclick = save;
   ta.onkeydown = e => { if (e.key === "Enter" && !e.shiftKey){ e.preventDefault(); save(); } else if (e.key === "Escape") close(); };
 }
+
+/* ===== ROBOT V2: head-only 3D robot + sound-wave background (voice mode only) ===== */
+var RB = null, robotFailed = false;
+function robotLevel(){
+  if (typeof window.ROBOT_AUDIO_LEVEL === "number") return window.ROBOT_AUDIO_LEVEL;
+  const t = performance.now() / 1000, cl = $("face").classList;
+  if (cl.contains("speaking")) return .55 * (.65 + .35 * Math.abs(Math.sin(t * 7.3) * Math.sin(t * 3.1 + 1)));
+  return (cl.contains("listening") ? .38 : cl.contains("thinking") ? .22 : .06) * (.85 + .15 * Math.sin(t * 2));
+}
+function robotStart(){
+  if (RB || robotFailed) return;
+  try {
+    if (!window.THREE) throw new Error("three.js missing");
+    const renderer = new THREE.WebGLRenderer({antialias: true, alpha: true}), cv = renderer.domElement;
+    cv.className = "rv2c"; $("voice").insertBefore(cv, $("voice").firstChild); $("voice").classList.add("rv2");
+    const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(40, 1, .1, 60); cam.position.set(0, 0, 10);
+    RB = {renderer: renderer, cv: cv, scene: scene, cam: cam, raf: 0, lvl: 0, bl: 0, nb: 2, nm: 0, ox: 0, oy: 0, tx: 0, ty: 0};
+    buildRobotHead(RB);
+    RB.onResize = robotResize; addEventListener("resize", RB.onResize); RB.clock = new THREE.Clock(); robotResize();
+    const loop = () => { if (!RB) return; RB.raf = requestAnimationFrame(loop); robotFrame(); }; loop();
+  } catch(e){
+    robotFailed = true; robotStop(); $("voice").classList.remove("rv2");
+    try { robotLegacy(); } catch(e2){}
+  }
+}
+function robotStop(){
+  const R = RB; if (!R) return; RB = null;
+  cancelAnimationFrame(R.raf); removeEventListener("resize", R.onResize);
+  try { R.scene.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { if (m.map) m.map.dispose(); m.dispose(); }); }); } catch(e){}
+  try { R.renderer.dispose(); if (R.renderer.forceContextLoss) R.renderer.forceContextLoss(); } catch(e){}
+  if (R.cv && R.cv.parentNode) R.cv.parentNode.removeChild(R.cv);
+  $("voice").classList.remove("rv2");
+}
+function buildRobotHead(R){
+  const M = (c, o) => new THREE.MeshStandardMaterial(Object.assign({color: c, roughness: .35, metalness: .55}, o || {}));
+  const shell = M(0xd4d9e6, {emissive: 0x9fdcff, emissiveIntensity: .3}), dark = M(0x070b18, {roughness: .15, metalness: .4}), cyan = M(0xcffaff, {emissive: 0x7fe8ff, emissiveIntensity: 1.2, roughness: .3, metalness: 0});
+  const S3 = (r, m, x, y, z) => { const o = new THREE.Mesh(new THREE.SphereGeometry(r, 36, 26), m); o.scale.set(x, y, z); return o; };
+  const rob = new THREE.Group(), hd = new THREE.Group(); rob.add(hd); R.scene.add(rob); R.rob = rob; R.hd = hd; R.cyan = cyan; R.shell = shell;
+  hd.add(S3(1.5, shell, 1.2, 1, .95));
+  const vis = S3(1, dark, 1.5, 1, .55); vis.position.z = .95; hd.add(vis);
+  R.eyes = [-.62, .62].map(x => { const e = S3(.28, cyan, 1, 1.3, .45); e.position.set(x, .22, 1.45); e.userData.x = x; hd.add(e); return e; });
+  const nose = S3(.09, shell, 1, 1.2, .8); nose.position.set(0, -.12, 1.55); hd.add(nose);
+  const mg = new THREE.Group(); mg.position.set(0, -.55, 1.45); hd.add(mg);
+  R.line = new THREE.Mesh(new THREE.BoxGeometry(.6, .07, .07), cyan);
+  R.arc = new THREE.Mesh(new THREE.TorusGeometry(.38, .05, 12, 32, Math.PI), cyan);
+  R.talk = S3(.3, cyan, 1, 1, .3); mg.add(R.line, R.arc, R.talk);
+  [-1, 1].forEach(s => { const p = new THREE.Mesh(new THREE.CylinderGeometry(.3, .3, .3, 24), cyan); p.rotation.z = Math.PI / 2; p.position.set(s * 1.85, 0, 0); hd.add(p); });
+  const ant = new THREE.Mesh(new THREE.CylinderGeometry(.04, .04, .5, 12), M(0x8c94b5)); ant.position.y = 1.7; hd.add(ant);
+  const tip = S3(.13, cyan, 1, 1, 1); tip.position.y = 2; hd.add(tip);
+  const hc = document.createElement("canvas"); hc.width = hc.height = 128;
+  const hg = hc.getContext("2d"), gr = hg.createRadialGradient(64, 64, 0, 64, 64, 64);
+  gr.addColorStop(0, "rgba(215,242,255,.9)"); gr.addColorStop(.35, "rgba(150,210,255,.38)"); gr.addColorStop(1, "rgba(120,180,255,0)");
+  hg.fillStyle = gr; hg.fillRect(0, 0, 128, 128);
+  R.halo = new THREE.Sprite(new THREE.SpriteMaterial({map: new THREE.CanvasTexture(hc), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: .75}));
+  R.halo.scale.set(9, 9, 1); R.halo.position.set(0, .2, -1.8); rob.add(R.halo);
+  R.scene.add(new THREE.AmbientLight(0x8fa3d9, .8));
+  const key = new THREE.DirectionalLight(0xffffff, .9); key.position.set(3, 4, 6); R.scene.add(key);
+  const rim = new THREE.DirectionalLight(0x3a7bff, 1.7); rim.position.set(-4, 2, -5); R.scene.add(rim);
+  const rim2 = new THREE.PointLight(0x2f8bff, 1.2, 20); rim2.position.set(4, 1, -2); R.scene.add(rim2);
+}
+function robotResize(){
+  const R = RB; if (!R) return;
+  const vr = $("voice").getBoundingClientRect(), fr = $("face").getBoundingClientRect(), w = Math.max(1, vr.width), h = Math.max(1, vr.height);
+  R.renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5)); R.renderer.setSize(w, h, false);
+  R.cam.aspect = w / h; R.cam.updateProjectionMatrix();
+  const halfH = Math.tan(R.cam.fov * Math.PI / 360) * 10, wpp = 2 * halfH / h;
+  R.halfH = halfH;
+  R.rob.scale.setScalar(Math.max(.2, fr.height * wpp * .82 / 3.8));
+  R.baseY = (1 - 2 * ((fr.top + fr.height / 2 - vr.top) / h)) * halfH;
+}
+function robotFrame(){
+  const R = RB; if (!R || !$("voice").classList.contains("on")) return;
+  const L = (a, b, k) => a + (b - a) * k, t = R.clock.getElapsedTime(), cl = $("face").classList;
+  const sp = cl.contains("speaking"), th = cl.contains("thinking"), li = cl.contains("listening");
+  R.lvl += (robotLevel() - R.lvl) * .12;
+  R.rob.position.y = R.baseY + Math.sin(t * 1.4) * R.halfH * .02;
+  R.hd.rotation.y = L(R.hd.rotation.y, Math.sin(t * .5) * .22 + (th ? -.35 : 0), .06);
+  R.hd.rotation.x = L(R.hd.rotation.x, li ? .16 : sp ? Math.sin(t * 3) * .05 : 0, .06);
+  R.hd.rotation.z = L(R.hd.rotation.z, li ? .12 : mood === "curious" ? .1 : 0, .06);
+  if (t > R.nb){ R.bl = 1; R.nb = t + 2 + Math.random() * 3; }
+  if (t > R.nm){ R.tx = (Math.random() - .5) * .14; R.ty = (Math.random() - .5) * .08; R.nm = t + 1.2 + Math.random() * 2; }
+  R.bl = Math.max(0, R.bl - .12);
+  R.ox = L(R.ox, R.tx, .1); R.oy = L(R.oy, th ? .2 : R.ty, .08);
+  const lid = 1 - .9 * Math.sin(R.bl * Math.PI), ey = (mood === "happy" ? .6 : mood === "sad" ? .95 : 1.3) * lid * (th ? .8 : li ? 1.12 : 1);
+  R.eyes.forEach(e => { e.scale.set(1, ey, .45); e.position.x = e.userData.x + R.ox; e.position.y = .22 + R.oy; });
+  const smile = mood === "happy" && !sp, frown = mood === "sad" && !sp;
+  R.talk.visible = sp; R.arc.visible = smile || frown; R.line.visible = !sp && !smile && !frown;
+  R.talk.scale.y = .3 + .7 * Math.abs(Math.sin(t * 13)); R.arc.rotation.z = smile ? Math.PI : 0; R.arc.position.y = smile ? .15 : -.3;
+  R.halo.material.opacity = .55 + .2 * Math.sin(t * 1.6) + R.lvl * .45; R.halo.scale.setScalar(9 + R.lvl * 1.6 + Math.sin(t * 1.6) * .25);
+  R.shell.emissiveIntensity = .3 + .1 * Math.sin(t * 2) + R.lvl * .35;
+  R.cyan.emissiveIntensity = 1 + .3 * Math.sin(t * 2.2) + R.lvl * .8;
+  R.renderer.render(R.scene, R.cam);
+}
+
+/* ===== settings, theme, files, share, stop, shortcuts ===== */
+try { Object.assign(S, JSON.parse(localStorage.getItem("alphaO_settings") || "{}")); } catch(e){}
+function saveS(){ try { localStorage.setItem("alphaO_settings", JSON.stringify(S)); } catch(e){} }
+function applyTheme(){ document.documentElement.dataset.theme = S.theme === "system" ? (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark") : S.theme; }
+function toast(t){ const e = $("toast"); e.textContent = t; e.classList.add("on"); clearTimeout(e._t); e._t = setTimeout(() => e.classList.remove("on"), 1800); }
+function friendly(e){
+  if (e && e.name === "AbortError") return "Stopped.";
+  if (e instanceof TypeError) return "I can’t reach Alpha-O right now. Please check your internet connection and try again.";
+  return (e && e.message) || "I couldn’t get an answer right now. Please try again.";
+}
+function addSources(m, srcs){
+  if (!m || !srcs || !srcs.length) return;
+  const d = document.createElement("div"); d.className = "src"; d.append("Sources:");
+  srcs.forEach(s => { const a = document.createElement("a"); a.href = s.uri; a.target = "_blank"; a.rel = "noopener"; a.textContent = s.title || s.uri; d.appendChild(a); });
+  m.parentNode.insertBefore(d, m.nextSibling);
+}
+function finishTyping(){ if (!typeTimer) return; clearInterval(typeTimer); typeTimer = null; typeNodes.forEach(x => { x[0].nodeValue = x[1]; }); $("chat").scrollTop = $("chat").scrollHeight; }
+function stopAll(){ if (ctl) ctl.abort(); finishTyping(); spk++; reading = null; if (window.speechSynthesis) speechSynthesis.cancel(); }
+$("stop").onclick = stopAll;
+setInterval(() => { const on = busy || !!typeTimer || (!voiceOn && window.speechSynthesis && speechSynthesis.speaking); $("stop").hidden = !on; $("send").hidden = on; }, 250);
+$("chat").addEventListener("click", e => {
+  const b = e.target.closest(".cpb"); if (!b) return;
+  if (navigator.clipboard) navigator.clipboard.writeText(b.closest(".cb").querySelector("code").textContent);
+  b.textContent = "Copied"; setTimeout(() => { b.textContent = "Copy"; }, 1400);
+});
+function fileCardEl(fi){
+  const d = document.createElement("div"), ext = (fi.name.split(".").pop() || "file").slice(0, 5).toUpperCase();
+  if (fi.thumb){ d.className = "fcard im"; const im = document.createElement("img"); im.src = fi.thumb; im.alt = fi.name; d.appendChild(im); return d; }
+  d.className = "fcard"; d.innerHTML = '<span class="fi">' + ic("file") + '</span><span class="fn"><b></b><i></i></span>';
+  d.querySelector("b").textContent = fi.name; d.querySelector("i").textContent = (fi.mime && fi.mime.indexOf("image/") === 0 ? "Image" : "File") + " · " + ext; return d;
+}
+function chipRender(){ if (!fInfo) return; const f = $("fname"); f.innerHTML = ""; f.appendChild(fileCardEl(fInfo)); $("chip").style.display = "flex"; }
+function thumbOf(src, cb){
+  const im = new Image();
+  im.onload = () => { const c = document.createElement("canvas"); c.width = c.height = 96; const k = Math.max(96 / im.width, 96 / im.height), w = im.width * k, h = im.height * k;
+    c.getContext("2d").drawImage(im, (96 - w) / 2, (96 - h) / 2, w, h); cb(c.toDataURL("image/jpeg", .7)); };
+  im.src = src;
+}
+function chatText(c){ return "# " + c.title + "\n\n" + c.msgs.map(m => "**" + (m.role === "user" ? "You" : "Alpha-O") + ":** " + m.text).join("\n\n") + "\n"; }
+function exportChat(c){
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([chatText(c)], {type: "text/markdown"}));
+  a.download = (c.title || "chat").replace(/[^\w-]+/g, "_") + ".md"; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000); toast("Chat exported");
+}
+function shareChat(){
+  const c = chats.find(x => x.id === curId); if (!c || !c.msgs.length){ toast("Nothing to share yet"); return; }
+  const txt = chatText(c) + "\nShared from Alpha-O";
+  if (navigator.share){ navigator.share({title: c.title, text: txt}).catch(() => {}); return; }
+  if (navigator.clipboard){ navigator.clipboard.writeText(txt).then(() => toast("Chat copied. Paste it anywhere to share."), () => exportChat(c)); } else exportChat(c);
+}
+$("share").onclick = shareChat;
+function syncSet(){
+  document.querySelectorAll("#segT button").forEach(b => b.classList.toggle("on", b.dataset.v === S.theme));
+  $("swShort").checked = !!S.short; $("swSearch").checked = !!S.search;
+  $("selV").innerHTML = ""; PRESETS.forEach(p => { const o = document.createElement("option"); o.value = p.id; o.textContent = p.label; o.selected = p.id === vp; $("selV").appendChild(o); });
+}
+function openSet(){ syncSet(); $("set").hidden = false; }
+function closeSet(){ $("set").hidden = true; }
+$("gear").onclick = openSet; $("priv").onclick = e => { e.preventDefault(); openSet(); }; $("setx").onclick = closeSet;
+$("set").onclick = e => { if (e.target === $("set")) closeSet(); };
+document.querySelectorAll("#segT button").forEach(b => { b.onclick = () => { S.theme = b.dataset.v; saveS(); applyTheme(); syncSet(); }; });
+$("swShort").onchange = () => { S.short = $("swShort").checked; saveS(); };
+$("swSearch").onchange = () => { S.search = $("swSearch").checked; saveS(); };
+$("selV").onchange = () => { vp = $("selV").value; try { localStorage.setItem("alphaO_voice", vp); } catch(e){} sample(); };
+$("clrAll").onclick = () => { if (confirm("Delete all chats from this browser?")){ chats = []; persist(); newChat(); closeSet(); toast("History cleared"); } };
+addEventListener("keydown", e => {
+  if (e.key === "Escape" && !$("set").hidden){ closeSet(); return; }
+  if (!(e.ctrlKey || e.metaKey)) return;
+  const k = e.key.toLowerCase();
+  if (k === "k"){ e.preventDefault(); newChat(); $("input").focus(); }
+  else if (k === "/"){ e.preventDefault(); $("input").focus(); }
+  else if (k === "b"){ e.preventDefault(); document.body.classList.toggle("fold"); }
+  else if (k === ","){ e.preventDefault(); openSet(); }
+  else if (k === "v" && e.shiftKey){ e.preventDefault(); $("voiceBtn2").click(); }
+});
+applyTheme();
 let reading = null;
 function readAloud(m, b){
   if (!window.speechSynthesis) return;
