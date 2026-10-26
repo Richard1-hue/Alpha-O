@@ -163,6 +163,7 @@ footer a{color:var(--muted)}
 .g6{left:84%;top:52%;width:110px;height:110px;--bs:5;animation-delay:-11s;animation-duration:14s}
 @keyframes gfloat{0%{opacity:0;transform:translate(0,40px) scale(.9)}25%{opacity:.3}50%{opacity:.45;transform:translate(40px,-40px) scale(1.12)}80%{opacity:.25}100%{opacity:0;transform:translate(-30px,-90px) scale(.95)}}
 @media(prefers-reduced-motion:reduce){.gst{opacity:.25!important}}
+@media(hover:none){.ci .ib{opacity:1}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
@@ -332,6 +333,7 @@ async function send(text, spoken){
   await answer(spoken);
 }
 async function answer(spoken){
+  const mine = history, myId = curId;
   busy = true; file = lastFile; askVoice = !!spoken && S.short;
   const m = add("", "bot"), labels = file ? ["Reading your file...", "Thinking..."] : ["Thinking..."], timers = [];
   const show = txt => { m.innerHTML = '<span class="dots"><i></i><i></i><i></i></span><span class="stp">' + txt + '</span>'; setFace("thinking", txt); };
@@ -341,7 +343,9 @@ async function answer(spoken){
   let reply; lastSources = [];
   try { reply = await ask(); } catch(e){ reply = friendly(e); }
   timers.forEach(clearTimeout); file = null; m.closest(".row").classList.remove("loading");
-  const srcs = lastSources; history.push({role:"model", text:reply, ts:Date.now(), src: srcs}); saveChat();
+  const srcs = lastSources; mine.push({role:"model", text:reply, ts:Date.now(), src: srcs});
+  if (history !== mine || !m.isConnected){ commitChat(myId, mine); busy = false; if (curId === myId) loadChat(myId); return; }
+  saveChat();
   busy = false; typeInto(m, reply); addSources(m, srcs);
   if (spoken) speak(reply); else if (voiceOn) setFace("", "Tap the mic to reply");
 }
@@ -351,7 +355,7 @@ async function regen(){
   const rows = $("chat").querySelectorAll(".row.bot"); rows[rows.length - 1].remove();
   await answer(false);
 }
-$("send").onclick = () => { const v = $("input").value; $("input").value = ""; $("input").style.height = ""; send(v, false); };
+$("send").onclick = () => { if (busy) return; const v = $("input").value; $("input").value = ""; $("input").style.height = ""; send(v, false); };
 $("input").onkeydown = e => { if (e.key === "Enter" && !e.shiftKey){ e.preventDefault(); $("send").click(); } };
 $("input").oninput = () => { const t = $("input"); t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, 200) + "px"; };
 $("newchat").onclick = $("newTop").onclick = newChat;
@@ -545,11 +549,12 @@ let chats = [], curId = null;
 try { chats = JSON.parse(localStorage.getItem("alphaO_chats") || "[]"); } catch(e){ chats = []; }
 function persist(){ try { localStorage.setItem("alphaO_chats", JSON.stringify(chats)); } catch(e){} }
 function closeSide(){ if (innerWidth < 800) document.body.classList.add("fold"); }
-function saveChat(){
-  if (!history.length) return;
-  let c = chats.find(x => x.id === curId);
-  if (!c){ c = {id: curId, title: history[0].text.slice(0, 40), ts: Date.now(), pin: false, msgs: []}; chats.unshift(c); }
-  c.msgs = history; c.ts = Date.now(); if (!c.custom) c.title = history[0].text.slice(0, 40); persist(); renderSide();
+function saveChat(){ commitChat(curId, history); }
+function commitChat(id, msgs){
+  if (!msgs.length) return;
+  let c = chats.find(x => x.id === id);
+  if (!c){ c = {id: id, title: msgs[0].text.slice(0, 40), ts: Date.now(), pin: false, msgs: []}; chats.unshift(c); }
+  c.msgs = msgs; c.ts = Date.now(); if (!c.custom) c.title = msgs[0].text.slice(0, 40); persist(); renderSide();
 }
 function renderSide(){
   const q = $("q").value.toLowerCase(), box = $("list"); box.innerHTML = "";
@@ -575,11 +580,13 @@ function renderSide(){
 }
 function loadChat(id){
   const c = chats.find(x => x.id === id); if (!c) return;
+  stopAll();
   curId = id; history = c.msgs; file = null; $("chip").style.display = "none"; $("chat").innerHTML = "";
   history.forEach((m, k) => { if (m.role === "user") add(m.text, "you", m.ts, k, m.fi || (m.file ? {name: m.file} : null)); else addSources(add(m.text, "bot", m.ts), m.src); });
   renderSide(); closeSide();
 }
 function newChat(){
+  stopAll();
   history = []; file = null; curId = Date.now().toString(36); $("chip").style.display = "none"; $("input").value = "";
   $("chat").innerHTML = '<div id="welcome"><svg class="lg big" viewBox="0 0 64 64"><use href="#logo"/></svg><p>Welcome to Alpha-O</p><h2>How can I assist you?</h2><div class="cards"></div></div>';
   ["Write a to-do list for my day", "Explain what an API is in simple words", "Help me plan a small coding project"].forEach(t => {
