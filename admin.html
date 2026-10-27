@@ -93,14 +93,17 @@ body{background:radial-gradient(ellipse at 15% 0%,rgba(76,201,240,.11),transpare
       <div class="section-head"><div><h2>Request log</h2><p>Latest requests, response status and recorded timing.</p></div><span class="tag" id="recentCount">0 entries</span></div>
       <article class="panel"><div class="table-wrap"><table><thead><tr><th>Time</th><th>Prompt excerpt</th><th>Provider</th><th>Status</th><th>Duration</th><th>Mode</th></tr></thead><tbody id="requestTable"><tr><td class="empty" colspan="6">Connect to load requests.</td></tr></tbody></table></div></article>
     </section>
-    <footer class="footer"><span>ALPHA-O · First Generation</span><span>Token is kept in page memory only. Refreshing the page clears it.</span></footer>
+    <footer class="footer"><span>ALPHA-O · First Generation</span><span>LIVE analytics · Auto-refresh every 10 seconds · Admin token kept for this tab session.</span></footer>
   </main>
 </div>
 <script>
   "use strict";
   const API_BASE = "https://alpha-o-api.ituzerichard6.workers.dev";
   let rangeSelection = "7";
-  let adminToken = ""; // In-memory only. Never persist this token.
+  let adminToken = ""; // Session-scoped only; cleared when the tab session ends.
+  const ADMIN_TOKEN_SESSION_KEY = "alpha_o_admin_token_session";
+  let lastUpdatedAt = null;
+  let autoRefreshTimer = null;
   let analytics = { visits: [], requests: [] };
   let isLoading = false;
   const statusBar = document.getElementById("connectionStatus");
@@ -120,11 +123,12 @@ body{background:radial-gradient(ellipse at 15% 0%,rgba(76,201,240,.11),transpare
     refreshBtn.textContent = value ? "Loading…" : "↻ Refresh";
   }
   function promptForToken() {
-    const entered = window.prompt("Enter your Alpha-O admin token. It will be kept only in this page's memory and will not be saved.");
+    const entered = window.prompt("Enter your Alpha-O admin token. It will be kept in this browser tab session and cleared when the session ends.");
     if (entered === null) return false;
     const cleaned = entered.trim();
     if (!cleaned) { setStatus("No token entered. The dashboard remains disconnected.", "warning"); return false; }
     adminToken = cleaned;
+    try { sessionStorage.setItem(ADMIN_TOKEN_SESSION_KEY, cleaned); } catch (error) { /* Storage may be unavailable; keep token in memory. */ }
     return true;
   }
   async function fetchAnalytics() {
@@ -140,13 +144,16 @@ body{background:radial-gradient(ellipse at 15% 0%,rgba(76,201,240,.11),transpare
       try { payload = await response.json(); } catch { throw new Error(`The server returned an unreadable response (HTTP ${response.status}).`); }
       if (response.status === 401) {
         adminToken = ""; refreshBtn.disabled = true;
+        try { sessionStorage.removeItem(ADMIN_TOKEN_SESSION_KEY); } catch (error) { /* Ignore unavailable storage. */ }
         setStatus("The admin token was rejected. Select “Connect / Change token” and try again.", "error"); return;
       }
       if (!response.ok) throw new Error(payload && payload.error ? payload.error : `Request failed (HTTP ${response.status}).`);
       if (!Array.isArray(payload.visits) || !Array.isArray(payload.requests)) throw new Error("The server response did not contain the expected visits and requests arrays.");
       analytics = { visits: payload.visits, requests: payload.requests };
       renderDashboard();
-      setStatus(`Connected successfully. Loaded ${analytics.visits.length} visit records and ${analytics.requests.length} request records for the last ${payload.days || rangeSelection} days.`, "success");
+      lastUpdatedAt = new Date();
+      setStatus(`LIVE · Last updated ${lastUpdatedAt.toLocaleTimeString()} · Loaded ${analytics.visits.length} visits and ${analytics.requests.length} requests for the last ${payload.days || rangeSelection} days. Auto-refresh: every 10 seconds.`, "success");
+      startAutoRefresh();
     } catch (error) {
       const message = error instanceof TypeError ? "Could not reach analytics API. Check internet access and the Worker CORS settings for https://richard1-hue.github.io." : (error.message || "Could not load analytics.");
       setStatus(message, "error");
@@ -233,6 +240,24 @@ body{background:radial-gradient(ellipse at 15% 0%,rgba(76,201,240,.11),transpare
     document.getElementById("visitNote").textContent="Visit events returned by Worker";document.getElementById("requestNote").textContent=`${success} successful · ${totalRequests-success} failed`;document.getElementById("successNote").textContent=`${success} successful of ${totalRequests}`;document.getElementById("responseNote").textContent=`Based on ${durations.length} timed requests`;
     document.getElementById("rangeLabel").textContent=`Last ${rangeSelection} days`;renderLineChart();renderProviderMix();renderHourlyChart();renderTopPrompts();renderHealth();renderActivity();renderRequestTable();
   }
+  function startAutoRefresh() {
+    if (autoRefreshTimer !== null) return;
+    autoRefreshTimer = window.setInterval(() => {
+      if (adminToken && !isLoading && document.visibilityState !== "hidden") fetchAnalytics();
+    }, 10000);
+  }
+
+  // Restore the admin token for this browser tab session, if one was saved earlier.
+  try {
+    const savedToken = sessionStorage.getItem(ADMIN_TOKEN_SESSION_KEY);
+    if (savedToken) {
+      adminToken = savedToken;
+      fetchAnalytics();
+    }
+  } catch (error) {
+    // Storage may be disabled; user can still connect manually.
+  }
+
   connectBtn.addEventListener("click",()=>{adminToken="";if(promptForToken())fetchAnalytics();});
   refreshBtn.addEventListener("click",fetchAnalytics);
   document.querySelectorAll("[data-range]").forEach(button=>button.addEventListener("click",()=>{document.querySelectorAll("[data-range]").forEach(item=>{item.classList.toggle("active",item===button);item.setAttribute("aria-pressed",String(item===button));});rangeSelection=button.dataset.range;document.getElementById("rangeLabel").textContent=`Last ${rangeSelection} days`;if(adminToken)fetchAnalytics();else setStatus(`Selected last ${rangeSelection} days. Connect with your admin token to load live analytics.`,"warning");}));
