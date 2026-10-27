@@ -198,7 +198,7 @@ footer a{color:var(--muted)}
   <h4>Voice</h4><select id="selV" aria-label="Voice"></select>
   <label class="sw"><input type="checkbox" id="swShort"> Short spoken answers in voice mode</label>
   <label class="sw"><input type="checkbox" id="swSearch"> Search the web for answers (uses more free allowance)</label>
-  <h4>Privacy</h4><p class="note">Chats are saved only in this browser. To answer, your messages go through a Cloudflare Worker to Google Gemini, Groq, or Cloudflare Workers AI. Please do not share passwords or private information.</p>
+  <h4>Privacy</h4><p class="note">Your chat history is saved in this browser. To answer, messages go through a Cloudflare Worker to Google Gemini, Groq, or Cloudflare Workers AI. For analytics, Alpha-O records a random browser ID, visit and request timestamps, response status, provider, and a short excerpt (up to 200 characters) of your latest prompt. The backend supports 90-day analytics cleanup; that cleanup must be enabled in Cloudflare before automatic deletion begins. Full conversations and attached files are not stored in the analytics database. Please do not share passwords or private information.</p>
   <button class="dng" id="clrAll">Clear all history</button>
   <h4>Keyboard shortcuts</h4><p class="note">Ctrl+K new chat, Ctrl+/ message box, Ctrl+B sidebar, Ctrl+, settings, Ctrl+Shift+V voice mode, Esc close.</p>
 </div></div>
@@ -228,6 +228,42 @@ IC.copy = '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2
 IC.person = '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>';
 const ic = n => '<svg viewBox="0 0 24 24" aria-hidden="true">' + IC[n] + '</svg>';
 const API_URL = "https://alpha-o-api.ituzerichard6.workers.dev/"; // your backend link
+
+// A random ID for this browser, used only to group analytics events.
+// It is not a name, email address, or account identifier.
+function getVisitorId(){
+  try {
+    let id = localStorage.getItem("alphaO_visitor_id");
+    if (!id || !/^[a-zA-Z0-9-]{8,64}$/.test(id)) {
+      const bytes = new Uint8Array(16);
+      if (window.crypto && window.crypto.getRandomValues) {
+        window.crypto.getRandomValues(bytes);
+      } else {
+        for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256);
+      }
+      id = "ao-" + Array.from(bytes, b => b.toString(16).padStart(2, "0")).join("");
+      localStorage.setItem("alphaO_visitor_id", id);
+    }
+    return id;
+  } catch (e) {
+    // Continue to let the chat work if browser storage is unavailable.
+    return "ao-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 12);
+  }
+}
+const VISITOR_ID = getVisitorId();
+
+// Record this page visit in the background. Analytics failure must not affect chat.
+function recordVisit(){
+  if (!API_URL) return;
+  fetch(API_URL + "visit", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ visitor_id: VISITOR_ID }),
+    keepalive: true
+  }).catch(() => {});
+}
+recordVisit();
+
 const $ = id => document.getElementById(id);
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 let history = [], file = null, voiceOn = false, listening = false, busy = false, spk = 0, rec = null;
@@ -317,7 +353,7 @@ async function ask(){
   }
   ctl = new AbortController();
   const r = await fetch(API_URL, {method:"POST", headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({messages: history.map(m => ({role: m.role, text: m.text})), file, search: S.search, voice: askVoice}), signal: ctl.signal});
+    body: JSON.stringify({messages: history.map(m => ({role: m.role, text: m.text})), file, search: S.search, voice: askVoice, visitor_id: VISITOR_ID}), signal: ctl.signal});
   const j = await r.json().catch(() => ({}));
   if (!r.ok || !j.reply) throw new Error(j.error || "I couldn’t get an answer right now. Please try again.");
   lastSources = j.sources || []; return j.reply;
