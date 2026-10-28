@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   validate:
-    name: Validate HTML and embedded JavaScript
+    name: Validate Alpha-O
     runs-on: ubuntu-latest
 
     steps:
@@ -23,66 +23,85 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Validate all inline JavaScript blocks in index.html
+      - name: Check required files
         shell: bash
         run: |
           set -euo pipefail
 
-          if [ ! -f index.html ]; then
-            echo "::error::index.html not found in the repository root."
-            exit 1
-          fi
+          for file in \
+            index.html \
+            automate/automate.html \
+            automate/automate.css \
+            automate/automate.js
+          do
+            if [ ! -f "$file" ]; then
+              echo "::error::Required file is missing: $file"
+              exit 1
+            fi
+          done
 
-          node - <<'NODE'
+          echo "All required Alpha-O files exist."
+
+      - name: Validate inline JavaScript in index.html
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          node <<'NODE'
           const fs = require("fs");
           const path = require("path");
           const { spawnSync } = require("child_process");
 
-          const htmlPath = "index.html";
+          const html = fs.readFileSync("index.html", "utf8");
+          const scripts = [
+            ...html.matchAll(
+              /<script\b(?![^>]*\bsrc\s*=)[^>]*>([\s\S]*?)<\/script>/gi
+            ),
+          ];
 
-          if (!fs.existsSync(htmlPath)) {
-            console.error("::error::index.html is missing.");
-            process.exit(1);
-          }
-
-          const html = fs.readFileSync(htmlPath, "utf8");
-          const matches = [...html.matchAll(/<script\b(?![^>]*\ssrc\s*=)([^>]*)>([\s\S]*?)<\/script>/gi)];
-
-          if (matches.length === 0) {
-            console.error("::error::No inline JavaScript blocks found in index.html.");
+          if (scripts.length === 0) {
+            console.error("No inline JavaScript blocks found.");
             process.exit(1);
           }
 
           const tempFiles = [];
 
           try {
-            for (const [index, match] of matches.entries()) {
-              const tempPath = path.join(process.cwd(), `.tmp-inline-check-${index}.js`);
-              tempFiles.push(tempPath);
-              fs.writeFileSync(tempPath, match[2], "utf8");
-            }
+            scripts.forEach((match, index) => {
+              const file = path.join(
+                process.cwd(),
+                `.tmp-inline-check-${index}.js`
+              );
 
-            for (const tempPath of tempFiles) {
-              const result = spawnSync(process.execPath, ["--check", tempPath], {
-                stdio: "inherit",
-              });
+              tempFiles.push(file);
+              fs.writeFileSync(file, match[1], "utf8");
+
+              const result = spawnSync(
+                process.execPath,
+                ["--check", file],
+                { stdio: "inherit" }
+              );
 
               if (result.status !== 0) {
-                process.exit(result.status === null ? 1 : result.status);
+                process.exitCode = 1;
               }
-            }
+            });
           } finally {
-            for (const tempPath of tempFiles) {
+            for (const file of tempFiles) {
               try {
-                fs.unlinkSync(tempPath);
-              } catch (error) {
-                // Best-effort cleanup; ignore cleanup failures while preserving the main validation result.
-              }
+                fs.unlinkSync(file);
+              } catch {}
             }
           }
+
+          if (process.exitCode) {
+            process.exit(process.exitCode);
+          }
+
+          console.log("Inline JavaScript syntax checks passed.");
           NODE
 
-      - name: Validate HTML structure
+      - name: Validate HTML
         shell: bash
         run: |
-          npx --yes htmlhint@0.16.3 index.html
+          npx --yes htmlhint@0.16.3 index.html automate/automate.html
