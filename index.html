@@ -904,5 +904,155 @@ function readAloud(m, b){
 }
 newChat();
 </script>
+
+</script>
+
+<!-- ALPHA-O AUTOMATE SLIDE-OUT PANEL -->
+<style>
+  #alpha-automate-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    background: rgba(0, 0, 0, 0.55);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+  }
+
+  #alpha-automate-overlay.open {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  #alpha-automate-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 9999;
+    width: min(520px, 100%);
+    height: 100dvh;
+    background: #080d18;
+    border-left: 1px solid #26354c;
+    transform: translateX(100%);
+    transition: transform 0.28s ease;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -15px 0 45px rgba(0, 0, 0, 0.35);
+  }
+
+  #alpha-automate-panel.open {
+    transform: translateX(0);
+  }
+
+  #alpha-automate-header {
+    min-height: 56px;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    color: #eaf2ff;
+    border-bottom: 1px solid #26354c;
+    font: 600 14px system-ui, sans-serif;
+  }
+
+  #alpha-automate-close {
+    background: #172236;
+    color: #fff;
+    border: 1px solid #354660;
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+
+  #alpha-automate-frame {
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    border: 0;
+    background: #080d18;
+  }
+
+  body.alpha-automate-open {
+    overflow: hidden;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #alpha-automate-panel,
+    #alpha-automate-overlay {
+      transition: none;
+    }
+  }
+</style>
+
+<div id="alpha-automate-overlay" aria-hidden="true"></div>
+
+<aside
+  id="alpha-automate-panel"
+  role="dialog"
+  aria-modal="true"
+  aria-label="ALPHA-O Automate"
+  aria-hidden="true"
+>
+  <div id="alpha-automate-header">
+    <span>ALPHA-O / AUTOMATE</span>
+    <button id="alpha-automate-close" type="button">Close ✕</button>
+  </div>
+
+  <iframe
+    id="alpha-automate-frame"
+    title="ALPHA-O Automate workspace"
+    src="automate/automate.html"
+  ></iframe>
+</aside>
+
+<script>
+(() => {
+  const panel = document.getElementById("alpha-automate-panel");
+  const overlay = document.getElementById("alpha-automate-overlay");
+  const closeButton = document.getElementById("alpha-automate-close");
+
+  function openAutomate() {
+    panel.classList.add("open");
+    overlay.classList.add("open");
+    panel.setAttribute("aria-hidden", "false");
+    overlay.setAttribute("aria-hidden", "false");
+    document.body.classList.add("alpha-automate-open");
+    closeButton.focus();
+  }
+
+  function closeAutomate() {
+    panel.classList.remove("open");
+    overlay.classList.remove("open");
+    panel.setAttribute("aria-hidden", "true");
+    overlay.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("alpha-automate-open");
+  }
+
+  closeButton.addEventListener("click", closeAutomate);
+  overlay.addEventListener("click", closeAutomate);
+
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && panel.classList.contains("open")) {
+      closeAutomate();
+    }
+  });
+
+  window.addEventListener("message", event => {
+    if (event.origin !== window.location.origin) return;
+    if (event.source !== document.getElementById("alpha-automate-frame").contentWindow) return;
+
+    if (event.data && event.data.type === "ALPHA_O_AUTOMATE_CLOSE") {
+      closeAutomate();
+    }
+  });
+
+  window.AlphaOAutomate = { open: openAutomate, close: closeAutomate };
+})();
+</script>
+
+</body>
+</html>
+
 </body>
 </html>
