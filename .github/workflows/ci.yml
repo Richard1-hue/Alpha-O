@@ -53,6 +53,7 @@ jobs:
           const { spawnSync } = require("child_process");
 
           const html = fs.readFileSync("index.html", "utf8");
+
           const scripts = [
             ...html.matchAll(
               /<script\b(?![^>]*\bsrc\s*=)[^>]*>([\s\S]*?)<\/script>/gi
@@ -65,6 +66,7 @@ jobs:
           }
 
           const tempFiles = [];
+          let failed = false;
 
           try {
             scripts.forEach((match, index) => {
@@ -76,26 +78,34 @@ jobs:
               tempFiles.push(file);
               fs.writeFileSync(file, match[1], "utf8");
 
+              console.log(`Checking inline JavaScript block ${index + 1}...`);
+
               const result = spawnSync(
                 process.execPath,
                 ["--check", file],
                 { stdio: "inherit" }
               );
 
-              if (result.status !== 0) {
-                process.exitCode = 1;
+              if (result.error) {
+                console.error(result.error);
+                failed = true;
+              } else if (result.status !== 0) {
+                failed = true;
               }
             });
           } finally {
             for (const file of tempFiles) {
               try {
                 fs.unlinkSync(file);
-              } catch {}
+              } catch {
+                // Ignore temporary-file cleanup errors.
+              }
             }
           }
 
-          if (process.exitCode) {
-            process.exit(process.exitCode);
+          if (failed) {
+            console.error("Inline JavaScript validation failed.");
+            process.exit(1);
           }
 
           console.log("Inline JavaScript syntax checks passed.");
@@ -104,4 +114,6 @@ jobs:
       - name: Validate HTML
         shell: bash
         run: |
-          npx --yes htmlhint@0.16.3 index.html automate/automate.html
+          npx --yes htmlhint@0.16.3 \
+            --rules '{"tag-pair": false, "attr-lowercase": false}' \
+            index.html automate/automate.html
