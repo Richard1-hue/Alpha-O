@@ -1,146 +1,279 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ALPHA-O Automate</title>
+  <meta name="theme-color" content="#0b1020">
+  <meta name="description" content="Alpha-O workflow automation workspace">
+  <title>Automate | Alpha-O</title>
   <link rel="stylesheet" href="automate.css">
+  <script src="automate.js" defer></script>
 </head>
 <body>
-  <main class="workspace">
-    <header class="header">
-      <div class="heading">
-        <div class="mark" aria-hidden="true">A<span>O</span></div>
-        <div>
-          <p class="eyebrow">ALPHA-O WORKSPACE</p>
-          <h1>Automate</h1>
-          <p class="subtitle">Build, organize, and monitor your workflows.</p>
+  <div class="automate-app" id="automateApp">
+    <header class="app-header">
+      <div class="brand-lockup">
+        <div class="brand-logo" aria-hidden="true">
+          <svg viewBox="0 0 64 64" role="img">
+            <defs>
+              <linearGradient id="robotMetal" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#f4f7fb"/>
+                <stop offset="0.55" stop-color="#a9b4c6"/>
+                <stop offset="1" stop-color="#586579"/>
+              </linearGradient>
+              <linearGradient id="robotDark" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#303b50"/>
+                <stop offset="1" stop-color="#111827"/>
+              </linearGradient>
+              <radialGradient id="robotEye">
+                <stop offset="0" stop-color="#fff1c2"/>
+                <stop offset="0.55" stop-color="#ffc86b"/>
+                <stop offset="1" stop-color="#e08a1e"/>
+              </radialGradient>
+            </defs>
+            <circle cx="32" cy="32" r="31" fill="url(#robotDark)"/>
+            <circle cx="32" cy="32" r="29.5" fill="none" stroke="#64748b" stroke-opacity=".65"/>
+            <path d="M32 7v6" stroke="#b8c3d4" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="32" cy="6.5" r="3" fill="url(#robotEye)"/>
+            <rect x="8" y="27" width="48" height="29" rx="11" fill="url(#robotMetal)"/>
+            <rect x="12" y="30" width="40" height="22" rx="8" fill="#101827"/>
+            <rect x="16" y="35" width="11" height="8" rx="4" fill="url(#robotEye)"/>
+            <rect x="37" y="35" width="11" height="8" rx="4" fill="url(#robotEye)"/>
+            <path d="M25 47h14" stroke="#9ba8bc" stroke-width="2" stroke-linecap="round"/>
+            <path d="M5 34h4M55 34h4" stroke="#9ba8bc" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="brand-copy">
+          <div class="brand-name">ALPHA-O <span class="brand-version">WORKSPACE</span></div>
+          <div class="brand-caption">The future begins from now.</div>
         </div>
       </div>
-      <button class="icon-button" id="closePanel"
-        type="button" aria-label="Close Automate panel">×</button>
+
+      <button class="icon-button close-button"
+              id="closeAutomate"
+              type="button"
+              aria-label="Close Automate workspace"
+              title="Close workspace">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="m18 6-12 12M6 6l12 12"/>
+        </svg>
+      </button>
     </header>
 
-    <section class="notice" aria-live="polite">
-      <span class="notice-dot"></span>
-      <div>
-        <strong>Workspace preview</strong>
-        <p>The interface is being prepared. Workflow execution is not connected yet.</p>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">OVERVIEW</p>
-          <h2>Your workflows</h2>
+    <main class="workspace">
+      <section class="welcome-section">
+        <div class="eyebrow">
+          <span class="status-dot"></span>
+          AUTOMATION CENTER
         </div>
-        <button class="primary" id="newWorkflow" type="button">
-          + New workflow
+        <h1>Make work <span>flow.</span></h1>
+        <p class="welcome-description">
+          Build repeatable workflows, organize your ideas, and prepare
+          your business processes for automation.
+        </p>
+        <button class="primary-button" id="newWorkflow" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          Create workflow
         </button>
-      </div>
+      </section>
 
-      <div class="stats">
-        <article class="stat">
-          <span>Workflows</span><strong>0</strong>
-          <small>Created in this workspace</small>
+      <section class="stats-grid" aria-label="Workflow overview">
+        <article class="stat-card">
+          <div class="stat-icon stat-icon-blue" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <rect x="4" y="4" width="6" height="6" rx="2"/>
+              <rect x="14" y="14" width="6" height="6" rx="2"/>
+              <path d="M10 7h3a3 3 0 0 1 3 3v4"/>
+            </svg>
+          </div>
+          <div class="stat-label">Total workflows</div>
+          <div class="stat-value" id="totalWorkflows">0</div>
+          <div class="stat-note">Saved in this browser</div>
         </article>
-        <article class="stat">
-          <span>Runs today</span><strong>0</strong>
-          <small>Execution history not connected</small>
+
+        <article class="stat-card">
+          <div class="stat-icon stat-icon-violet" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 3v4m0 10v4M3 12h4m10 0h4"/>
+              <circle cx="12" cy="12" r="5"/>
+            </svg>
+          </div>
+          <div class="stat-label">Drafts</div>
+          <div class="stat-value" id="draftWorkflows">0</div>
+          <div class="stat-note">Ready for your review</div>
         </article>
-        <article class="stat">
-          <span>Needs attention</span><strong>0</strong>
-          <small>No runs recorded yet</small>
+
+        <article class="stat-card">
+          <div class="stat-icon stat-icon-amber" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="m13 2-3 8h7l-6 12 2-9H6l7-11Z"/>
+            </svg>
+          </div>
+          <div class="stat-label">Active automations</div>
+          <div class="stat-value" id="activeWorkflows">0</div>
+          <div class="stat-note">Execution not connected yet</div>
         </article>
-      </div>
-    </section>
+      </section>
 
-    <section class="section">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">GET STARTED</p>
-          <h2>Choose a starting point</h2>
+      <section class="section-block" aria-labelledby="templatesHeading">
+        <div class="section-heading">
+          <div>
+            <h2 id="templatesHeading">Start with a template</h2>
+            <p>Choose a starting point and customize it.</p>
+          </div>
         </div>
-      </div>
 
-      <div class="templates">
-        <button class="template" type="button"
-          data-template="Lead management">
-          <span class="template-icon">↗</span>
-          <span>
-            <strong>Lead management</strong>
-            <small>Capture and organize new leads.</small>
-          </span>
-          <span class="arrow">→</span>
-        </button>
+        <div class="template-grid">
+          <button class="template-card" type="button"
+                  data-workflow-template="email-follow-up">
+            <span class="template-icon template-email" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <rect x="3" y="5" width="18" height="14" rx="3"/>
+                <path d="m4 7 8 6 8-6"/>
+              </svg>
+            </span>
+            <span class="template-title">Email follow-up</span>
+            <span class="template-description">
+              Plan reminders and follow-up messages.
+            </span>
+            <span class="template-action">Use template <span>↗</span></span>
+          </button>
 
-        <button class="template" type="button"
-          data-template="Task reminders">
-          <span class="template-icon">◷</span>
-          <span>
-            <strong>Task reminders</strong>
-            <small>Prepare reminders for important tasks.</small>
-          </span>
-          <span class="arrow">→</span>
-        </button>
+          <button class="template-card" type="button"
+                  data-workflow-template="task-management">
+            <span class="template-icon template-tasks" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="m5 12 4 4L19 6"/>
+                <path d="M19 13v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10"/>
+              </svg>
+            </span>
+            <span class="template-title">Task management</span>
+            <span class="template-description">
+              Organize recurring tasks and responsibilities.
+            </span>
+            <span class="template-action">Use template <span>↗</span></span>
+          </button>
 
-        <button class="template" type="button"
-          data-template="AI-assisted workflow">
-          <span class="template-icon">✧</span>
-          <span>
-            <strong>AI-assisted workflow</strong>
-            <small>Plan a workflow with ALPHA-O's help.</small>
-          </span>
-          <span class="arrow">→</span>
-        </button>
-      </div>
-    </section>
-
-    <section class="section builder" id="builder" hidden>
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">WORKFLOW SETUP</p>
-          <h2 id="builderTitle">New workflow</h2>
+          <button class="template-card" type="button"
+                  data-workflow-template="data-reporting">
+            <span class="template-icon template-reports" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 19V5m0 14h17"/>
+                <rect x="7" y="11" width="3" height="5" rx="1"/>
+                <rect x="13" y="7" width="3" height="9" rx="1"/>
+                <rect x="19" y="4" width="2" height="12" rx="1"/>
+              </svg>
+            </span>
+            <span class="template-title">Data reporting</span>
+            <span class="template-description">
+              Outline reports and scheduled data reviews.
+            </span>
+            <span class="template-action">Use template <span>↗</span></span>
+          </button>
         </div>
-        <button class="text-button" id="cancelBuilder" type="button">
-          Cancel
-        </button>
-      </div>
+      </section>
 
-      <label for="workflowName">Workflow name</label>
-      <input id="workflowName" maxlength="80"
-        placeholder="e.g. New lead follow-up">
-
-      <label for="workflowGoal">What should it do?</label>
-      <textarea id="workflowGoal" rows="3" maxlength="1000"
-        placeholder="Describe the trigger and the actions you want this workflow to perform."></textarea>
-
-      <p class="help">This preview does not save or execute workflows yet.</p>
-      <button class="primary" id="saveDraft" type="button">
-        Save local draft
-      </button>
-    </section>
-
-    <section class="section">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">ACTIVITY</p>
-          <h2>Recent runs</h2>
+      <section class="section-block workflow-section" aria-labelledby="workflowsHeading">
+        <div class="section-heading">
+          <div>
+            <h2 id="workflowsHeading">Your workflows</h2>
+            <p>Create, edit, and organize your saved drafts.</p>
+          </div>
+          <label class="search-box">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="11" cy="11" r="7"/>
+              <path d="m16 16 4 4"/>
+            </svg>
+            <input id="workflowSearch" type="search"
+                   placeholder="Search workflows"
+                   aria-label="Search workflows">
+          </label>
         </div>
-        <span class="tag">Not connected</span>
-      </div>
 
-      <div class="empty">
-        <span class="empty-icon">◷</span>
-        <strong>No workflow runs yet</strong>
-        <p>When the backend is connected, run status and execution details will appear here.</p>
-      </div>
-    </section>
+        <div id="workflowList" class="workflow-list" aria-live="polite">
+          <div class="empty-state" id="workflowEmpty">
+            <div class="empty-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <rect x="3" y="3" width="7" height="7" rx="2"/>
+                <rect x="14" y="14" width="7" height="7" rx="2"/>
+                <path d="M10 6h3a3 3 0 0 1 3 3v5"/>
+              </svg>
+            </div>
+            <h3>Your next great workflow starts here</h3>
+            <p>Create a workflow or select a template to get started.</p>
+          </div>
+        </div>
+      </section>
 
-    <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  </main>
-  <script src="automate.js"></script>
+      <section class="workflow-editor" id="workflowEditor"
+               aria-labelledby="editorHeading" hidden>
+        <div class="editor-heading">
+          <div>
+            <div class="eyebrow">WORKFLOW BUILDER</div>
+            <h2 id="editorHeading">Create a workflow</h2>
+          </div>
+          <button class="icon-button" id="cancelWorkflow" type="button"
+                  aria-label="Close workflow editor" title="Close editor">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m18 6-12 12M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <form id="workflowForm">
+          <input type="hidden" id="workflowId" name="workflow-id">
+
+          <label class="field-label" for="workflowName">Workflow name</label>
+          <input class="text-field" id="workflowName" name="workflow-name"
+                 type="text" maxlength="100"
+                 placeholder="e.g. Weekly business report" required>
+
+          <label class="field-label" for="workflowType">Category</label>
+          <select class="text-field" id="workflowType" name="workflow-type" required>
+            <option value="business">Business operations</option>
+            <option value="communication">Communication</option>
+            <option value="productivity">Productivity</option>
+            <option value="reporting">Data and reporting</option>
+            <option value="other">Other</option>
+          </select>
+
+          <label class="field-label" for="workflowDescription">What should this workflow do?</label>
+          <textarea class="text-field" id="workflowDescription"
+                    name="workflow-description" rows="4" maxlength="2000"
+                    placeholder="Describe the trigger, steps, and desired outcome..."
+                    required></textarea>
+
+          <div class="editor-note">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/>
+              <path d="M12 11v5m0-8h.01"/>
+            </svg>
+            Saving creates a local draft. It will not execute business actions.
+          </div>
+
+          <div class="editor-actions">
+            <button class="secondary-button" id="cancelWorkflowBottom"
+                    type="button">Cancel</button>
+            <button class="primary-button" type="submit">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 12.5 9.5 17 20 6"/>
+              </svg>
+              Save draft
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <footer class="workspace-footer">
+        <span><span class="footer-dot"></span> Alpha-O Automate</span>
+        <span>Workspace preview · Local drafts only</span>
+      </footer>
+    </main>
+
+    <div class="toast-region" id="toastRegion"
+         role="status" aria-live="polite"></div>
+  </div>
 </body>
 </html>
