@@ -178,7 +178,9 @@ footer a{color:var(--muted)}
 <main>
   <div class="top">
     <div class="bar"><button class="ib" id="menu" data-tip="Open sidebar" data-ic="panel" aria-label="Show sidebar"></button><h2>Alpha-O <span class="ver">v5.0</span></h2></div>
-    <div class="bar"><button class="shr" id="share" data-tip="Share chat"><span data-ic="share"></span>Share</button><button class="ib" id="newTop" data-tip="New chat" data-ic="plus" aria-label="New chat"></button></div>
+    
+<div class="bar"><button class="shr" id="share" data-tip="Share chat"><span data-ic="share"></span>Share</button><button class="shr" id="automateBtn" type="button">⚡ Automate</button><button class="ib" id="newTop" data-tip="New chat" data-ic="plus" aria-label="New chat"></button></div>
+
   </div>
   <div id="chat" aria-live="polite"></div>
   <div id="comp">
@@ -1011,7 +1013,10 @@ newChat();
   const panel = document.getElementById("alpha-automate-panel");
   const overlay = document.getElementById("alpha-automate-overlay");
   const closeButton = document.getElementById("alpha-automate-close");
-
+const automateButton = document.getElementById("automateBtn");
+if (automateButton) {
+  automateButton.addEventListener("click", openAutomate);
+}
   function openAutomate() {
     panel.classList.add("open");
     overlay.classList.add("open");
