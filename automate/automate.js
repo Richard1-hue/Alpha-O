@@ -2,7 +2,7 @@
 
 (() => {
   const STORAGE_KEY = "alphaO.automate.workflows.v1";
-  const CLOSE_MESSAGE = "ALPHA_O_AUTOMATE_CLOSE";
+  const CLOSE_MESSAGE = { type: "ALPHA_O_AUTOMATE_CLOSE" };
 
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
