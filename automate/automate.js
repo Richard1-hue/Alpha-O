@@ -1,4 +1,3 @@
-
 "use strict";
 
 (() => {
@@ -32,6 +31,10 @@
     closeButton: $("#closeAutomate"),
     toast: $("#toastRegion")
   };
+
+  // The execution engine (automate/engine.js) is loaded before this file.
+  // If it failed to load, the builder keeps working and Run Test explains why.
+  const engine = window.AlphaOEngine || null;
 
   const TYPE_LABELS = {
     business: "Business operations",
@@ -83,6 +86,9 @@
   const ICON_TRASH =
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>';
 
+  const ICON_PLAY =
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>';
+
   const ICON_OK =
     '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>';
 
@@ -130,6 +136,12 @@
   let lastFocus = null;
   let deleteArmed = null;
   let deleteTimer = null;
+
+  // Test-run panel state
+  const engineEls = {};
+  let selectedRunId = null;
+  let clearArmed = false;
+  let clearTimer = null;
 
   /* ---------- Storage ---------- */
 
@@ -245,7 +257,7 @@
     const toast = document.createElement("div");
     toast.className = `toast toast-${kind}`;
     toast.innerHTML =
-      `${kind === "error" ? ICON_ERR : ICON_OK}<span></span>`;
+      `${kind === "error" || kind === "warn" ? ICON_ERR : ICON_OK}<span></span>`;
 
     $("span", toast).textContent = message;
 
@@ -358,6 +370,8 @@
         ? `<span><b>IF</b> ${escapeHTML(condition)}</span>`
         : "";
 
+      const running = Boolean(engine && engine.isRunning(workflow.id));
+
       card.innerHTML = `
         <div class="workflow-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24">${icon}</svg>
@@ -392,6 +406,15 @@
         </div>
 
         <div class="workflow-card-actions">
+          <button
+            class="action-button action-run${running ? " running" : ""}"
+            type="button"
+            data-action="run"
+            data-id="${id}"
+            aria-busy="${running ? "true" : "false"}"
+            ${running ? "disabled" : ""}
+          >${ICON_PLAY}<span>${running ? "Running…" : "Run Test"}</span></button>
+
           <button
             class="action-button"
             type="button"
@@ -679,7 +702,582 @@
       openEditor(workflow);
     } else if (button.dataset.action === "delete") {
       deleteWorkflow(id, button);
+    } else if (button.dataset.action === "run") {
+      disarmDelete();
+      runTest(workflow);
     }
+  }
+
+  /* ---------- Test runs: formatting helpers ---------- */
+
+  function formatDateTime(iso) {
+    const time = Date.parse(iso);
+
+    return time ? new Date(time).toLocaleString() : "Not recorded";
+  }
+
+  function formatDuration(ms) {
+    if (!Number.isFinite(ms)) return "Not recorded";
+
+    return ms < 1000 ? `${ms} ms` : `${(ms / 1000).toFixed(1)} s`;
+  }
+
+  function statusClass(status) {
+    switch (status) {
+      case "SUCCESS":
+      case "SIMULATED":
+      case "MET":
+        return "success";
+      case "FAILED":
+      case "ERROR":
+        return "failed";
+      case "SKIPPED":
+      case "NOT_MET":
+        return "skipped";
+      case "UNSUPPORTED":
+        return "unsupported";
+      case "RUNNING":
+      case "PENDING":
+        return "running";
+      default:
+        return "neutral";
+    }
+  }
+
+  function statusPill(status) {
+    const label = String(status || "UNKNOWN").replace(/_/g, " ");
+
+    return `<span class="status-pill status-${statusClass(status)}">${escapeHTML(label)}</span>`;
+  }
+
+  /* ---------- Test runs: report ---------- */
+
+  function renderNotes(notes) {
+    if (!Array.isArray(notes) || !notes.length) return "";
+
+    return `<ul class="run-notes">${notes
+      .map(note => `<li>${escapeHTML(note)}</li>`)
+      .join("")}</ul>`;
+  }
+
+  function renderStep(title, step, bodyHTML) {
+    const status = step && step.status ? step.status : "NOT_RUN";
+
+    return `
+      <li class="run-step run-step-${statusClass(status)}">
+        <div class="run-step-head">
+          <span class="run-step-title">${escapeHTML(title)}</span>
+          ${statusPill(status)}
+        </div>
+        <div class="run-step-body">${bodyHTML}</div>
+      </li>
+    `;
+  }
+
+  function renderTriggerStep(run) {
+    const step = run.trigger || {};
+    let body;
+
+    if (step.status === "PENDING") {
+      body = '<p class="run-muted">Waiting…</p>';
+    } else if (step.status === "NOT_RUN") {
+      body = '<p class="run-muted">Not reached.</p>';
+    } else {
+      body = `
+        <p>${escapeHTML(step.summary || "")}</p>
+        ${renderNotes(step.notes)}
+      `;
+    }
+
+    const title = step.label ? `Trigger: ${step.label}` : "Trigger";
+
+    return renderStep(title, step, body);
+  }
+
+  function renderConditionStep(run) {
+    const step = run.condition || {};
+    let body;
+
+    if (step.status === "PENDING") {
+      body = '<p class="run-muted">Waiting…</p>';
+    } else if (step.status === "NOT_RUN") {
+      body = '<p class="run-muted">Not reached.</p>';
+    } else {
+      const expression = step.expression
+        ? `<p class="run-code">${escapeHTML(step.expression)}</p>`
+        : "";
+
+      const clauses = Array.isArray(step.clauses) && step.clauses.length
+        ? `<ul class="run-clauses">${step.clauses.map(clause => {
+            let outcome;
+
+            if (clause.error) {
+              outcome = `<span class="clause-result clause-error">${escapeHTML(clause.error)}</span>`;
+            } else {
+              outcome = `<span class="clause-result clause-${clause.result ? "true" : "false"}">${clause.result ? "true" : "false"}</span>`;
+            }
+
+            const actual = clause.actual === null || clause.actual === undefined
+              ? "not in test input"
+              : clause.actual;
+
+            return `
+              <li>
+                <code>${escapeHTML(clause.raw)}</code>
+                <span class="run-muted">Test input: ${escapeHTML(actual)}</span>
+                ${outcome}
+              </li>
+            `;
+          }).join("")}</ul>`
+        : "";
+
+      const help = step.help
+        ? `<p class="run-muted">${escapeHTML(step.help)}</p>`
+        : "";
+
+      body = `${expression}<p>${escapeHTML(step.summary || "")}</p>${clauses}${help}`;
+    }
+
+    return renderStep("Condition", step, body);
+  }
+
+  function renderActionStep(run) {
+    const step = run.action || {};
+    let body;
+
+    if (step.status === "PENDING") {
+      body = '<p class="run-muted">Waiting…</p>';
+    } else if (step.status === "NOT_RUN" && !step.summary) {
+      body = '<p class="run-muted">Not reached.</p>';
+    } else {
+      const preview = step.preview && typeof step.preview === "object"
+        ? `<dl class="run-preview">${Object.keys(step.preview).map(key => `
+            <dt>${escapeHTML(key)}</dt>
+            <dd>${escapeHTML(step.preview[key])}</dd>
+          `).join("")}</dl>`
+        : "";
+
+      const label = step.status === "SIMULATED"
+        ? '<p class="run-simulated">Simulation only. Nothing real was done.</p>'
+        : "";
+
+      body = `
+        ${label}
+        <p>${escapeHTML(step.summary || "")}</p>
+        ${preview}
+        ${renderNotes(step.notes)}
+      `;
+    }
+
+    const title = step.label ? `Action: ${step.label}` : "Action";
+
+    return renderStep(title, step, body);
+  }
+
+  function renderReport() {
+    if (!engineEls.report) return;
+
+    const run = engine && selectedRunId ? engine.getRun(selectedRunId) : null;
+
+    if (!run) {
+      engineEls.report.innerHTML = `
+        <div class="run-empty">
+          <p class="empty-title">No test selected</p>
+          <p class="empty-text">Click Run Test on a workflow, or choose Details in the run history.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const validation = run.validation || { errors: [], warnings: [] };
+
+    const validationBlock = validation.errors.length || validation.warnings.length
+      ? `
+        <div class="run-block ${validation.errors.length ? "run-block-error" : "run-block-warn"}">
+          <div class="run-block-title">Validation</div>
+          <ul class="run-notes">
+            ${validation.errors.map(text => `<li><b>Error:</b> ${escapeHTML(text)}</li>`).join("")}
+            ${validation.warnings.map(text => `<li><b>Note:</b> ${escapeHTML(text)}</li>`).join("")}
+          </ul>
+        </div>
+      `
+      : "";
+
+    const errorBlock = run.error
+      ? `
+        <div class="run-block run-block-error">
+          <div class="run-block-title">${run.status === "UNSUPPORTED" ? "Unsupported" : "Error"} (${escapeHTML(run.error.code)})</div>
+          <p>${escapeHTML(run.error.message)}</p>
+        </div>
+      `
+      : "";
+
+    const messages = Array.isArray(run.messages) ? run.messages : [];
+
+    const logBlock = `
+      <details class="run-details">
+        <summary>Execution messages (${messages.length})</summary>
+        <ol class="run-log">
+          ${messages.map(message => `
+            <li class="log-${escapeHTML(message.level)}">
+              <time>${escapeHTML(message.at ? new Date(message.at).toLocaleTimeString() : "")}</time>
+              <span class="log-step">${escapeHTML(message.step)}</span>
+              <span>${escapeHTML(message.text)}</span>
+            </li>
+          `).join("")}
+        </ol>
+      </details>
+    `;
+
+    const inputBlock = `
+      <details class="run-details">
+        <summary>Test input used (sensitive-looking fields are hidden)</summary>
+        <pre class="run-pre">${escapeHTML(JSON.stringify(run.testInput || {}, null, 2))}</pre>
+      </details>
+    `;
+
+    engineEls.report.innerHTML = `
+      <article class="run-report">
+        <header class="run-report-head">
+          <div class="run-report-title">
+            <h4>${escapeHTML(run.workflowName)}</h4>
+            <div class="run-meta">Run ID <code>${escapeHTML(run.id)}</code> · Simulation</div>
+          </div>
+          ${statusPill(run.status)}
+        </header>
+
+        ${run.summary ? `<p class="run-summary">${escapeHTML(run.summary)}</p>` : ""}
+
+        <dl class="run-times">
+          <div><dt>Started</dt><dd>${escapeHTML(formatDateTime(run.startedAt))}</dd></div>
+          <div><dt>Completed</dt><dd>${escapeHTML(run.finishedAt ? formatDateTime(run.finishedAt) : "Still running…")}</dd></div>
+          <div><dt>Duration</dt><dd>${escapeHTML(run.finishedAt ? formatDuration(run.durationMs) : "…")}</dd></div>
+        </dl>
+
+        ${validationBlock}
+        ${errorBlock}
+
+        <ol class="run-steps">
+          ${renderTriggerStep(run)}
+          ${renderConditionStep(run)}
+          ${renderActionStep(run)}
+        </ol>
+
+        ${logBlock}
+        ${inputBlock}
+      </article>
+    `;
+  }
+
+  /* ---------- Test runs: history ---------- */
+
+  function renderHistory() {
+    if (!engineEls.history) return;
+
+    const runs = engine ? engine.getRuns() : [];
+
+    if (engineEls.clear) engineEls.clear.disabled = runs.length === 0;
+
+    if (!runs.length) {
+      engineEls.history.innerHTML = `
+        <li class="run-empty">
+          <p class="empty-title">No test runs yet</p>
+          <p class="empty-text">Runs appear here after you click Run Test.</p>
+        </li>
+      `;
+      return;
+    }
+
+    engineEls.history.innerHTML = runs.map(run => `
+      <li class="run-row${run.id === selectedRunId ? " selected" : ""}">
+        <div class="run-row-main">
+          <span class="run-row-name">${escapeHTML(run.workflowName)}</span>
+          <span class="run-row-time">${escapeHTML(formatDateTime(run.startedAt))}${run.finishedAt ? ` · ${escapeHTML(formatDuration(run.durationMs))}` : ""}</span>
+        </div>
+        ${statusPill(run.status)}
+        <button
+          class="action-button"
+          type="button"
+          data-run-action="view"
+          data-run-id="${escapeHTML(run.id)}"
+          aria-label="View details for ${escapeHTML(run.workflowName)}, ${escapeHTML(formatDateTime(run.startedAt))}"
+        >Details</button>
+      </li>
+    `).join("");
+  }
+
+  function updateRunButtons() {
+    $$('button[data-action="run"]', elements.list).forEach(button => {
+      const running = Boolean(engine && engine.isRunning(button.dataset.id));
+
+      button.disabled = running;
+      button.classList.toggle("running", running);
+      button.setAttribute("aria-busy", running ? "true" : "false");
+
+      const label = $("span", button);
+
+      if (label) label.textContent = running ? "Running…" : "Run Test";
+    });
+  }
+
+  function revealReport() {
+    if (!engineEls.report) return;
+
+    const reduceMotion = window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    engineEls.report.scrollIntoView({
+      behavior: reduceMotion ? "auto" : "smooth",
+      block: "nearest"
+    });
+  }
+
+  function handleEngineEvent(event) {
+    if (event.type === "run-started" || event.type === "run-finished") {
+      updateRunButtons();
+    }
+
+    renderHistory();
+
+    if (event.type === "history-cleared") {
+      selectedRunId = null;
+      renderReport();
+    } else if (event.run && event.run.id === selectedRunId) {
+      renderReport();
+    }
+
+    if (event.type === "storage-error") {
+      showToast(
+        "Run history could not be saved in this browser. It will be lost when you leave the page.",
+        "error"
+      );
+    }
+  }
+
+  /* ---------- Test runs: input and running ---------- */
+
+  function showInputError(message) {
+    if (!engineEls.inputError || !engineEls.input) return;
+
+    engineEls.inputError.textContent = message || "";
+    engineEls.inputError.hidden = !message;
+
+    engineEls.input.classList.toggle("invalid", Boolean(message));
+    engineEls.input.setAttribute("aria-invalid", message ? "true" : "false");
+  }
+
+  function readTestInput() {
+    const text = (engineEls.input?.value || "").trim();
+
+    if (!text) return { ok: true, value: {} };
+
+    if (engine && text.length > engine.MAX_TEST_INPUT_CHARS) {
+      return {
+        ok: false,
+        message: `Test input is longer than ${engine.MAX_TEST_INPUT_CHARS} characters.`
+      };
+    }
+
+    try {
+      const value = JSON.parse(text);
+
+      if (!value || typeof value !== "object" || Array.isArray(value)) {
+        return {
+          ok: false,
+          message: 'Test input must be a JSON object, for example {"priority": "urgent"}.'
+        };
+      }
+
+      return { ok: true, value };
+    } catch (error) {
+      return { ok: false, message: `Test input is not valid JSON: ${error.message}` };
+    }
+  }
+
+  async function runTest(workflow) {
+    if (!engine) {
+      showToast(
+        "The test engine did not load. Check that engine.js is in the automate folder.",
+        "error"
+      );
+      return;
+    }
+
+    const input = readTestInput();
+
+    if (!input.ok) {
+      showInputError(input.message);
+      engineEls.input?.focus();
+      showToast("Fix the test input before running a test.", "error");
+      return;
+    }
+
+    showInputError("");
+
+    let outcome;
+
+    try {
+      outcome = await engine.runWorkflow(workflow, {
+        testInput: input.value,
+        onStart: run => {
+          selectedRunId = run.id;
+          renderReport();
+          revealReport();
+        }
+      });
+    } catch (error) {
+      console.error("Alpha-O Automate: Test run failed unexpectedly.", error);
+      showToast("The test could not be run. See the browser console for details.", "error");
+      return;
+    }
+
+    if (!outcome.accepted) {
+      showToast(outcome.message, "warn");
+      return;
+    }
+
+    const { run } = outcome;
+
+    if (run.status === "SUCCESS") {
+      showToast(`Test completed (simulation): ${run.workflowName}`);
+    } else if (run.status === "SKIPPED") {
+      showToast(`Test skipped, condition not met: ${run.workflowName}`, "warn");
+    } else if (run.status === "UNSUPPORTED") {
+      showToast(`Test not run, unsupported: ${run.workflowName}`, "warn");
+    } else {
+      showToast(`Test failed: ${run.workflowName}. See the execution report.`, "error");
+    }
+  }
+
+  function resetTestInput() {
+    if (!engine || !engineEls.input) return;
+
+    engineEls.input.value = JSON.stringify(engine.getSampleInput(), null, 2);
+    showInputError("");
+  }
+
+  function disarmClear() {
+    window.clearTimeout(clearTimer);
+
+    clearTimer = null;
+    clearArmed = false;
+
+    if (engineEls.clear) engineEls.clear.textContent = "Clear history";
+  }
+
+  function clearRunHistory() {
+    if (!engine) return;
+
+    if (!clearArmed) {
+      clearArmed = true;
+      engineEls.clear.textContent = "Confirm?";
+      clearTimer = window.setTimeout(disarmClear, 3000);
+      return;
+    }
+
+    disarmClear();
+    engine.clearHistory();
+    showToast("Run history cleared.");
+  }
+
+  function handleEnginePanelClick(event) {
+    const viewButton = event.target.closest("button[data-run-action='view']");
+
+    if (viewButton) {
+      selectedRunId = viewButton.dataset.runId;
+      renderReport();
+      renderHistory();
+      revealReport();
+      return;
+    }
+
+    if (event.target.closest("#resetTestInput")) {
+      resetTestInput();
+    } else if (event.target.closest("#clearRunHistory")) {
+      clearRunHistory();
+    }
+  }
+
+  /* ---------- Test runs: panel setup ---------- */
+
+  function mountEnginePanel() {
+    const anchor = $(".workflow-section");
+
+    if (!anchor || $("#engineSection")) return;
+
+    const section = document.createElement("section");
+    section.className = "section-block engine-section";
+    section.id = "engineSection";
+    section.setAttribute("aria-labelledby", "engineHeading");
+
+    section.innerHTML = `
+      <div class="section-heading">
+        <div>
+          <h2 id="engineHeading">Test runs</h2>
+          <p>Simulated tests only. Nothing is sent, saved to a spreadsheet, or posted.</p>
+        </div>
+      </div>
+
+      <div class="engine-grid">
+        <div class="engine-panel">
+          <div class="engine-panel-head">
+            <label class="field-label" for="engineTestInput">Test input (JSON)</label>
+            <button class="action-button" id="resetTestInput" type="button">Reset sample</button>
+          </div>
+          <textarea class="text-field engine-input" id="engineTestInput" rows="10" spellcheck="false"
+            aria-describedby="engineInputHelp engineInputError"></textarea>
+          <div class="engine-input-error" id="engineInputError" role="alert" hidden></div>
+          <p class="engine-help" id="engineInputHelp">
+            Every Run Test button uses these values. Do not enter real passwords, tokens, or API keys.
+          </p>
+          <details class="run-details">
+            <summary>How conditions are checked</summary>
+            <p class="engine-help" id="engineSyntaxHelp"></p>
+          </details>
+        </div>
+
+        <div class="engine-panel">
+          <div class="engine-panel-head">
+            <h3 class="engine-subheading">Execution report</h3>
+          </div>
+          <div class="engine-report" id="engineReport"></div>
+        </div>
+      </div>
+
+      <div class="engine-panel engine-history-panel">
+        <div class="engine-panel-head">
+          <h3 class="engine-subheading">Run history</h3>
+          <button class="action-button" id="clearRunHistory" type="button">Clear history</button>
+        </div>
+        <ol class="run-history" id="engineHistory" aria-live="polite"></ol>
+      </div>
+    `;
+
+    anchor.insertAdjacentElement("afterend", section);
+
+    engineEls.section = section;
+    engineEls.input = $("#engineTestInput", section);
+    engineEls.inputError = $("#engineInputError", section);
+    engineEls.report = $("#engineReport", section);
+    engineEls.history = $("#engineHistory", section);
+    engineEls.clear = $("#clearRunHistory", section);
+
+    if (engine) {
+      resetTestInput();
+      $("#engineSyntaxHelp", section).textContent = engine.CONDITION_SYNTAX_HELP;
+    } else {
+      engineEls.input.disabled = true;
+      $("#resetTestInput", section).disabled = true;
+      engineEls.clear.disabled = true;
+      engineEls.report.innerHTML = `
+        <div class="run-empty">
+          <p class="empty-title">Test engine not loaded</p>
+          <p class="empty-text">Check that engine.js is in the same folder as automate.html and loads before automate.js.</p>
+        </div>
+      `;
+    }
+
+    section.addEventListener("click", handleEnginePanelClick);
   }
 
   /* ---------- Close the Automate panel ---------- */
@@ -808,7 +1406,13 @@
       });
     });
 
+    mountEnginePanel();
+
+    if (engine) engine.subscribe(handleEngineEvent);
+
     render();
+    renderReport();
+    renderHistory();
   }
 
   init();
