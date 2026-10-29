@@ -129,7 +129,7 @@
         </div>
 
         <form id="workflowForm" novalidate>
-          <input type="hidden" id="workflowId" name="workflow-id">
+                   <input type="hidden" id="workflowId" name="workflow-id">
 
           <div class="field">
             <label class="field-label" for="workflowName">Workflow name</label>
@@ -147,15 +147,71 @@
             </select>
           </div>
 
+          <section class="builder-section" aria-labelledby="triggerHeading">
+            <div class="builder-section-heading">
+              <span class="builder-step">01</span>
+              <div>
+                <h3 id="triggerHeading">Trigger</h3>
+                <p>Choose what starts this workflow.</p>
+              </div>
+            </div>
+            <div class="field">
+              <label class="field-label" for="workflowTrigger">Start when</label>
+              <select class="text-field" id="workflowTrigger" name="workflow-trigger" required>
+                <option value="manual">Manually started</option>
+                <option value="schedule">On a schedule</option>
+                <option value="new-email">A new email arrives</option>
+                <option value="form-submission">A form is submitted</option>
+                <option value="file-added">A file is added</option>
+                <option value="webhook">A webhook is received</option>
+              </select>
+            </div>
+          </section>
+
+          <section class="builder-section" aria-labelledby="actionHeading">
+            <div class="builder-section-heading">
+              <span class="builder-step">02</span>
+              <div>
+                <h3 id="actionHeading">Action</h3>
+                <p>Choose what the workflow should do.</p>
+              </div>
+            </div>
+            <div class="field">
+              <label class="field-label" for="workflowAction">Perform action</label>
+              <select class="text-field" id="workflowAction" name="workflow-action" required>
+                <option value="summarize">Summarize information</option>
+                <option value="draft-email">Draft an email</option>
+                <option value="create-task">Create or organize a task</option>
+                <option value="analyze-data">Analyze data and prepare a report</option>
+                <option value="notify">Prepare a notification</option>
+                <option value="process-file">Process a file</option>
+              </select>
+            </div>
+          </section>
+
+          <section class="builder-section" aria-labelledby="conditionHeading">
+            <div class="builder-section-heading">
+              <span class="builder-step">03</span>
+              <div>
+                <h3 id="conditionHeading">Condition <span class="optional-label">OPTIONAL</span></h3>
+                <p>Describe a rule that should be checked before the action.</p>
+              </div>
+            </div>
+            <div class="field">
+              <label class="field-label" for="workflowCondition">Only continue if...</label>
+              <input class="text-field" id="workflowCondition" name="workflow-condition" type="text" maxlength="500" placeholder="e.g. The email is marked urgent">
+            </div>
+          </section>
+
           <div class="field">
-            <label class="field-label" for="workflowDescription">What should this workflow do?</label>
-            <textarea class="text-field" id="workflowDescription" name="workflow-description" rows="4" maxlength="2000" placeholder="Describe the trigger, steps, and desired outcome..." required></textarea>
+            <label class="field-label" for="workflowDescription">Workflow notes and expected result</label>
+            <textarea class="text-field" id="workflowDescription" name="workflow-description" rows="3" maxlength="2000" placeholder="Explain the details, requirements, and expected outcome..." required></textarea>
             <div class="field-meta"><span id="descCount">0 / 2000</span></div>
           </div>
 
           <div class="editor-note">
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/></svg>
-            Saving creates a local draft. It will not run any business actions.
+            Saving creates a local draft. Triggers and actions are configuration only; the workflow will not execute automatically.
           </div>
 
           <div class="editor-actions">
@@ -165,7 +221,7 @@
               Save draft
             </button>
           </div>
-        </form>
+
       </div>
     </section>
 
