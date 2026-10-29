@@ -243,3 +243,91 @@ select.text-field { appearance: none; padding-right: 36px; cursor: pointer;
 .app-header { border-bottom: 1px solid var(--border); }
 .status-dot { animation: pulse 2.4s ease-in-out infinite; }
 @keyframes pulse { 50% { box-shadow: 0 0 0 7px rgba(85, 214, 160, 0); } }
+
+
+
+/* ==========================================
+   ALPHA O — Structured Workflow Builder
+   ========================================== */
+
+.builder-section {
+  padding: 15px;
+  margin: 0 0 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: linear-gradient(
+    135deg,
+    rgba(79, 211, 255, 0.045),
+    transparent 70%
+  );
+}
+
+.builder-section-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  margin-bottom: 14px;
+}
+
+.builder-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 9px;
+  color: var(--blue);
+  background: rgba(79, 211, 255, 0.1);
+  border: 1px solid rgba(79, 211, 255, 0.22);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.builder-section-heading h3 {
+  margin: 1px 0 4px;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.builder-section-heading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.optional-label {
+  margin-left: 5px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.builder-section .field {
+  margin-bottom: 0;
+}
+
+.workflow-flow-summary {
+  display: grid;
+  gap: 5px;
+  margin-top: 11px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.workflow-flow-summary span {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.workflow-flow-summary b {
+  display: inline-block;
+  min-width: 31px;
+  color: var(--blue);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
