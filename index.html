@@ -950,27 +950,6 @@ newChat();
     transform: translateX(0);
   }
 
-  #alpha-automate-header {
-    min-height: 56px;
-    padding: 10px 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    color: #eaf2ff;
-    border-bottom: 1px solid #26354c;
-    font: 600 14px system-ui, sans-serif;
-  }
-
-  #alpha-automate-close {
-    background: #172236;
-    color: #fff;
-    border: 1px solid #354660;
-    border-radius: 8px;
-    padding: 8px 12px;
-    cursor: pointer;
-  }
-
   #alpha-automate-frame {
     width: 100%;
     flex: 1;
@@ -979,7 +958,7 @@ newChat();
     background: #080d18;
   }
 
-  /* Drag this handle to resize the panel */
+  /* Resizable left edge */
   #alpha-automate-resizer {
     position: absolute;
     top: 0;
@@ -1035,13 +1014,17 @@ newChat();
 
   @media (prefers-reduced-motion: reduce) {
     #alpha-automate-panel,
-    #alpha-automate-overlay {
+    #alpha-automate-overlay,
+    #alpha-automate-resizer::after {
       transition: none;
     }
   }
 </style>
 
-<div id="alpha-automate-overlay" aria-hidden="true"></div>
+<div
+  id="alpha-automate-overlay"
+  aria-hidden="true"
+></div>
 
 <aside
   id="alpha-automate-panel"
@@ -1062,13 +1045,6 @@ newChat();
     title="Drag to resize the Automate sidebar"
   ></div>
 
-  <div id="alpha-automate-header">
-    <span>ALPHA-O / AUTOMATE</span>
-    <button id="alpha-automate-close" type="button">
-      Close ✕
-    </button>
-  </div>
-
   <iframe
     id="alpha-automate-frame"
     title="ALPHA-O Automate workspace"
@@ -1078,11 +1054,18 @@ newChat();
 
 <script>
 (() => {
+  "use strict";
+
   const panel = document.getElementById("alpha-automate-panel");
   const overlay = document.getElementById("alpha-automate-overlay");
-  const closeButton = document.getElementById("alpha-automate-close");
   const automateButton = document.getElementById("automateBtn");
+  const frame = document.getElementById("alpha-automate-frame");
   const resizer = document.getElementById("alpha-automate-resizer");
+
+  if (!panel || !overlay || !frame || !resizer) {
+    console.error("Alpha-O Automate: Required panel elements are missing.");
+    return;
+  }
 
   const WIDTH_KEY = "alphaO_automate_panel_width";
   const DEFAULT_WIDTH = 520;
@@ -1100,9 +1083,10 @@ newChat();
       Math.min(MAX_WIDTH, window.innerWidth)
     );
 
-    const min = Math.min(MIN_WIDTH, max);
-
-    return { min, max };
+    return {
+      min: Math.min(MIN_WIDTH, max),
+      max
+    };
   }
 
   function clampWidth(width) {
@@ -1118,15 +1102,17 @@ newChat();
       currentWidth + "px"
     );
 
-    resizer.setAttribute("aria-valuemin", String(limits().min));
-    resizer.setAttribute("aria-valuemax", String(limits().max));
+    const bounds = limits();
+
+    resizer.setAttribute("aria-valuemin", String(bounds.min));
+    resizer.setAttribute("aria-valuemax", String(bounds.max));
     resizer.setAttribute("aria-valuenow", String(currentWidth));
 
     if (save) {
       try {
         localStorage.setItem(WIDTH_KEY, String(currentWidth));
       } catch (error) {
-        // Resizing still works if browser storage is unavailable.
+        // Resizing still works when storage is unavailable.
       }
     }
   }
@@ -1140,7 +1126,7 @@ newChat();
         return;
       }
     } catch (error) {
-      // Use the default width if browser storage is unavailable.
+      // Use the default width if storage is unavailable.
     }
 
     applyWidth(DEFAULT_WIDTH);
@@ -1149,17 +1135,25 @@ newChat();
   function openAutomate() {
     panel.classList.add("open");
     overlay.classList.add("open");
+
     panel.setAttribute("aria-hidden", "false");
     overlay.setAttribute("aria-hidden", "false");
+
     document.body.classList.add("alpha-automate-open");
-    closeButton.focus();
+
+    // Focus the workspace iframe instead of the removed parent Close button.
+    frame.focus();
   }
 
   function closeAutomate() {
+    finishResize();
+
     panel.classList.remove("open");
     overlay.classList.remove("open");
+
     panel.setAttribute("aria-hidden", "true");
     overlay.setAttribute("aria-hidden", "true");
+
     document.body.classList.remove("alpha-automate-open");
 
     if (automateButton) {
@@ -1183,7 +1177,7 @@ newChat();
       try {
         resizer.setPointerCapture(event.pointerId);
       } catch (error) {
-        // Continue resizing without pointer capture if unavailable.
+        // Continue without pointer capture if unavailable.
       }
     }
   }
@@ -1191,8 +1185,8 @@ newChat();
   function moveResize(event) {
     if (!dragging) return;
 
-    // The panel is anchored to the right, so moving its left edge
-    // left increases its width and moving right decreases it.
+    // The panel is anchored to the right.
+    // Moving its left edge left increases its width.
     const delta = dragStartX - event.clientX;
 
     applyWidth(dragStartWidth + delta);
@@ -1238,7 +1232,6 @@ newChat();
     automateButton.addEventListener("click", openAutomate);
   }
 
-  closeButton.addEventListener("click", closeAutomate);
   overlay.addEventListener("click", closeAutomate);
 
   document.addEventListener("keydown", event => {
@@ -1256,8 +1249,6 @@ newChat();
 
   window.addEventListener("message", event => {
     if (event.origin !== window.location.origin) return;
-
-    const frame = document.getElementById("alpha-automate-frame");
 
     if (event.source !== frame.contentWindow) return;
 
@@ -1277,7 +1268,8 @@ newChat();
   };
 })();
 </script>
-  
+<!-- END ALPHA-O AUTOMATE SLIDE-OUT PANEL -->
+
 </body>
 </html>
 
