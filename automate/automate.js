@@ -2,6 +2,8 @@
 
 (() => {
   const STORAGE_KEY = "alphaO.automate.workflows.v1";
+  const TOKEN_KEY = "alphaO.automate.adminToken.v1";
+  const API_BASE = "https://alpha-o-api.ituzerichard6.workers.dev";
   const CLOSE_MESSAGE = { type: "ALPHA_O_AUTOMATE_CLOSE" };
 
   const $ = (selector, root = document) => root.querySelector(selector);
@@ -29,7 +31,12 @@
     cancelButton: $("#cancelWorkflow"),
     cancelBottom: $("#cancelWorkflowBottom"),
     closeButton: $("#closeAutomate"),
-    toast: $("#toastRegion")
+    toast: $("#toastRegion"),
+    cloudToken: $("#cloudAdminToken"),
+    cloudConnect: $("#cloudConnect"),
+    cloudDisconnect: $("#cloudDisconnect"),
+    cloudStatus: $("#cloudSyncStatus"),
+    storageNote: $("#workflowStorageNote")
   };
 
   // The execution engine (automate/engine.js) is loaded before this file.
@@ -182,6 +189,179 @@
         "error"
       );
       return false;
+    }
+  }
+
+  /* ---------- Cloudflare workflow storage ---------- */
+
+  let cloudToken = "";
+  let cloudConnected = false;
+  let cloudBusy = false;
+
+  function setCloudStatus(message) {
+    if (elements.cloudStatus) {
+      elements.cloudStatus.textContent = message;
+    }
+  }
+
+  async function cloudRequest(path, options = {}) {
+    const response = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${cloudToken}`,
+        ...(options.headers || {})
+      }
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data.error || `Cloud request failed (${response.status})`);
+    }
+
+    return data;
+  }
+
+  function fromCloud(item) {
+    return {
+      id: String(item.id),
+      name: item.name || "",
+      type: item.category || "other",
+      trigger: item.triggerType || DEFAULT_TRIGGER,
+      action: item.actionType || DEFAULT_ACTION,
+      condition: item.conditionText || "",
+      description: item.description || "",
+      status: item.status || "draft",
+      updatedAt: item.updatedAt || item.updated_at || new Date().toISOString()
+    };
+  }
+
+  function toCloud(workflow) {
+    return {
+      name: workflow.name,
+      category: workflow.type,
+      triggerType: workflow.trigger,
+      actionType: workflow.action,
+      conditionText: workflow.condition,
+      description: workflow.description,
+      status: workflow.status || "draft"
+    };
+  }
+
+  async function loadCloudWorkflows() {
+    const data = await cloudRequest("/admin/workflows");
+    workflows = Array.isArray(data.workflows)
+      ? data.workflows.map(fromCloud)
+      : [];
+    render();
+    if (elements.storageNote) {
+      elements.storageNote.textContent = "Saved in Cloudflare database";
+    }
+  }
+  async function connectCloud() {
+    if (cloudBusy) return;
+
+    const token = elements.cloudToken?.value.trim() || "";
+
+    if (!token) {
+      setCloudStatus("Enter your Cloudflare admin token first.");
+      elements.cloudToken?.focus();
+      return;
+    }
+
+    cloudBusy = true;
+    cloudToken = token;
+    elements.cloudConnect.disabled = true;
+    setCloudStatus("Connecting to Cloudflare...");
+
+    try {
+      await loadCloudWorkflows();
+
+      cloudConnected = true;
+      sessionStorage.setItem(TOKEN_KEY, cloudToken);
+
+      elements.cloudToken.value = "";
+      elements.cloudDisconnect.disabled = false;
+
+      setCloudStatus("Connected — workflows are stored online.");
+      showToast("Cloudflare connected.");
+    } catch (error) {
+      cloudToken = "";
+      cloudConnected = false;
+      setCloudStatus(`Connection failed: ${error.message}`);
+      showToast("Could not connect to Cloudflare.", "error");
+    } finally {
+      cloudBusy = false;
+      elements.cloudConnect.disabled = false;
+    }
+  }
+
+  function disconnectCloud() {
+    if (cloudBusy) return;
+
+    cloudToken = "";
+    cloudConnected = false;
+    sessionStorage.removeItem(TOKEN_KEY);
+
+    workflows = loadWorkflows();
+    render();
+
+    if (elements.storageNote) {
+      elements.storageNote.textContent = "Saved in this browser";
+    }
+
+    elements.cloudDisconnect.disabled = true;
+    setCloudStatus("Disconnected — using browser storage.");
+    showToast("Cloudflare disconnected.");
+  }
+  
+  async function saveCloudWorkflow(workflow, existing) {
+    if (cloudBusy) return;
+
+    cloudBusy = true;
+
+    try {
+      const isEditing = Boolean(existing);
+      const path = isEditing
+        ? `/admin/workflows/${encodeURIComponent(existing.id)}`
+        : "/admin/workflows";
+
+      await cloudRequest(path, {
+        method: isEditing ? "PUT" : "POST",
+        body: JSON.stringify(toCloud(workflow))
+      });
+
+      await loadCloudWorkflows();
+
+      closeEditor();
+      showToast(isEditing ? "Cloud workflow updated." : "Cloud workflow saved.");
+    } catch (error) {
+      console.error("Alpha-O cloud save failed:", error);
+      showToast(`Cloud save failed: ${error.message}`, "error");
+    } finally {
+      cloudBusy = false;
+    }
+  }
+
+  async function deleteCloudWorkflow(id) {
+    if (cloudBusy) return;
+
+    cloudBusy = true;
+
+    try {
+      await cloudRequest(
+        `/admin/workflows/${encodeURIComponent(id)}`,
+        { method: "DELETE" }
+      );
+
+      await loadCloudWorkflows();
+      showToast("Cloud workflow deleted.");
+    } catch (error) {
+      console.error("Alpha-O cloud delete failed:", error);
+      showToast(`Cloud delete failed: ${error.message}`, "error");
+    } finally {
+      cloudBusy = false;
     }
   }
 
@@ -540,7 +720,7 @@
     lastFocus = null;
   }
 
-  function saveWorkflow(event) {
+  async function saveWorkflow(event) {
     event.preventDefault();
     clearInvalid();
 
@@ -671,7 +851,14 @@
     }
 
     disarmDelete();
-
+    if (cloudConnected) {
+      await saveCloudWorkflow(workflow, existing);
+      return;
+    }
+        if (cloudConnected) {
+      deleteCloudWorkflow(id);
+      return;
+    }
     const previous = workflows;
 
     workflows = workflows.filter(item => item.id !== id);
@@ -1338,7 +1525,15 @@
       "submit",
       saveWorkflow
     );
+    elements.cloudConnect?.addEventListener(
+      "click",
+      connectCloud
+    );
 
+    elements.cloudDisconnect?.addEventListener(
+      "click",
+      disconnectCloud
+    );
     elements.newButton?.addEventListener(
       "click",
       () => openEditor()
@@ -1413,7 +1608,13 @@
     render();
     renderReport();
     renderHistory();
-  }
+
+    const savedCloudToken = sessionStorage.getItem(TOKEN_KEY);
+
+    if (savedCloudToken) {
+      cloudToken = savedCloudToken;
+      connectCloud();
+    }
 
   init();
 })();
