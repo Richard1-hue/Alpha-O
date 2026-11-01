@@ -289,6 +289,7 @@
     } catch (error) {
       cloudToken = "";
       cloudConnected = false;
+      sessionStorage.removeItem(TOKEN_KEY);
       setCloudStatus(`Connection failed: ${error.message}`);
       showToast("Could not connect to Cloudflare.", "error");
     } finally {
