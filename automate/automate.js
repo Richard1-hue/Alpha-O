@@ -855,10 +855,6 @@
       await saveCloudWorkflow(workflow, existing);
       return;
     }
-        if (cloudConnected) {
-      deleteCloudWorkflow(id);
-      return;
-    }
     const previous = workflows;
 
     workflows = workflows.filter(item => item.id !== id);
