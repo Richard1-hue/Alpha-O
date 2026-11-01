@@ -776,7 +776,10 @@
       status: "draft",
       updatedAt: new Date().toISOString()
     };
-
+    if (cloudConnected) {
+      await saveCloudWorkflow(workflow, existing);
+      return;
+    }
     const previous = workflows;
 
     workflows = existing
