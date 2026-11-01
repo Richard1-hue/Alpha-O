@@ -1614,6 +1614,7 @@
 
     if (savedCloudToken) {
       cloudToken = savedCloudToken;
+      lements.cloudToken.value = savedCloudToken;
       connectCloud();
     }
 
