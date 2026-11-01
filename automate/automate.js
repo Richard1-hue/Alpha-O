@@ -851,6 +851,26 @@
     }
 
     disarmDelete();
+
+    if (cloudConnected) {
+      deleteCloudWorkflow(id);
+      return;
+    }
+
+    const previous = workflows;
+
+    workflows = workflows.filter(item => item.id !== id);
+
+    if (!persistWorkflows()) {
+      workflows = previous;
+      return;
+    }
+
+    render();
+    showToast("Draft deleted.");
+  }
+
+    disarmDelete();
     if (cloudConnected) {
       await saveCloudWorkflow(workflow, existing);
       return;
