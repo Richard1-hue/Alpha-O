@@ -870,24 +870,6 @@
     showToast("Draft deleted.");
   }
 
-    disarmDelete();
-    if (cloudConnected) {
-      await saveCloudWorkflow(workflow, existing);
-      return;
-    }
-    const previous = workflows;
-
-    workflows = workflows.filter(item => item.id !== id);
-
-    if (!persistWorkflows()) {
-      workflows = previous;
-      return;
-    }
-
-    render();
-    showToast("Draft deleted.");
-  }
-
   function handleListClick(event) {
     const button = event.target.closest(
       "button[data-action]"
