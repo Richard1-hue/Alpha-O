@@ -1614,7 +1614,7 @@
 
     if (savedCloudToken) {
       cloudToken = savedCloudToken;
-      lements.cloudToken.value = savedCloudToken;
+      elements.cloudToken.value = savedCloudToken;
       connectCloud();
     }
 
