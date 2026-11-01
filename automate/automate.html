@@ -41,13 +41,42 @@
         </button>
       </section>
 
+      <section class="cloud-sync-panel" aria-labelledby="cloudSyncHeading">
+        <div class="cloud-sync-copy">
+          <div class="eyebrow">CLOUD CONNECTION</div>
+          <h2 id="cloudSyncHeading">Connect your workspace</h2>
+          <p>Connect ALPHA-O to your Cloudflare database to store and manage workflows online.</p>
+          <p id="cloudSyncStatus" role="status">Not connected — using browser storage.</p>
+        </div>
+
+        <div class="cloud-sync-controls">
+          <label class="cloud-token" for="cloudAdminToken">
+            Cloudflare admin token
+          </label>
+          <input
+            id="cloudAdminToken"
+            type="password"
+            placeholder="Enter your admin token"
+            autocomplete="off"
+          >
+          <div class="cloud-sync-actions">
+            <button class="primary-button" id="cloudConnect" type="button">
+              Connect
+            </button>
+            <button class="icon-button" id="cloudDisconnect" type="button" disabled>
+              Disconnect
+            </button>
+          </div>
+        </div>
+      </section>
+
       <section class="stats-grid" aria-label="Workflow overview">
         <article class="stat-card">
           <div class="stat-icon stat-icon-blue" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="2"/><rect x="14" y="14" width="6" height="6" rx="2"/><path d="M10 7h3a3 3 0 0 1 3 3v4"/></svg></div>
           <div class="stat-body">
             <div class="stat-label">Total workflows</div>
             <div class="stat-value" id="totalWorkflows">0</div>
-            <div class="stat-note">Saved in this browser</div>
+            <div class="stat-note" id="workflowStorageNote">Saved in this browser</div>
           </div>
         </article>
         <article class="stat-card">
