@@ -1618,6 +1618,7 @@
       elements.cloudToken.value = savedCloudToken;
       connectCloud();
     }
+  }
 
   init();
 })();
