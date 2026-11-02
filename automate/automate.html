@@ -28,8 +28,19 @@
       </button>
     </header>
 
+    <nav class="app-nav" id="appNav" aria-label="Automate sections">
+      <a class="nav-link" href="#dashboard" data-nav="dashboard">Dashboard</a>
+      <a class="nav-link" href="#workflows" data-nav="workflows">Workflows</a>
+      <a class="nav-link" href="#templates" data-nav="templates">Templates</a>
+      <a class="nav-link" href="#assistant" data-nav="assistant">Automate AI</a>
+      <a class="nav-link" href="#monitoring" data-nav="monitoring">Monitoring</a>
+      <a class="nav-link" href="#workspaces" data-nav="workspaces">Workspaces</a>
+      <a class="nav-link" href="#integrations" data-nav="integrations">Integrations</a>
+      <a class="nav-link" href="#access" data-nav="access">Access</a>
+    </nav>
+
     <main class="workspace">
-      <section class="welcome-section">
+      <section class="welcome-section" data-view="dashboard">
         <div class="welcome-copy">
           <div class="eyebrow"><span class="status-dot"></span>Automation center</div>
           <h1>Make work flow.</h1>
@@ -41,7 +52,7 @@
         </button>
       </section>
 
-      <section class="cloud-sync-panel" aria-labelledby="cloudSyncHeading">
+      <section class="cloud-sync-panel" data-view="dashboard workflows" aria-labelledby="cloudSyncHeading">
         <div class="cloud-sync-copy">
           <div class="eyebrow">CLOUD CONNECTION</div>
           <h2 id="cloudSyncHeading">Connect your workspace</h2>
@@ -70,7 +81,7 @@
         </div>
       </section>
 
-      <section class="stats-grid" aria-label="Workflow overview">
+      <section class="stats-grid" data-view="dashboard workflows" aria-label="Workflow overview">
         <article class="stat-card">
           <div class="stat-icon stat-icon-blue" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="2"/><rect x="14" y="14" width="6" height="6" rx="2"/><path d="M10 7h3a3 3 0 0 1 3 3v4"/></svg></div>
           <div class="stat-body">
@@ -97,7 +108,71 @@
         </article>
       </section>
 
-      <section class="section-block" aria-labelledby="templatesHeading">
+      <section class="stats-grid" data-view="dashboard" aria-label="Test run overview">
+        <article class="stat-card">
+          <div class="stat-icon stat-icon-green" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg></div>
+          <div class="stat-body">
+            <div class="stat-label">Successful test runs</div>
+            <div class="stat-value" id="dashRunsSuccess">0</div>
+            <div class="stat-note">Simulation results</div>
+          </div>
+        </article>
+        <article class="stat-card">
+          <div class="stat-icon stat-icon-red" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5m0 3h.01"/></svg></div>
+          <div class="stat-body">
+            <div class="stat-label">Failed test runs</div>
+            <div class="stat-value" id="dashRunsFailed">0</div>
+            <div class="stat-note">Simulation results</div>
+          </div>
+        </article>
+        <article class="stat-card">
+          <div class="stat-icon stat-icon-blue" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19V5m0 14h17"/><path d="m8 15 3-4 3 2 5-7"/></svg></div>
+          <div class="stat-body">
+            <div class="stat-label">Test runs recorded</div>
+            <div class="stat-value" id="dashRunsTotal">0</div>
+            <div class="stat-note" id="dashRunsTotalNote">No runs yet</div>
+          </div>
+        </article>
+      </section>
+
+      <section class="dash-grid" data-view="dashboard" aria-label="Performance and activity">
+        <div class="panel">
+          <div class="panel-head">
+            <h2 class="panel-title">Test run performance</h2>
+            <span class="badge badge-sim">Simulation</span>
+          </div>
+          <div id="dashPerformance" class="dash-performance"></div>
+          <h3 class="panel-subtitle">By workflow</h3>
+          <div id="dashWorkflowPerf" class="perf-list"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h2 class="panel-title">Recent activity</h2>
+            <span class="badge" id="dashActivityBadge">This session</span>
+          </div>
+          <ol id="dashActivity" class="activity-list"></ol>
+        </div>
+      </section>
+
+      <section class="dash-grid dash-grid-even" data-view="dashboard" aria-label="Status and quick actions">
+        <div class="panel">
+          <div class="panel-head"><h2 class="panel-title">Automation status</h2></div>
+          <ul id="dashStatus" class="status-list"></ul>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h2 class="panel-title">Quick actions</h2></div>
+          <div class="quick-actions" id="dashQuick">
+            <button class="action-button" type="button" data-quick="new">New workflow</button>
+            <button class="action-button" type="button" data-quick="assistant">Ask Automate AI</button>
+            <button class="action-button" type="button" data-quick="templates">Browse templates</button>
+            <button class="action-button" type="button" data-quick="monitoring">Open monitoring</button>
+            <button class="action-button" type="button" data-quick="workflows">View workflows</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-block" data-view="dashboard templates" aria-labelledby="templatesHeading">
         <div class="section-heading">
           <div><h2 id="templatesHeading">Start with a template</h2><p>Pick a starting point, then make it yours.</p></div>
         </div>
@@ -123,7 +198,20 @@
         </div>
       </section>
 
-      <section class="section-block workflow-section" aria-labelledby="workflowsHeading">
+      <section class="section-block" id="templateLibrarySection" data-view="templates" aria-labelledby="libraryHeading" hidden>
+        <div class="section-heading">
+          <div><h2 id="libraryHeading">Template library</h2><p>Every template uses triggers and actions the test engine already understands.</p></div>
+          <label class="search-box">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 4 4"/></svg>
+            <input id="templateSearch" type="search" placeholder="Search templates" aria-label="Search templates">
+          </label>
+        </div>
+        <div class="chip-row" id="templateCategories" role="tablist" aria-label="Template categories"></div>
+        <p class="result-count" id="templateCount" role="status"></p>
+        <div class="library-grid" id="templateLibrary"></div>
+      </section>
+
+      <section class="section-block workflow-section" data-view="workflows" aria-labelledby="workflowsHeading" hidden>
         <div class="section-heading">
           <div><h2 id="workflowsHeading">Your workflows</h2><p>Create, edit, and organize your saved drafts.</p></div>
           <label class="search-box">
@@ -131,18 +219,197 @@
             <input id="workflowSearch" type="search" placeholder="Search workflows" aria-label="Search workflows">
           </label>
         </div>
+
+        <div class="filter-bar" role="group" aria-label="Filter and sort workflows">
+          <label class="filter-field">
+            <span class="filter-label">Category</span>
+            <select class="text-field compact" id="workflowCategoryFilter">
+              <option value="all">All categories</option>
+              <option value="business">Business operations</option>
+              <option value="communication">Communication</option>
+              <option value="productivity">Productivity</option>
+              <option value="reporting">Data and reporting</option>
+              <option value="other">Other</option>
+            </select>
+          </label>
+          <label class="filter-field">
+            <span class="filter-label">Test status</span>
+            <select class="text-field compact" id="workflowStatusFilter">
+              <option value="all">Any status</option>
+              <option value="untested">Not tested yet</option>
+              <option value="passed">Last test passed</option>
+              <option value="attention">Needs attention</option>
+            </select>
+          </label>
+          <label class="filter-field">
+            <span class="filter-label">Sort by</span>
+            <select class="text-field compact" id="workflowSort">
+              <option value="updated">Recently updated</option>
+              <option value="name">Name (A to Z)</option>
+              <option value="category">Category</option>
+            </select>
+          </label>
+          <div class="filter-end">
+            <span class="result-count" id="workflowCount" role="status"></span>
+            <button class="primary-button compact-button" id="newWorkflowAlt" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              New workflow
+            </button>
+          </div>
+        </div>
+
         <div id="workflowList" class="workflow-list" aria-live="polite">
           <div class="empty-state" id="workflowEmpty">
             <div class="empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/><path d="M10 6h3a3 3 0 0 1 3 3v5"/></svg></div>
             <h3 class="empty-title">No workflows yet</h3>
             <p class="empty-text">Create a workflow or start with one of the templates above.</p>
+            <button class="action-button empty-action" id="clearWorkflowFilters" type="button" hidden>Clear search and filters</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-block" id="assistantSection" data-view="assistant" aria-labelledby="aiHeading" hidden>
+        <div class="section-heading">
+          <div>
+            <h2 id="aiHeading">ALPHA-O AUTOMATE AI</h2>
+            <p>Describe an automation in plain language and review a proposed workflow before anything is saved.</p>
+          </div>
+          <span class="badge badge-warn" id="aiModeBadge" title="No AI model is connected in this phase. Proposals come from local keyword rules.">Local preview · no AI model connected</span>
+        </div>
+
+        <div class="ai-layout">
+          <div class="panel ai-chat">
+            <div class="ai-messages" id="aiMessages" role="log" aria-live="polite" aria-label="Conversation"></div>
+            <div class="ai-suggestions" id="aiSuggestions" aria-label="Suggested prompts"></div>
+            <form id="aiForm" novalidate>
+              <label class="field-label" for="aiPrompt">Describe your automation</label>
+              <textarea class="text-field" id="aiPrompt" rows="3" maxlength="600" placeholder="e.g. Every Monday, analyze last week's sales numbers and prepare a report"></textarea>
+              <div class="field-error" id="aiError" role="alert" hidden></div>
+              <div class="ai-form-foot">
+                <span class="field-meta" id="aiPromptCount">0 / 600</span>
+                <button class="primary-button" id="aiSend" type="submit">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 12 16-8-6 16-3-6z"/></svg>
+                  Generate proposal
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div class="panel ai-proposal" id="aiProposalPanel">
+            <div class="panel-head">
+              <h3 class="panel-title">Proposed workflow</h3>
+              <span class="badge badge-draft">Not saved</span>
+            </div>
+            <div class="empty-state compact-empty" id="aiProposalEmpty">
+              <p class="empty-title">No proposal yet</p>
+              <p class="empty-text">Send a request and the proposed trigger, condition and action will appear here for review.</p>
+            </div>
+
+            <div id="aiProposalBody" hidden>
+              <p class="proposal-source" id="aiProposalSource"></p>
+              <ul class="proposal-notes" id="aiProposalNotes"></ul>
+
+              <div class="field"><label class="field-label" for="aiName">Name</label>
+                <input class="text-field" id="aiName" type="text" maxlength="100"></div>
+              <div class="field"><label class="field-label" for="aiType">Category</label>
+                <select class="text-field" id="aiType"></select></div>
+              <div class="field"><label class="field-label" for="aiTrigger">Start when</label>
+                <select class="text-field" id="aiTrigger"></select></div>
+              <div class="field"><label class="field-label" for="aiCondition">Only continue if (optional)</label>
+                <input class="text-field" id="aiCondition" type="text" maxlength="500"></div>
+              <div class="field"><label class="field-label" for="aiAction">Perform action</label>
+                <select class="text-field" id="aiAction"></select></div>
+              <div class="field"><label class="field-label" for="aiDescription">Notes and expected result</label>
+                <textarea class="text-field" id="aiDescription" rows="3" maxlength="2000"></textarea></div>
+
+              <h4 class="panel-subtitle">Review checks</h4>
+              <ul class="check-list" id="aiChecks"></ul>
+              <div id="aiTestResult" class="inline-result" hidden></div>
+
+              <p class="approval-note">Accepting saves a draft only. Nothing becomes active, and nothing runs outside this page.</p>
+              <div class="proposal-actions">
+                <button class="secondary-button" id="aiReject" type="button">Reject</button>
+                <button class="secondary-button" id="aiBuilder" type="button">Open in builder</button>
+                <button class="secondary-button" id="aiTest" type="button">Test proposal</button>
+                <button class="primary-button" id="aiAccept" type="button">Accept as draft</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-block" id="workspacesSection" data-view="workspaces" aria-labelledby="wsHeading" hidden>
+        <div class="section-heading">
+          <div>
+            <h2 id="wsHeading">Workspaces and clients</h2>
+            <p>See how agency work will be organized per client.</p>
+          </div>
+          <label class="filter-field">
+            <span class="filter-label">Workspace</span>
+            <select class="text-field compact" id="wsSwitch"></select>
+          </label>
+        </div>
+        <div class="notice" id="wsNotice" role="note"></div>
+        <div class="ws-summary" id="wsSummary"></div>
+        <div class="ws-layout">
+          <div class="panel">
+            <div class="panel-head"><h3 class="panel-title" id="wsListTitle">Clients</h3></div>
+            <ul class="ws-list" id="wsClients"></ul>
+          </div>
+          <div class="panel" id="wsDetail" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section class="section-block" id="integrationsSection" data-view="integrations" aria-labelledby="intHeading" hidden>
+        <div class="section-heading">
+          <div>
+            <h2 id="intHeading">Integrations and API connections</h2>
+            <p>Nothing here is connected. This page shows how connections will be managed later.</p>
+          </div>
+        </div>
+        <div class="notice" role="note">No OAuth permission is requested, no external request is made and no credential is stored by this page.</div>
+        <div class="chip-row" id="intFilters" role="group" aria-label="Filter integrations"></div>
+        <div class="int-grid" id="intGrid"></div>
+
+        <div class="panel table-panel">
+          <div class="panel-head"><h3 class="panel-title">Connection overview</h3></div>
+          <div class="table-scroll">
+            <table class="data-table">
+              <caption class="sr-only">Planned integrations and their status</caption>
+              <thead><tr><th scope="col">Connection</th><th scope="col">Status</th><th scope="col">Credentials</th><th scope="col">Permissions</th><th scope="col"><span class="sr-only">Details</span></th></tr></thead>
+              <tbody id="intRows"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-block" id="accessSection" data-view="access" aria-labelledby="accessHeading" hidden>
+        <div class="section-heading">
+          <div>
+            <h2 id="accessHeading">Roles and permissions</h2>
+            <p>A preview of the planned role model.</p>
+          </div>
+          <label class="filter-field">
+            <span class="filter-label">Preview as</span>
+            <select class="text-field compact" id="rbacRole"></select>
+          </label>
+        </div>
+        <div class="notice notice-warn" role="note">Visual preview only. These labels do not restrict anything in this workspace and are not a security control. Real sign-in and role enforcement arrive with the database phase.</div>
+        <div class="panel" id="rbacSummary" aria-live="polite"></div>
+        <div class="panel table-panel">
+          <div class="table-scroll">
+            <table class="data-table rbac-table" id="rbacTable">
+              <caption class="sr-only">Planned permissions by role</caption>
+              <thead id="rbacHead"></thead>
+              <tbody id="rbacBody"></tbody>
+            </table>
           </div>
         </div>
       </section>
 
       <footer class="workspace-footer">
         <span><span class="footer-dot"></span>Alpha-O Automate</span>
-        <span>Workspace preview · Local drafts only</span>
+        <span id="workspaceFooterNote">Workspace preview · Local drafts only</span>
       </footer>
     </main>
 
@@ -163,7 +430,8 @@
 
           <div class="field">
             <label class="field-label" for="workflowName">Workflow name</label>
-            <input class="text-field" id="workflowName" name="workflow-name" type="text" maxlength="100" placeholder="e.g. Weekly business report" required>
+            <input class="text-field" id="workflowName" name="workflow-name" type="text" maxlength="100" placeholder="e.g. Weekly business report" required aria-describedby="workflowNameError">
+            <div class="field-error" id="workflowNameError" role="alert" hidden></div>
           </div>
 
           <div class="field">
@@ -195,6 +463,7 @@
                 <option value="file-added">A file is added</option>
                 <option value="webhook">A webhook is received</option>
               </select>
+              <p class="field-help" id="triggerHelp"></p>
             </div>
           </section>
 
@@ -216,6 +485,7 @@
                 <option value="notify">Prepare a notification</option>
                 <option value="process-file">Process a file</option>
               </select>
+              <p class="field-help" id="actionHelp"></p>
             </div>
           </section>
 
@@ -229,23 +499,38 @@
             </div>
             <div class="field">
               <label class="field-label" for="workflowCondition">Only continue if...</label>
-              <input class="text-field" id="workflowCondition" name="workflow-condition" type="text" maxlength="500" placeholder="e.g. priority is urgent">
+              <input class="text-field" id="workflowCondition" name="workflow-condition" type="text" maxlength="500" placeholder="e.g. priority is urgent" aria-describedby="conditionHint">
+              <p class="field-hint" id="conditionHint" role="status" hidden></p>
+              <details class="run-details">
+                <summary>How conditions are written</summary>
+                <p class="engine-help" id="conditionSyntax"></p>
+              </details>
             </div>
           </section>
 
           <div class="field">
             <label class="field-label" for="workflowDescription">Workflow notes and expected result</label>
-            <textarea class="text-field" id="workflowDescription" name="workflow-description" rows="3" maxlength="2000" placeholder="Explain the details, requirements, and expected outcome..." required></textarea>
+            <textarea class="text-field" id="workflowDescription" name="workflow-description" rows="3" maxlength="2000" placeholder="Explain the details, requirements, and expected outcome..." required aria-describedby="workflowDescriptionError"></textarea>
+            <div class="field-error" id="workflowDescriptionError" role="alert" hidden></div>
             <div class="field-meta"><span id="descCount">0 / 2000</span></div>
           </div>
 
+          <div class="builder-preview" aria-labelledby="previewHeading">
+            <h3 class="panel-subtitle" id="previewHeading">Configuration preview</h3>
+            <div id="builderPreview"></div>
+            <p class="field-help">Order is fixed: trigger, then condition, then action. The test engine supports one of each per workflow.</p>
+          </div>
+
+          <div id="builderTestResult" class="inline-result" hidden></div>
+
           <div class="editor-note">
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/></svg>
-            Saving creates a local draft. Triggers and actions are configuration only; the workflow will not execute automatically.
+            <span id="editorNote">Saving creates a local draft. Triggers and actions are configuration only; the workflow will not execute automatically.</span>
           </div>
 
           <div class="editor-actions">
             <button class="secondary-button" id="cancelWorkflowBottom" type="button">Cancel</button>
+            <button class="secondary-button" id="testConfig" type="button" title="Runs a simulation of the values currently in this form. Nothing is saved or sent.">Test this configuration</button>
             <button class="primary-button" type="submit">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5 9.5 17 20 6"/></svg>
               Save draft
@@ -254,6 +539,38 @@
         </form>
       </div>
     </section>
+
+    <div class="drawer-layer" id="detailDrawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" hidden>
+      <aside class="drawer-panel">
+        <header class="drawer-head">
+          <div class="drawer-heading">
+            <div class="eyebrow">Workflow details</div>
+            <h2 id="drawerTitle">Workflow</h2>
+          </div>
+          <button class="icon-button" id="drawerClose" type="button" aria-label="Close details" title="Close details">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12"/></svg>
+          </button>
+        </header>
+        <div class="drawer-body" id="drawerBody"></div>
+        <footer class="drawer-actions" id="drawerActions">
+          <button class="secondary-button" type="button" data-drawer-action="delete">Delete</button>
+          <button class="secondary-button" type="button" data-drawer-action="duplicate">Duplicate</button>
+          <button class="secondary-button" type="button" data-drawer-action="edit">Edit</button>
+          <button class="primary-button" type="button" data-drawer-action="run">Run test</button>
+        </footer>
+      </aside>
+    </div>
+
+    <div class="dialog-layer" id="appDialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle" aria-describedby="dialogBody" hidden>
+      <div class="dialog-card">
+        <h2 id="dialogTitle">Confirm</h2>
+        <div class="dialog-body" id="dialogBody"></div>
+        <div class="dialog-actions">
+          <button class="secondary-button" id="dialogCancel" type="button">Cancel</button>
+          <button class="primary-button" id="dialogConfirm" type="button">OK</button>
+        </div>
+      </div>
+    </div>
 
     <div class="toast-region" id="toastRegion" role="status" aria-live="polite"></div>
   </div>
