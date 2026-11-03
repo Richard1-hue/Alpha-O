@@ -233,6 +233,28 @@ main::before{background:radial-gradient(closest-side,rgba(16,163,127,.12),transp
 #modeBtn.on{color:var(--accent)}
 .sughint{display:none;font-size:14px!important;color:var(--muted);margin:8px 0 auto!important}
 @media(max-width:600px),(max-height:500px) and (hover:none){#welcome .cards{display:none}#welcome .sughint{display:block}}
+/* ===== Revision 3: circular logo glow, animated avatar ===== */
+.lg.big{filter:none;animation:none}
+.lgw{display:grid;width:fit-content;border-radius:50%;animation:lgglow 3.5s ease-in-out infinite}
+@keyframes lgglow{0%,100%{box-shadow:0 0 18px 2px rgba(16,163,127,.28)}50%{box-shadow:0 0 30px 6px rgba(16,163,127,.5)}}
+.av svg{overflow:visible}
+.av .hd{transform-origin:32px 51px}
+.av .eye{transform-box:fill-box;transform-origin:center}
+.av .mo-f,.av .mo-h,.av .hap{display:none}
+.av svg.think .mo-s,.av svg.happy .mo-s{display:none}
+.av svg.think .mo-f{display:inline}
+.av svg.happy .mo-h,.av svg.happy .hap{display:inline}
+.av svg.happy .eye{display:none}
+.av svg.think .hd{animation:avthink 2.6s ease-in-out infinite}
+.av svg.think .eyes{animation:avorbit 2.4s linear infinite}
+.av svg.think .eye{animation:avblink 2.2s infinite}
+.av svg.think .ant{animation:avant .9s ease-in-out infinite}
+.av svg.happy .hd{animation:avhappy 1.1s ease-in-out infinite}
+@keyframes avthink{0%,100%{transform:rotate(-9deg)}50%{transform:rotate(9deg) translateY(-1px)}}
+@keyframes avblink{0%,40%,50%,100%{transform:scaleY(1)}45%{transform:scaleY(.1)}}
+@keyframes avorbit{0%,100%{transform:translate(0,-2.4px)}12.5%{transform:translate(1.7px,-1.7px)}25%{transform:translate(2.4px,0)}37.5%{transform:translate(1.7px,1.7px)}50%{transform:translate(0,2.4px)}62.5%{transform:translate(-1.7px,1.7px)}75%{transform:translate(-2.4px,0)}87.5%{transform:translate(-1.7px,-1.7px)}}
+@keyframes avant{0%,100%{opacity:.45}50%{opacity:1}}
+@keyframes avhappy{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-1.6px) rotate(3deg)}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
@@ -381,6 +403,10 @@ function md(src){
   if (code !== null) out += cb(lang, code);
   fp(); fl(); return out;
 }
+function botAvatar(){
+  const st = 'fill="none" stroke="#ffc86b" stroke-linecap="round"';
+  return '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="31" fill="url(#gB)"/><ellipse cx="32" cy="55" rx="14" ry="2.6" fill="#000" opacity=".4"/><g class="hd"><line x1="32" y1="9" x2="32" y2="15" stroke="#9aa0a8" stroke-width="2" stroke-linecap="round"/><circle class="ant" cx="32" cy="8" r="3" fill="url(#gE)"/><rect x="9" y="29" width="4" height="10" rx="2" fill="url(#gE)"/><rect x="51" y="29" width="4" height="10" rx="2" fill="url(#gE)"/><rect x="12" y="15" width="40" height="36" rx="14" fill="url(#gH)"/><rect x="17" y="23" width="30" height="20" rx="9" fill="url(#gV)"/><g class="eyes"><circle class="eye" cx="25.5" cy="33" r="3.8" fill="url(#gE)"/><circle class="eye" cx="38.5" cy="33" r="3.8" fill="url(#gE)"/><path class="hap" d="M21.7 34Q25.5 28.6 29.3 34M34.7 34Q38.5 28.6 42.3 34" ' + st + ' stroke-width="2.4"/></g><path class="mo-s" d="M27 39.5Q32 43 37 39.5" ' + st + ' stroke-width="1.8"/><path class="mo-f" d="M28.5 40H35.5" ' + st + ' stroke-width="1.8"/><path class="mo-h" d="M26 38Q32 44.6 38 38" ' + st + ' stroke-width="2"/><ellipse cx="23" cy="19.5" rx="8" ry="2.6" fill="#fff" opacity=".55"/></g></svg>';
+}
 function stamp(ts){ const d = new Date(ts || Date.now()); return {t: d.toLocaleTimeString([], {hour: "numeric", minute: "2-digit"}), full: d.toLocaleString([], {weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit"})}; }
 function add(text, who, ts, idx, fi){
   const r = document.createElement("div"); r.className = "row " + who;
@@ -388,7 +414,7 @@ function add(text, who, ts, idx, fi){
   const col = document.createElement("div"); col.className = "col " + who;
   const act = document.createElement("div"); act.className = "act " + who;
   if (who === "you") r.dataset.i = idx;
-  if (who === "bot"){ const a = document.createElement("div"); a.className = "av"; a.innerHTML = LOGO_USE; r.appendChild(a); }
+  if (who === "bot"){ const a = document.createElement("div"); a.className = "av"; a.innerHTML = botAvatar(); r.appendChild(a); }
   if (text){ if (who === "bot") m.innerHTML = md(text); else m.textContent = text; }
   const mk = (icon, tip, fn, cls) => { const b = document.createElement("button"); b.className = "ib " + (cls || ""); b.dataset.tip = tip; b.innerHTML = ic(icon); b.onclick = () => fn(b); act.appendChild(b); };
   if (who === "bot"){
@@ -485,20 +511,23 @@ async function answer(spoken){
   busy = true; file = lastFile; askVoice = !!spoken && S.short;
   const m = add("", "bot"), labels = file ? ["Reading your file...", "Thinking..."] : ["Thinking..."], timers = [];
   const show = txt => { m.innerHTML = '<span class="dots"><i></i><i></i><i></i></span><span class="stp">' + txt + '</span>'; setFace("thinking", txt); };
+  const av = m.closest(".row").querySelector(".av svg"), setAv = c => { if (av) av.setAttribute("class", c); }; setAv("think");
   m.closest(".row").classList.add("loading"); show(labels[0]);
   if (labels.length > 1) timers.push(setTimeout(() => show(labels[1]), 1500));
   timers.push(setTimeout(() => show("Still working on it..."), 7000), setTimeout(() => show("Taking longer than usual..."), 20000));
   let reply; lastSources = [];
   const cEl = $("chat"); let first = true, pend = 0, latest = "";
   const live = txt => {
-    if (first){ first = false; timers.forEach(clearTimeout); setFace("thinking", "Responding..."); }
+    if (first){ first = false; timers.forEach(clearTimeout); setFace("thinking", "Responding..."); setAv("happy"); }
     latest = txt;
     if (!pend) pend = requestAnimationFrame(() => {
       pend = 0; const near = cEl.scrollHeight - cEl.scrollTop - cEl.clientHeight < 90;
       m.innerHTML = md(latest); if (near) cEl.scrollTop = cEl.scrollHeight;
     });
   };
-  try { reply = await ask(live); } catch(e){ reply = friendly(e); }
+  let failed = false;
+  try { reply = await ask(live); } catch(e){ reply = friendly(e); failed = true; }
+  if (failed) setAv(""); else { setAv("happy"); setTimeout(() => setAv(""), 3000); }
   if (pend){ cancelAnimationFrame(pend); pend = 0; }
   timers.forEach(clearTimeout); file = null; m.closest(".row").classList.remove("loading");
   const srcs = lastSources; mine.push({role:"model", text:reply, ts:Date.now(), src: srcs});
@@ -749,7 +778,7 @@ function loadChat(id){
 function newChat(){
   stopAll();
   history = []; file = null; curId = Date.now().toString(36); $("chip").style.display = "none"; $("input").value = "";
-  $("chat").innerHTML = '<div id="welcome"><svg class="lg big" viewBox="0 0 64 64"><use href="#logo"/></svg><p id="greet"></p><h2>How can I assist you?</h2><div class="cards"></div><p class="sughint">Tap the lightbulb below for ideas</p></div>';
+  $("chat").innerHTML = '<div id="welcome"><span class="lgw"><svg class="lg big" viewBox="0 0 64 64"><use href="#logo"/></svg></span><p id="greet"></p><h2>How can I assist you?</h2><div class="cards"></div><p class="sughint">Tap the lightbulb below for ideas</p></div>';
   $("greet").textContent = greeting();
   pickPrompts().forEach(x => {
     const b = document.createElement("button"); b.type = "button"; b.className = "card";
@@ -861,10 +890,11 @@ function robotStart(){
     const renderer = new THREE.WebGLRenderer({antialias: true, alpha: true}), cv = renderer.domElement;
     cv.className = "rv2c"; $("voice").insertBefore(cv, $("voice").firstChild); $("voice").classList.add("rv2");
     const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(40, 1, .1, 60); cam.position.set(0, 0, 10);
-    RB = {renderer: renderer, cv: cv, scene: scene, cam: cam, raf: 0, lvl: 0, bl: 0, nb: 2, nm: 0, ox: 0, oy: 0, tx: 0, ty: 0, px: 0, py: 0};
+    RB = {renderer: renderer, cv: cv, scene: scene, cam: cam, raf: 0, lvl: 0, bl: 0, nb: 2, nm: 0, ox: 0, oy: 0, tx: 0, ty: 0, px: 0, py: 0, gx: 0, gy: 0, pm: 0};
     buildRobotHead(RB);
     RB.onPointerMove = e => {
       const vr = $("voice").getBoundingClientRect();
+      RB.pm = performance.now();
       RB.px = ((e.clientX - vr.left) / Math.max(1, vr.width) - .5) * 1.1;
       RB.py = ((e.clientY - vr.top) / Math.max(1, vr.height) - .5) * .7;
     };
@@ -922,16 +952,18 @@ function robotFrame(){
   const L = (a, b, k) => a + (b - a) * k, t = R.clock.getElapsedTime(), cl = $("face").classList;
   const sp = cl.contains("speaking"), th = cl.contains("thinking"), li = cl.contains("listening");
   R.lvl += (robotLevel() - R.lvl) * .12;
+  const moving = performance.now() - R.pm < 450;
+  R.gx = L(R.gx, moving ? R.px : 0, .1); R.gy = L(R.gy, moving ? R.py : 0, .1);
   R.rob.position.y = R.baseY + Math.sin(t * 1.4) * R.halfH * .02;
-  R.hd.rotation.y = L(R.hd.rotation.y, R.px + Math.sin(t * .5) * .04 + (th ? -.18 : 0), .08);
-  R.hd.rotation.x = L(R.hd.rotation.x, R.py + (sp ? Math.sin(t * 3) * .025 : 0) + (li ? .04 : 0), .08);
+  R.hd.rotation.y = L(R.hd.rotation.y, R.gx + Math.sin(t * .5) * .04 + (th ? -.18 : 0), .08);
+  R.hd.rotation.x = L(R.hd.rotation.x, R.gy + (sp ? Math.sin(t * 3) * .025 : 0) + (li ? .04 : 0), .08);
   R.hd.rotation.z = L(R.hd.rotation.z, li ? .12 : mood === "curious" ? .1 : 0, .06);
   if (t > R.nb){ R.bl = 1; R.nb = t + 2 + Math.random() * 3; }
   if (t > R.nm){ R.tx = (Math.random() - .5) * .14; R.ty = (Math.random() - .5) * .08; R.nm = t + 1.2 + Math.random() * 2; }
   R.bl = Math.max(0, R.bl - .12);
   R.ox = L(R.ox, R.tx, .1); R.oy = L(R.oy, th ? .2 : R.ty, .08);
   const lid = 1 - .9 * Math.sin(R.bl * Math.PI), ey = (mood === "happy" ? .6 : mood === "sad" ? .95 : 1.3) * lid * (th ? .8 : li ? 1.12 : 1);
-  R.eyes.forEach(e => { e.scale.set(1, ey, .45); e.position.x = e.userData.x + R.ox + R.px * .2; e.position.y = .22 + R.oy - R.py * .2; });
+  R.eyes.forEach(e => { e.scale.set(1, ey, .45); e.position.x = e.userData.x + R.ox + R.gx * .2; e.position.y = .22 + R.oy - R.gy * .2; });
   const smile = mood === "happy" && !sp, frown = mood === "sad" && !sp;
   R.talk.visible = sp; R.arc.visible = smile || frown; R.line.visible = !sp && !smile && !frown;
   R.talk.scale.y = .3 + .7 * Math.abs(Math.sin(t * 13)); R.arc.rotation.z = smile ? Math.PI : 0; R.arc.position.y = smile ? .15 : -.3;
