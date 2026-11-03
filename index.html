@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Alpha-O</title>
 <style>
-:root{--bg:#0a0f1c;--side:#070b14;--panel:#121a2b;--line:#222f49;--text:#e8ecf5;--muted:#9aa5bd;--accent:#10a37f;--eye:#ffc86b}
+:root{--bg:#262624;--side:#1f1e1d;--panel:#30302e;--line:#434340;--text:#ece9e2;--muted:#a3a098;--accent:#10a37f;--eye:#ffc86b}
 *{box-sizing:border-box}[hidden]{display:none!important}
 html,body{height:100%;margin:0}
 body{background:var(--bg);color:var(--text);font-family:"Segoe UI",system-ui,sans-serif;display:flex}
@@ -110,7 +110,7 @@ footer{text-align:center;color:var(--muted);font-size:12.5px;padding:8px 16px 14
 .pri{background:var(--text);color:#171717;border-color:var(--text)}
 /* --- robot v2 / voice background --- */
 .rv2c{position:absolute;inset:0;width:100%;height:100%;z-index:1}
-#voice.rv2{background:linear-gradient(180deg,#02040a,#0a1226)}
+#voice.rv2{background:linear-gradient(180deg,#0c0c0b,#1d1c1a)}
 #voice.rv2>*:not(canvas){position:relative;z-index:2}
 #voice.rv2 #status{color:#b9bcc6}#voice.rv2 #face{animation:none;width:min(780px,96vw,calc(100vh - 200px))}
 /* --- theme, settings, extras --- */
@@ -160,12 +160,12 @@ footer a{color:var(--muted)}
 @media(hover:none){.ci .ib{opacity:1}}
 /* ===== Stage 2: command-center layout ===== */
 body{height:100vh;height:100dvh}
-#scrim{display:none;position:fixed;inset:0;background:rgba(2,5,12,.6);z-index:4}
-main::before{background:radial-gradient(closest-side,rgba(52,120,255,.12),transparent)}
+#scrim{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4}
+main::before{background:radial-gradient(closest-side,rgba(16,163,127,.12),transparent)}
 #side{border-right:1px solid var(--line)}
-.top{border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(18,26,43,.7),transparent)}
+.top{border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(48,48,46,.6),transparent)}
 .top h2{display:flex;align-items:center;gap:6px;white-space:nowrap}
-.mtag{background:rgba(52,120,255,.14);color:#8fb4ff;border-color:rgba(52,120,255,.35)}
+.mtag{background:rgba(255,255,255,.07);color:var(--muted);border-color:var(--line)}
 #automateBtn{border-color:rgba(16,163,127,.5);color:#6ee7c0}
 .ib::after,.mchip::after,.vopt::after{display:none}
 #comp{padding-bottom:env(safe-area-inset-bottom,0)}
@@ -173,7 +173,7 @@ main::before{background:radial-gradient(closest-side,rgba(52,120,255,.12),transp
 #box:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(16,163,127,.14),0 10px 34px rgba(0,0,0,.35)}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));width:100%;max-width:760px;padding:0 4px}
 .card{width:auto;border-color:var(--line)}.card:hover{color:var(--text);border-color:var(--accent)}
-.msg.you{background:linear-gradient(180deg,#16213a,#121a2b)}
+.msg.you{background:var(--panel)}
 .msg pre{max-width:100%;-webkit-overflow-scrolling:touch}.msg pre code{font-size:13.5px;line-height:1.55;white-space:pre}
 .cb{max-width:100%;background:var(--side)}.ch{border-bottom:1px solid var(--line)}
 .msg h4{border-bottom:1px solid var(--line);padding-bottom:3px}
@@ -201,6 +201,32 @@ main::before{background:radial-gradient(closest-side,rgba(52,120,255,.12),transp
 }
 @media(pointer:coarse){.ib{min-width:40px;min-height:40px}.mchip{padding:9px 14px}.cpb{min-height:32px}}
 @media(max-height:560px){#welcome .lg.big{width:56px;height:56px}#welcome h2{margin-bottom:12px}}
+/* ===== Stage 3 ===== */
+.card{display:flex;flex-direction:column;gap:6px}
+.card svg{width:18px;height:18px;fill:none;stroke:var(--accent);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.vstate{display:inline-flex;align-items:center;gap:8px;padding:5px 14px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);font-size:14px;font-weight:600}
+.vstate i{width:10px;height:10px;border-radius:50%;background:var(--muted)}
+.vstate[data-s="listening"]{border-color:#10a37f}.vstate[data-s="listening"] i{background:#10a37f;animation:vp 1.2s infinite}
+.vstate[data-s="thinking"]{border-color:#8fb4ff}.vstate[data-s="thinking"] i{border-radius:2px;background:#8fb4ff;animation:vs 1.4s linear infinite}
+.vstate[data-s="speaking"]{border-color:#ffc86b}.vstate[data-s="speaking"] i{border-radius:2px;width:14px;background:#ffc86b;animation:vp .7s infinite}
+.vstate[data-s="problem"]{border-color:#ff6b6b;color:#ffb3b3}.vstate[data-s="problem"] i{background:#ff6b6b;clip-path:polygon(50% 0,100% 100%,0 100%);border-radius:0}
+@keyframes vp{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:.6}}
+@keyframes vs{to{transform:rotate(360deg)}}
+#mic.live{animation:micp 1.4s infinite}
+@keyframes micp{0%,100%{box-shadow:0 0 0 0 rgba(16,163,127,.5)}50%{box-shadow:0 0 0 10px rgba(16,163,127,0)}}
+#chip{flex-wrap:wrap}.fnote{font-size:12.5px;color:#e0a43b}
+/* ===== Revision: prompts fit every screen and stay reachable ===== */
+#welcome{justify-content:flex-start;padding:12px 0;max-width:100%}
+#welcome>:first-child{margin-top:auto}#welcome>.cards{margin-bottom:auto}
+.cards{grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:10px;max-width:760px;width:100%}
+.card{min-height:0;padding:12px;font-size:14px;line-height:1.35;overflow-wrap:anywhere;min-width:0}
+@media(max-width:500px){.card{flex-direction:row;align-items:center;gap:10px}.card svg{flex:none}#welcome p{font-size:16px;margin-top:8px}#welcome h2{font-size:28px}.lg.big{width:64px;height:64px}}
+#sug{position:absolute;left:16px;right:16px;bottom:100%;margin-bottom:6px;max-height:min(60vh,60dvh,440px);overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:6px 8px 8px;z-index:7;box-shadow:0 14px 40px rgba(0,0,0,.5);overscroll-behavior:contain}
+#sug h5{margin:10px 8px 4px;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.sopt{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border-color:transparent;padding:9px 10px;border-radius:8px;font-size:14.5px;line-height:1.35}
+.sopt:hover,.sopt:focus-visible{background:rgba(255,255,255,.08)}
+.sopt svg{width:18px;height:18px;flex:none;fill:none;stroke:var(--accent);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+@media(max-width:800px){#sug{left:10px;right:10px}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
@@ -222,11 +248,12 @@ main::before{background:radial-gradient(closest-side,rgba(52,120,255,.12),transp
   </div>
   <div id="chat" aria-live="polite"></div>
   <div id="comp">
+    <div id="sug" role="dialog" aria-label="Suggested prompts" hidden></div>
     <div id="modes" role="group" aria-label="Assistant mode"></div>
-    <div id="chip"><span id="fname"></span><button id="clearfile" data-tip="Remove file" aria-label="Remove file">x</button></div>
+    <div id="chip"><span id="fname"></span><span class="fnote" id="fnote" role="status"></span><button id="clearfile" data-tip="Remove file" aria-label="Remove file">x</button></div>
     <div id="box">
       <textarea id="input" rows="1" placeholder="Ask Alpha-O anything or write your request..."></textarea>
-      <div class="tools"><button class="ib" id="attach" data-tip="Attach a file" data-ic="clip" aria-label="Attach a file"></button><span class="sp"></span><button class="ib" id="voiceBtn2" data-tip="Voice mode" data-ic="wave" aria-label="Voice mode"></button><button id="stop" data-tip="Stop" data-ic="stop" aria-label="Stop" hidden></button><button id="send" data-tip="Send message" data-ic="up" aria-label="Send"></button></div>
+      <div class="tools"><button class="ib" id="attach" data-tip="Attach a file" data-ic="clip" aria-label="Attach a file"></button><button class="ib" id="sugBtn" type="button" data-tip="Suggested prompts" data-ic="bulb" aria-label="Suggested prompts" aria-haspopup="true" aria-expanded="false"></button><span class="sp"></span><button class="ib" id="voiceBtn2" data-tip="Voice mode" data-ic="wave" aria-label="Voice mode"></button><button id="stop" data-tip="Stop" data-ic="stop" aria-label="Stop" hidden></button><button id="send" data-tip="Send message" data-ic="up" aria-label="Send"></button></div>
     </div>
     <footer><span id="copy"></span> Alpha-O can make mistakes. Check important information. <a href="#" id="priv">Privacy</a></footer>
   </div>
@@ -245,7 +272,8 @@ main::before{background:radial-gradient(closest-side,rgba(52,120,255,.12),transp
 </div></div>
 <div id="voice">
   <div id="face" role="img" aria-label="3D robot face"></div>
-  <div id="status">Tap the mic and speak</div>
+  <div class="vstate" id="vstate" data-s="ready"><i></i><span>Ready</span></div>
+  <div id="status" role="status" aria-live="polite">Tap the mic and speak</div>
   <div class="bar"><span class="vw"><button class="ib" id="vpick" data-ic="person" data-tip="Choose voice" aria-label="Choose voice"></button><div id="vmenu" hidden></div></span><button id="mic" data-tip="Speak to Alpha-O">Start talking</button><button id="closeVoice" data-tip="Close voice mode">Close</button></div>
 </div>
 <script>
@@ -265,6 +293,7 @@ IC.download = '<path d="M12 4v11M8 11l4 4 4-4"/><path d="M5 19h14"/>';
 IC.stop = '<rect x="7" y="7" width="10" height="10" rx="2" style="fill:currentColor"/>';
 IC.file = '<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/>';
 IC.copy = '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/>';
+IC.bulb = '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>';
 IC.person = '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>';
 const ic = n => '<svg viewBox="0 0 24 24" aria-hidden="true">' + IC[n] + '</svg>';
 const API_URL = "https://alpha-o-api.ituzerichard6.workers.dev/"; // your backend link
@@ -478,20 +507,23 @@ async function regen(){
   const rows = $("chat").querySelectorAll(".row.bot"); rows[rows.length - 1].remove();
   await answer(false);
 }
-$("send").onclick = () => { if (busy) return; const v = $("input").value; $("input").value = ""; $("input").style.height = ""; send(v, false); };
+$("send").onclick = () => { if (busy) return; if (fInfo && !file){ toast("Please wait, the file is still loading."); return; } const v = $("input").value; $("input").value = ""; $("input").style.height = ""; send(v, false); };
 $("input").onkeydown = e => { if (e.key === "Enter" && !e.shiftKey){ e.preventDefault(); $("send").click(); } };
 $("input").oninput = () => { const t = $("input"); t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, 200) + "px"; };
 $("newchat").onclick = $("newTop").onclick = newChat;
 
 $("attach").onclick = () => $("file").click();
-$("clearfile").onclick = () => { fInfo = null; file = null; $("file").value = ""; $("chip").style.display = "none"; };
+$("clearfile").onclick = () => { $("fnote").textContent = ""; fInfo = null; file = null; $("file").value = ""; $("chip").style.display = "none"; };
 $("file").onchange = () => {
   const f = $("file").files[0]; if (!f) return;
-  if (f.size > 4e6){ add("That file is over 4 MB. Choose a smaller one.", "bot"); $("file").value = ""; return; }
+  if (f.size > 4e6){ toast("That file is over 4 MB. Choose a smaller one."); $("file").value = ""; return; }
   const rd = new FileReader(), isImg = f.type.startsWith("image/");
+  file = null; fInfo = {name: f.name, mime: f.type, thumb: "", size: f.size, note: "Reading file\u2026"}; chipRender();
+  rd.onerror = () => { fInfo = null; file = null; $("chip").style.display = "none"; $("file").value = ""; toast("Couldn\u2019t read that file. Try another one."); };
   rd.onload = () => {
     file = isImg ? {name:f.name, mime:f.type, base64:rd.result.split(",")[1]} : {name:f.name, mime:f.type || "text/plain", text:rd.result};
-    fInfo = {name: f.name, mime: f.type, thumb: ""}; chipRender(); if (isImg) thumbOf(rd.result, t => { if (fInfo){ fInfo.thumb = t; chipRender(); } });
+    fInfo.note = (!isImg && rd.result.length > 24000) ? "Large file: only the first 24,000 characters will be read." : "";
+    chipRender(); if (isImg) thumbOf(rd.result, t => { if (fInfo){ fInfo.thumb = t; chipRender(); } });
   };
   isImg ? rd.readAsDataURL(f) : rd.readAsText(f);
 };
@@ -711,9 +743,12 @@ function loadChat(id){
 function newChat(){
   stopAll();
   history = []; file = null; curId = Date.now().toString(36); $("chip").style.display = "none"; $("input").value = "";
-  $("chat").innerHTML = '<div id="welcome"><svg class="lg big" viewBox="0 0 64 64"><use href="#logo"/></svg><p>Welcome to Alpha-O</p><h2>How can I assist you?</h2><div class="cards"></div></div>';
-  ["Write a to-do list for my day", "Explain what an API is in simple words", "Help me plan a small coding project"].forEach(t => {
-    const b = document.createElement("button"); b.className = "card"; b.textContent = t; b.onclick = () => send(t, false); document.querySelector(".cards").appendChild(b);
+  $("chat").innerHTML = '<div id="welcome"><svg class="lg big" viewBox="0 0 64 64"><use href="#logo"/></svg><p id="greet"></p><h2>How can I assist you?</h2><div class="cards"></div></div>';
+  $("greet").textContent = greeting();
+  pickPrompts().forEach(x => {
+    const b = document.createElement("button"); b.type = "button"; b.className = "card";
+    b.innerHTML = ic(x.i) + "<span></span>"; b.lastChild.textContent = x.t;
+    b.onclick = () => usePrompt(x); document.querySelector(".cards").appendChild(b);
   });
   renderSide(); closeSide();
 }
@@ -926,9 +961,9 @@ function fileCardEl(fi){
   const d = document.createElement("div"), ext = (fi.name.split(".").pop() || "file").slice(0, 5).toUpperCase();
   if (fi.thumb){ d.className = "fcard im"; const im = document.createElement("img"); im.src = fi.thumb; im.alt = fi.name; d.appendChild(im); return d; }
   d.className = "fcard"; d.innerHTML = '<span class="fi">' + ic("file") + '</span><span class="fn"><b></b><i></i></span>';
-  d.querySelector("b").textContent = fi.name; d.querySelector("i").textContent = (fi.mime && fi.mime.indexOf("image/") === 0 ? "Image" : "File") + " · " + ext; return d;
+  d.querySelector("b").textContent = fi.name; d.querySelector("i").textContent = (fi.mime && fi.mime.indexOf("image/") === 0 ? "Image" : "File") + " · " + ext + (fi.size ? " · " + fmtSize(fi.size) : ""); return d;
 }
-function chipRender(){ if (!fInfo) return; const f = $("fname"); f.innerHTML = ""; f.appendChild(fileCardEl(fInfo)); $("chip").style.display = "flex"; }
+function chipRender(){ if (!fInfo) return; const f = $("fname"); f.innerHTML = ""; f.appendChild(fileCardEl(fInfo)); $("fnote").textContent = fInfo.note || ""; $("chip").style.display = "flex"; }
 function thumbOf(src, cb){
   const im = new Image();
   im.onload = () => { const c = document.createElement("canvas"); c.width = c.height = 96; const k = Math.max(96 / im.width, 96 / im.height), w = im.width * k, h = im.height * k;
@@ -1010,6 +1045,81 @@ function renderModes(){
     box.appendChild(b);
   });
 }
+/* ===== Stage 3: greetings and rotating starter prompts ===== */
+function memGet(k){ try { return JSON.parse(sessionStorage.getItem(k) || "null"); } catch(e){ return null; } }
+function memSet(k, v){ try { sessionStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+function greeting(){
+  const h = new Date().getHours(), back = chats.length > 0;
+  const base = h < 5 ? "Hello." : h < 12 ? "Good morning." : h < 18 ? "Good afternoon." : "Good evening.";
+  const tails = back
+    ? ["Welcome back to ALPHA-O.", "What are we building today?", "Ready to work on something?", "What would you like to accomplish?"]
+    : ["Welcome to ALPHA-O.", "What are we building today?", "Let\u2019s turn an idea into something real.", "What would you like to accomplish?"];
+  const last = memGet("alphaO_lastGreet"), pool = tails.filter(t => t !== last), t = pool[Math.floor(Math.random() * pool.length)];
+  memSet("alphaO_lastGreet", t); return base + " " + t;
+}
+const PROMPTS = {
+  dev: [
+    {t: "Design a backend API for a task manager", i: "code"}, {t: "Help me build a web application from my idea", i: "code"},
+    {t: "Explain how a frontend talks to a backend API", i: "layers"}, {t: "Explain this JavaScript code", i: "code", fill: "Explain this JavaScript code step by step:\n\n"},
+    {t: "Debug this Python error", i: "bug", fill: "Help me debug this Python error. Here are the code and the full error message:\n\n"},
+    {t: "Review my project architecture", i: "layers", fill: "Review my project architecture. Here is how it is organised:\n\n"}
+  ],
+  auto: [
+    {t: "Design a customer onboarding workflow", i: "bolt"}, {t: "Explain how webhooks work", i: "bolt"},
+    {t: "Design an automation system for multiple clients", i: "bolt"}, {t: "Explain how to connect two business applications", i: "bolt"},
+    {t: "How should errors and retries work in a workflow?", i: "bolt"}, {t: "Help me automate a repetitive business task", i: "bolt", fill: "I want to automate this business task. Here is how it works today:\n\n"}
+  ],
+  gen: [
+    {t: "Explain a technical concept in simple words", i: "spark", fill: "Explain this concept in simple words: "}, {t: "Help me plan a project", i: "list"},
+    {t: "Write a to-do list for my day", i: "list"}, {t: "Analyse a document", i: "spark", fill: "Analyse the attached document and summarise the key points.", attach: true}
+  ]
+};
+const ALL_PROMPTS = PROMPTS.dev.concat(PROMPTS.auto, PROMPTS.gen);
+let promptBoot = true;
+function curPromptSet(){ return (memGet("alphaO_curPrompts") || []).map(t => ALL_PROMPTS.find(x => x.t === t)).filter(Boolean); }
+function pickPrompts(){
+  if (promptBoot){ promptBoot = false; const kept = curPromptSet(); if (kept.length >= 4) return kept; }
+  const last = memGet("alphaO_lastPrompts") || [], out = [];
+  const take = (arr, n) => { const f = arr.filter(x => last.indexOf(x.t) < 0), src = (f.length >= n ? f : arr).slice();
+    for (let k = 0; k < n && src.length; k++) out.push(src.splice(Math.floor(Math.random() * src.length), 1)[0]); };
+  take(PROMPTS.dev, 2); take(PROMPTS.auto, 2); take(PROMPTS.gen, 2);
+  memSet("alphaO_lastPrompts", out.map(x => x.t)); memSet("alphaO_curPrompts", out.map(x => x.t)); return out;
+}
+function usePrompt(x){
+  if (!x.fill){ if (busy){ toast("Wait for the current answer to finish"); return; } send(x.t, false); return; }
+  const inp = $("input");
+  if (inp.value.trim()){ toast("Finish or clear your current message first"); inp.focus(); return; }
+  inp.value = x.fill; inp.dispatchEvent(new Event("input")); inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length);
+  toast(x.attach ? "Attach your file with the paperclip, then send" : "Add your details, then send");
+}
+
+/* ===== Stage 3: voice state indicator ===== */
+function syncVoiceState(){
+  const cl = $("face").classList, st = $("status").textContent, v = $("vstate"); let s = "ready", l = "Ready";
+  if (cl.contains("speaking")){ s = "speaking"; l = "Speaking"; }
+  else if (cl.contains("listening")){ s = "listening"; l = "Listening"; }
+  else if (cl.contains("thinking")){ s = "thinking"; l = "Processing"; }
+  else if (/blocked|needs chrome|not supported|error|problem|connection|did not hear/i.test(st)){ s = "problem"; l = "Needs attention"; }
+  v.dataset.s = s; v.lastElementChild.textContent = l;
+}
+new MutationObserver(syncVoiceState).observe($("face"), {attributes: true, attributeFilter: ["class"]});
+new MutationObserver(syncVoiceState).observe($("status"), {childList: true, characterData: true, subtree: true});
+$("voiceBtn2").addEventListener("click", () => { if (!SR) setFace("", "Voice input needs Chrome or Edge. Replies can still be read aloud."); syncVoiceState(); });
+function closeSug(){ $("sug").hidden = true; $("sugBtn").setAttribute("aria-expanded", "false"); }
+function renderSug(){
+  const box = $("sug"); box.innerHTML = "";
+  const sec = (title, items) => {
+    const h = document.createElement("h5"); h.textContent = title; box.appendChild(h);
+    items.forEach(x => { const b = document.createElement("button"); b.type = "button"; b.className = "sopt"; b.innerHTML = ic(x.i) + "<span></span>"; b.lastChild.textContent = x.t; b.onclick = () => { closeSug(); usePrompt(x); }; box.appendChild(b); });
+  };
+  const cur = curPromptSet(); if (cur.length) sec("Suggested now", cur);
+  sec("Software development", PROMPTS.dev); sec("Business automation", PROMPTS.auto); sec("General", PROMPTS.gen);
+}
+$("sugBtn").onclick = e => { e.stopPropagation(); const open = $("sug").hidden; if (open) renderSug(); $("sug").hidden = !open; $("sugBtn").setAttribute("aria-expanded", String(open)); if (open) $("sug").scrollTop = 0; };
+document.addEventListener("click", e => { if (!$("sug").hidden && !e.target.closest("#sug")) closeSug(); });
+addEventListener("keydown", e => { if (e.key === "Escape" && !$("sug").hidden) closeSug(); });
+function fmtSize(n){ return n < 1024 ? n + " B" : n < 1048576 ? Math.round(n / 1024) + " KB" : (n / 1048576).toFixed(1) + " MB"; }
+
 renderModes();
 $("scrim").onclick = () => document.body.classList.add("fold");
 newChat();
