@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Alpha-O</title>
 <style>
-:root{--bg:#212121;--side:#171717;--panel:#2f2f2f;--line:#3a3a3a;--text:#ececec;--muted:#9b9b9b;--accent:#10a37f;--eye:#ffc86b}
+:root{--bg:#0a0f1c;--side:#070b14;--panel:#121a2b;--line:#222f49;--text:#e8ecf5;--muted:#9aa5bd;--accent:#10a37f;--eye:#ffc86b}
 *{box-sizing:border-box}[hidden]{display:none!important}
 html,body{height:100%;margin:0}
 body{background:var(--bg);color:var(--text);font-family:"Segoe UI",system-ui,sans-serif;display:flex}
-aside{width:270px;background:var(--side);padding:14px 10px;display:flex;flex-direction:column;gap:10px;flex:none}
-body.fold aside{display:none}
+#side{width:270px;background:var(--side);padding:14px 10px;display:flex;flex-direction:column;gap:10px;flex:none}
+body.fold #side{display:none}
 .sh{display:flex;align-items:center;justify-content:space-between;padding:0 4px}
 .brand{display:flex;align-items:center;gap:8px;font-size:19px;font-weight:600}
 .lg{width:30px;height:30px}.lg.big{width:92px;height:92px;filter:drop-shadow(0 0 24px rgba(16,163,127,.45));animation:ghost 3.5s ease-in-out infinite}
@@ -76,7 +76,7 @@ footer{text-align:center;color:var(--muted);font-size:12.5px;padding:8px 16px 14
 @keyframes dot{0%,80%,100%{opacity:.3;transform:translateY(0)}40%{opacity:1;transform:translateY(-5px)}}
 @keyframes aura{0%,100%{filter:drop-shadow(0 0 10px rgba(255,200,107,.2));opacity:.93}50%{filter:drop-shadow(0 0 28px rgba(255,200,107,.5));opacity:1}}
 @keyframes ghost{0%,100%{box-shadow:0 0 0 rgba(16,163,127,0)}50%{box-shadow:0 0 16px rgba(16,163,127,.4)}}
-@media(max-width:800px){aside{position:fixed;inset:0 auto 0 0;z-index:5;width:280px;box-shadow:0 0 40px rgba(0,0,0,.6)}}
+@media(max-width:800px){#side{position:fixed;inset:0 auto 0 0;z-index:5;width:280px;box-shadow:0 0 40px rgba(0,0,0,.6)}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 .msg.bot{flex:1}.cp{align-self:flex-start;opacity:0}.row:hover .cp,.cp:focus-visible{opacity:1}
 @media(hover:none){.cp{opacity:1}}
@@ -101,7 +101,7 @@ footer{text-align:center;color:var(--muted);font-size:12.5px;padding:8px 16px 14
 .tm svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .row.loading .act{visibility:hidden}
 .msg.you{border:1px solid var(--line)}
-#welcome h2{background:linear-gradient(90deg,#fff,#8fe3c8);-webkit-background-clip:text;background-clip:text;color:transparent}
+#welcome h2{background:linear-gradient(90deg,var(--text),var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent}
 .ci.on{box-shadow:inset 2px 0 0 var(--accent)}
 #box{box-shadow:0 8px 30px rgba(0,0,0,.25)}
 .edit{align-self:stretch;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:8px}
@@ -110,8 +110,8 @@ footer{text-align:center;color:var(--muted);font-size:12.5px;padding:8px 16px 14
 .pri{background:var(--text);color:#171717;border-color:var(--text)}
 /* --- robot v2 / voice background --- */
 .rv2c{position:absolute;inset:0;width:100%;height:100%;z-index:1}
-#voice.rv2{background:#000}
-#voice.rv2>*:not(canvas):not(#ghosts){position:relative;z-index:2}
+#voice.rv2{background:linear-gradient(180deg,#02040a,#0a1226)}
+#voice.rv2>*:not(canvas){position:relative;z-index:2}
 #voice.rv2 #status{color:#b9bcc6}#voice.rv2 #face{animation:none;width:min(780px,96vw,calc(100vh - 200px))}
 /* --- theme, settings, extras --- */
 [data-theme="light"]{--bg:#fff;--side:#f4f4f6;--panel:#f0f0f3;--line:#d9d9df;--text:#1b1b1f;--muted:#6a6a74;--accent:#0d8a6a}
@@ -146,30 +146,68 @@ footer a{color:var(--muted)}
 #fname{display:inline-flex}#chip{align-items:center;gap:8px}
 .src{font-size:13px;color:var(--muted);margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .src a{color:var(--text);border:1px solid var(--line);border-radius:999px;padding:2px 10px;text-decoration:none}.src a:hover{border-color:var(--accent)}
+/* --- assistant modes --- */
+#modes{display:flex;gap:6px;overflow-x:auto;padding:0 2px 8px;scrollbar-width:none}
+#modes::-webkit-scrollbar{display:none}
+.mchip{flex:none;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;font-size:13.5px;background:transparent;color:var(--muted)}
+.mchip svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.mchip[aria-pressed="true"]{background:rgba(16,163,127,.18);color:var(--text);border-color:var(--accent)}
 /* --- sidebar alignment --- */
 .sh{padding:2px 0 0 6px;gap:8px}.brand{white-space:nowrap;min-width:0}
 .srow{display:flex;align-items:center;gap:6px}
 .srow #newchat{flex:1;width:auto;min-width:0}
 .sh .ib,.srow .ib{flex:none;width:36px;height:36px;padding:0}
-/* --- voice mode: soft blurred shapes drifting in the background --- */
-#ghosts{display:none;position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none}
-#voice.rv2 #ghosts{display:block}
-.gst{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.5) 0%,rgba(255,255,255,0) 68%);opacity:0;filter:blur(calc(var(--bs) * 1px));animation:gfloat 16s ease-in-out infinite}
-.g1{left:4%;top:58%;width:220px;height:220px;--bs:14}
-.g2{left:74%;top:10%;width:150px;height:150px;--bs:8;animation-delay:-4s;animation-duration:13s}
-.g3{left:56%;top:62%;width:300px;height:300px;--bs:22;animation-delay:-9s;animation-duration:21s}
-.g4{left:14%;top:8%;width:120px;height:120px;--bs:6;animation-delay:-2s;animation-duration:12s}
-.g5{left:38%;top:2%;width:200px;height:200px;--bs:18;animation-delay:-7s;animation-duration:18s}
-.g6{left:84%;top:52%;width:110px;height:110px;--bs:5;animation-delay:-11s;animation-duration:14s}
-@keyframes gfloat{0%{opacity:0;transform:translate(0,40px) scale(.9)}25%{opacity:.3}50%{opacity:.45;transform:translate(40px,-40px) scale(1.12)}80%{opacity:.25}100%{opacity:0;transform:translate(-30px,-90px) scale(.95)}}
-@media(prefers-reduced-motion:reduce){.gst{opacity:.25!important}}
 @media(hover:none){.ci .ib{opacity:1}}
+/* ===== Stage 2: command-center layout ===== */
+body{height:100vh;height:100dvh}
+#scrim{display:none;position:fixed;inset:0;background:rgba(2,5,12,.6);z-index:4}
+main::before{background:radial-gradient(closest-side,rgba(52,120,255,.12),transparent)}
+#side{border-right:1px solid var(--line)}
+.top{border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(18,26,43,.7),transparent)}
+.top h2{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.mtag{background:rgba(52,120,255,.14);color:#8fb4ff;border-color:rgba(52,120,255,.35)}
+#automateBtn{border-color:rgba(16,163,127,.5);color:#6ee7c0}
+.ib::after,.mchip::after,.vopt::after{display:none}
+#comp{padding-bottom:env(safe-area-inset-bottom,0)}
+#box{border-radius:22px;box-shadow:0 10px 34px rgba(0,0,0,.35)}
+#box:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(16,163,127,.14),0 10px 34px rgba(0,0,0,.35)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));width:100%;max-width:760px;padding:0 4px}
+.card{width:auto;border-color:var(--line)}.card:hover{color:var(--text);border-color:var(--accent)}
+.msg.you{background:linear-gradient(180deg,#16213a,#121a2b)}
+.msg pre{max-width:100%;-webkit-overflow-scrolling:touch}.msg pre code{font-size:13.5px;line-height:1.55;white-space:pre}
+.cb{max-width:100%;background:var(--side)}.ch{border-bottom:1px solid var(--line)}
+.msg h4{border-bottom:1px solid var(--line);padding-bottom:3px}
+.mod{max-height:88vh;max-height:88dvh;overscroll-behavior:contain}
+#voice{height:100vh;height:100dvh;padding:12px;overflow:auto}
+#voice .bar{flex-wrap:wrap;justify-content:center}
+#voice.rv2 #face{width:min(780px,96vw,calc(100dvh - 220px))}
+[data-theme="light"] .msg.you{background:var(--panel)}
+@media(min-width:801px) and (max-width:1100px){#side{width:240px}}
+@media(max-width:800px){
+  #side{width:min(86vw,300px)}
+  body:not(.fold) #scrim{display:block}
+  .top{padding:8px 10px}.top h2{font-size:15px}
+  #chat{padding:12px 10px}.row{gap:10px;margin-bottom:16px}.av{width:26px;height:26px}
+  .msg.you{max-width:90%}
+  #comp{padding:0 10px env(safe-area-inset-bottom,0)}
+  #welcome h2{margin-bottom:18px}#welcome p{font-size:18px}
+  .cards{grid-template-columns:1fr}.card{min-height:0}
+  footer{padding:6px 8px 10px;font-size:11.5px}
+}
+@media(max-width:600px){
+  .shr .bt,.mtag{display:none}.shr{padding:8px}
+  .top h2 .ver:not(.mtag){display:none}
+  .tw{max-width:calc(100vw - 80px)}
+}
+@media(pointer:coarse){.ib{min-width:40px;min-height:40px}.mchip{padding:9px 14px}.cpb{min-height:32px}}
+@media(max-height:560px){#welcome .lg.big{width:56px;height:56px}#welcome h2{margin-bottom:12px}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="defs"></defs></svg>
-<aside>
+<div id="scrim" aria-hidden="true"></div>
+<aside id="side">
   <div class="sh"><span class="brand"><svg class="lg" viewBox="0 0 64 64"><use href="#logo"/></svg>Alpha-O<span class="ver">v5.0</span></span><button class="ib" id="fold" data-tip="Close sidebar" data-ic="panel" aria-label="Hide sidebar"></button></div>
   <div class="srow"><button id="newchat"><span data-ic="plus"></span>New chat</button><button class="ib" id="srch" data-tip="Search chats" data-ic="search" aria-label="Search chats"></button><button class="ib" id="gear" data-tip="Settings" data-ic="gear" aria-label="Settings"></button></div>
   <input id="q" placeholder="Search chats" hidden>
@@ -177,13 +215,14 @@ footer a{color:var(--muted)}
   </aside>
 <main>
   <div class="top">
-    <div class="bar"><button class="ib" id="menu" data-tip="Open sidebar" data-ic="panel" aria-label="Show sidebar"></button><h2>Alpha-O <span class="ver">v5.0</span></h2></div>
+    <div class="bar"><button class="ib" id="menu" data-tip="Open sidebar" data-ic="panel" aria-label="Show sidebar"></button><h2>Alpha-O <span class="ver">v5.0</span><span class="ver mtag" id="modeTag"></span></h2></div>
     
-<div class="bar"><button class="shr" id="share" data-tip="Share chat"><span data-ic="share"></span>Share</button><button   class="shr"   id="automateBtn"   type="button"   aria-label="Open Alpha-O Automate workspace"   data-tip="Open Automate workspace" >   <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">     <path style="fill:none;stroke:currentColor;stroke-width:0.85;stroke-linecap:round;stroke-linejoin:round" d="M10.65 6.57 L11.04 5.17 L12.96 5.17 L13.35 6.57 L14.88 7.2 L16.15 6.49 L17.51 7.85 L16.8 9.12 L17.43 10.65 L18.83 11.04 L18.83 12.96 L17.43 13.35 L16.8 14.88 L17.51 16.15 L16.15 17.51 L14.88 16.8 L13.35 17.43 L12.96 18.83 L11.04 18.83 L10.65 17.43 L9.12 16.8 L7.85 17.51 L6.49 16.15 L7.2 14.88 L6.57 13.35 L5.17 12.96 L5.17 11.04 L6.57 10.65 L7.2 9.12 L6.49 7.85 L7.85 6.49 L9.12 7.2ZM7.8 12a4.2 4.2 0 1 0 8.4 0a4.2 4.2 0 1 0 -8.4 0M12 8.4V13.2M11.2 14a0.8 0.8 0 1 0 1.6 0a0.8 0.8 0 1 0 -1.6 0M10.6 8.6V10L9.9 10.8M8.6 11.5a0.7 0.7 0 1 0 1.4 0a0.7 0.7 0 1 0 -1.4 0M13.4 8.6V10L14.1 10.8M14 11.5a0.7 0.7 0 1 0 1.4 0a0.7 0.7 0 1 0 -1.4 0M7 3.34A10 10 0 0 1 19.66 5.57M19.63 3.51L19.66 5.57L17.64 5.18M21.06 7.77A10 10 0 0 1 19.88 18.16M21.89 17.7L19.88 18.16L19.84 16.1M16.23 21.06A10 10 0 0 1 5.57 19.66M5.96 21.68L5.57 19.66L7.63 19.69M2.94 16.23A10 10 0 0 1 4.12 5.84M2.11 6.3L4.12 5.84L4.16 7.9"></path>   </svg>   <span>Automate</span> </button><button class="ib" id="newTop" data-tip="New chat" data-ic="plus" aria-label="New chat"></button></div>
+<div class="bar"><button class="shr" id="share" data-tip="Share chat"><span data-ic="share"></span><span class="bt">Share</span></button><button   class="shr"   id="automateBtn"   type="button"   aria-label="Open Alpha-O Automate workspace"   data-tip="Open Automate workspace" >   <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">     <path style="fill:none;stroke:currentColor;stroke-width:0.85;stroke-linecap:round;stroke-linejoin:round" d="M10.65 6.57 L11.04 5.17 L12.96 5.17 L13.35 6.57 L14.88 7.2 L16.15 6.49 L17.51 7.85 L16.8 9.12 L17.43 10.65 L18.83 11.04 L18.83 12.96 L17.43 13.35 L16.8 14.88 L17.51 16.15 L16.15 17.51 L14.88 16.8 L13.35 17.43 L12.96 18.83 L11.04 18.83 L10.65 17.43 L9.12 16.8 L7.85 17.51 L6.49 16.15 L7.2 14.88 L6.57 13.35 L5.17 12.96 L5.17 11.04 L6.57 10.65 L7.2 9.12 L6.49 7.85 L7.85 6.49 L9.12 7.2ZM7.8 12a4.2 4.2 0 1 0 8.4 0a4.2 4.2 0 1 0 -8.4 0M12 8.4V13.2M11.2 14a0.8 0.8 0 1 0 1.6 0a0.8 0.8 0 1 0 -1.6 0M10.6 8.6V10L9.9 10.8M8.6 11.5a0.7 0.7 0 1 0 1.4 0a0.7 0.7 0 1 0 -1.4 0M13.4 8.6V10L14.1 10.8M14 11.5a0.7 0.7 0 1 0 1.4 0a0.7 0.7 0 1 0 -1.4 0M7 3.34A10 10 0 0 1 19.66 5.57M19.63 3.51L19.66 5.57L17.64 5.18M21.06 7.77A10 10 0 0 1 19.88 18.16M21.89 17.7L19.88 18.16L19.84 16.1M16.23 21.06A10 10 0 0 1 5.57 19.66M5.96 21.68L5.57 19.66L7.63 19.69M2.94 16.23A10 10 0 0 1 4.12 5.84M2.11 6.3L4.12 5.84L4.16 7.9"></path>   </svg>   <span class="bt">Automate</span> </button><button class="ib" id="newTop" data-tip="New chat" data-ic="plus" aria-label="New chat"></button></div>
 
   </div>
   <div id="chat" aria-live="polite"></div>
   <div id="comp">
+    <div id="modes" role="group" aria-label="Assistant mode"></div>
     <div id="chip"><span id="fname"></span><button id="clearfile" data-tip="Remove file" aria-label="Remove file">x</button></div>
     <div id="box">
       <textarea id="input" rows="1" placeholder="Ask Alpha-O anything or write your request..."></textarea>
@@ -205,7 +244,6 @@ footer a{color:var(--muted)}
   <h4>Keyboard shortcuts</h4><p class="note">Ctrl+K new chat, Ctrl+/ message box, Ctrl+B sidebar, Ctrl+, settings, Ctrl+Shift+V voice mode, Esc close.</p>
 </div></div>
 <div id="voice">
-  <div id="ghosts" aria-hidden="true"><i class="gst g1"></i><i class="gst g2"></i><i class="gst g3"></i><i class="gst g4"></i><i class="gst g5"></i><i class="gst g6"></i></div>
   <div id="face" role="img" aria-label="3D robot face"></div>
   <div id="status">Tap the mic and speak</div>
   <div class="bar"><span class="vw"><button class="ib" id="vpick" data-ic="person" data-tip="Choose voice" aria-label="Choose voice"></button><div id="vmenu" hidden></div></span><button id="mic" data-tip="Speak to Alpha-O">Start talking</button><button id="closeVoice" data-tip="Close voice mode">Close</button></div>
@@ -348,14 +386,51 @@ function typeInto(el, text){
     if (k >= nodes.length){ clearInterval(t); typeTimer = null; }
   }, 18);
 }
-async function ask(){
+let streamed = false;
+async function readSSE(res, live){
+  const rd = res.body.getReader(), dec = new TextDecoder(), FAIL = "I couldn’t get an answer right now. Please try again.";
+  let buf = "", text = "", fin = false, err = null;
+  const handle = block => {
+    let ev = "message"; const data = [];
+    block.split(/\r?\n/).forEach(l => { if (l.startsWith("event:")) ev = l.slice(6).trim(); else if (l.startsWith("data:")) data.push(l.slice(5).replace(/^ /, "")); });
+    if (!data.length) return;
+    let j; try { j = JSON.parse(data.join("\n")); } catch(e){ return; }
+    if (ev === "delta" && j.t){ text += j.t; live(text); }
+    else if (ev === "sources" && j.sources) lastSources = j.sources;
+    else if (ev === "done") fin = true;
+    else if (ev === "error") err = j;
+  };
+  try {
+    for (;;){
+      const r = await rd.read(); if (r.done) break;
+      buf += dec.decode(r.value, {stream: true});
+      let m; while ((m = /\r?\n\r?\n/.exec(buf))){ handle(buf.slice(0, m.index)); buf = buf.slice(m.index + m[0].length); }
+    }
+    buf += dec.decode(); if (buf.trim()) handle(buf);
+  } catch(e){
+    if (e && e.name === "AbortError"){ if (text) return {text: text, cut: false}; throw e; }
+    if (!text) throw e;
+    return {text: text, cut: true};
+  }
+  if (err){ if (text) return {text: text, cut: true}; throw new Error(err.error || FAIL); }
+  if (!text) throw new Error(FAIL);
+  return {text: text, cut: !fin};
+}
+async function ask(live){
+  streamed = false;
   if (!API_URL){
     const f = file ? " I also received your file *" + file.name + "*." : "";
     return "**Demo mode:** I heard \"" + history[history.length-1].text + "\"." + f + " Connect a backend to get real AI answers.";
   }
   ctl = new AbortController();
-  const r = await fetch(API_URL, {method:"POST", headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({messages: history.map(m => ({role: m.role, text: m.text})), file, search: S.search, voice: askVoice, visitor_id: VISITOR_ID}), signal: ctl.signal});
+  const payload = {messages: history.map(m => ({role: m.role, text: m.text})), file, search: S.search, voice: askVoice, visitor_id: VISITOR_ID};
+  if (!askVoice) payload.stream = true;
+  if (curMode) payload.mode = curMode;
+  const r = await fetch(API_URL, {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload), signal: ctl.signal});
+  if (r.ok && r.body && (r.headers.get("content-type") || "").indexOf("text/event-stream") >= 0){
+    const out = await readSSE(r, live); streamed = true;
+    return out.cut ? out.text + "\n\n*The response was interrupted.*" : out.text;
+  }
   const j = await r.json().catch(() => ({}));
   if (!r.ok || !j.reply) throw new Error(j.error || "I couldn’t get an answer right now. Please try again.");
   lastSources = j.sources || []; return j.reply;
@@ -379,12 +454,22 @@ async function answer(spoken){
   if (labels.length > 1) timers.push(setTimeout(() => show(labels[1]), 1500));
   timers.push(setTimeout(() => show("Still working on it..."), 7000), setTimeout(() => show("Taking longer than usual..."), 20000));
   let reply; lastSources = [];
-  try { reply = await ask(); } catch(e){ reply = friendly(e); }
+  const cEl = $("chat"); let first = true, pend = 0, latest = "";
+  const live = txt => {
+    if (first){ first = false; timers.forEach(clearTimeout); setFace("thinking", "Responding..."); }
+    latest = txt;
+    if (!pend) pend = requestAnimationFrame(() => {
+      pend = 0; const near = cEl.scrollHeight - cEl.scrollTop - cEl.clientHeight < 90;
+      m.innerHTML = md(latest); if (near) cEl.scrollTop = cEl.scrollHeight;
+    });
+  };
+  try { reply = await ask(live); } catch(e){ reply = friendly(e); }
+  if (pend){ cancelAnimationFrame(pend); pend = 0; }
   timers.forEach(clearTimeout); file = null; m.closest(".row").classList.remove("loading");
   const srcs = lastSources; mine.push({role:"model", text:reply, ts:Date.now(), src: srcs});
   if (history !== mine || !m.isConnected){ commitChat(myId, mine); busy = false; if (curId === myId) loadChat(myId); return; }
   saveChat();
-  busy = false; typeInto(m, reply); addSources(m, srcs);
+  busy = false; if (streamed){ m.innerHTML = md(reply); $("chat").scrollTop = $("chat").scrollHeight; } else typeInto(m, reply); addSources(m, srcs);
   if (spoken) speak(reply); else if (voiceOn) setFace("", "Tap the mic to reply");
 }
 async function regen(){
@@ -773,12 +858,7 @@ function buildRobotHead(R){
   [-1, 1].forEach(s => { const p = new THREE.Mesh(new THREE.CylinderGeometry(.3, .3, .3, 24), cyan); p.rotation.z = Math.PI / 2; p.position.set(s * 1.85, 0, 0); hd.add(p); });
   const ant = new THREE.Mesh(new THREE.CylinderGeometry(.04, .04, .5, 12), M(0x8c94b5)); ant.position.y = 1.7; hd.add(ant);
   const tip = S3(.13, cyan, 1, 1, 1); tip.position.y = 2; hd.add(tip);
-  const hc = document.createElement("canvas"); hc.width = hc.height = 128;
-  const hg = hc.getContext("2d"), gr = hg.createRadialGradient(64, 64, 0, 64, 64, 64);
-  gr.addColorStop(0, "rgba(215,242,255,.9)"); gr.addColorStop(.35, "rgba(150,210,255,.38)"); gr.addColorStop(1, "rgba(120,180,255,0)");
-  hg.fillStyle = gr; hg.fillRect(0, 0, 128, 128);
-  R.halo = new THREE.Sprite(new THREE.SpriteMaterial({map: new THREE.CanvasTexture(hc), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: .75}));
-  R.halo.scale.set(9, 9, 1); R.halo.position.set(0, .2, -1.8); rob.add(R.halo);
+
   R.scene.add(new THREE.AmbientLight(0x8fa3d9, .8));
   const key = new THREE.DirectionalLight(0xffffff, .9); key.position.set(3, 4, 6); R.scene.add(key);
   const rim = new THREE.DirectionalLight(0x3a7bff, 1.7); rim.position.set(-4, 2, -5); R.scene.add(rim);
@@ -808,11 +888,10 @@ function robotFrame(){
   R.bl = Math.max(0, R.bl - .12);
   R.ox = L(R.ox, R.tx, .1); R.oy = L(R.oy, th ? .2 : R.ty, .08);
   const lid = 1 - .9 * Math.sin(R.bl * Math.PI), ey = (mood === "happy" ? .6 : mood === "sad" ? .95 : 1.3) * lid * (th ? .8 : li ? 1.12 : 1);
-  R.eyes.forEach(e => { e.scale.set(1, ey, .45); e.position.x = e.userData.x + R.ox; e.position.y = .22 + R.oy; });
+  R.eyes.forEach(e => { e.scale.set(1, ey, .45); e.position.x = e.userData.x + R.ox + R.px * .2; e.position.y = .22 + R.oy - R.py * .2; });
   const smile = mood === "happy" && !sp, frown = mood === "sad" && !sp;
   R.talk.visible = sp; R.arc.visible = smile || frown; R.line.visible = !sp && !smile && !frown;
   R.talk.scale.y = .3 + .7 * Math.abs(Math.sin(t * 13)); R.arc.rotation.z = smile ? Math.PI : 0; R.arc.position.y = smile ? .15 : -.3;
-  R.halo.material.opacity = .38 + .12 * Math.sin(t * 1.6) + R.lvl * .25; R.halo.scale.setScalar(8.2 + R.lvl * 1.2 + Math.sin(t * 1.6) * .2);
   R.shell.emissiveIntensity = .3 + .1 * Math.sin(t * 2) + R.lvl * .35;
   R.cyan.emissiveIntensity = 1 + .3 * Math.sin(t * 2.2) + R.lvl * .8;
   R.renderer.render(R.scene, R.cam);
@@ -904,12 +983,37 @@ function readAloud(m, b){
     if (!speechSynthesis.speaking && !speechSynthesis.pending){ clearInterval(iv); if (reading === m){ reading = null; b.dataset.tip = "Read aloud"; } }
   }, 500);
 }
+/* ===== assistant modes (keys must match the Worker's MODES) ===== */
+IC.code = '<path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 5l-4 14"/>';
+IC.bug = '<rect x="8" y="9" width="8" height="10" rx="4"/><path d="M12 9V6M9.5 6.5 11 8M14.5 6.5 13 8M4 13h4M16 13h4M5 19l3-2M19 19l-3-2"/>';
+IC.layers = '<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/>';
+IC.bolt = '<path d="M13 3 5 14h6l-1 7 8-11h-6z"/>';
+IC.list = '<path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/>';
+IC.spark = '<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18"/>';
+const MODE_LIST = [
+  ["", "General", "spark", "General questions and everyday help"],
+  ["code", "Code", "code", "Complete, working code with every file and run steps"],
+  ["debug", "Debug", "bug", "Find the cause of an error and get a verified fix"],
+  ["architecture", "Architecture", "layers", "System, API and database design"],
+  ["automation", "Automation", "bolt", "Business workflows, triggers, retries and monitoring"],
+  ["planning", "Planning", "list", "Turn an idea into requirements and a roadmap"]
+];
+var curMode = ""; try { curMode = localStorage.getItem("alphaO_mode") || ""; } catch(e){}
+if (!MODE_LIST.some(x => x[0] === curMode)) curMode = "";
+function renderModes(){
+  const box = $("modes"); box.innerHTML = "";
+  $("modeTag").textContent = (MODE_LIST.find(x => x[0] === curMode) || MODE_LIST[0])[1];
+  MODE_LIST.forEach(x => {
+    const b = document.createElement("button"); b.type = "button"; b.className = "mchip"; b.dataset.tip = x[3];
+    b.setAttribute("aria-pressed", String(x[0] === curMode)); b.innerHTML = ic(x[2]) + "<span>" + x[1] + "</span>";
+    b.onclick = () => { curMode = x[0]; try { localStorage.setItem("alphaO_mode", curMode); } catch(e){} renderModes(); toast(x[1] + " mode"); };
+    box.appendChild(b);
+  });
+}
+renderModes();
+$("scrim").onclick = () => document.body.classList.add("fold");
 newChat();
 </script>
-
-</script>
-
-<!-- ALPHA-O AUTOMATE SLIDE-OUT PANEL -->
 
 <!-- ALPHA-O AUTOMATE SLIDE-OUT PANEL -->
 <style>
@@ -1269,9 +1373,6 @@ newChat();
 })();
 </script>
 <!-- END ALPHA-O AUTOMATE SLIDE-OUT PANEL -->
-
-</body>
-</html>
 
 </body>
 </html>
