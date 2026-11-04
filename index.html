@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Alpha-O</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#262624">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Alpha-O">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>
 :root{--bg:#262624;--side:#1f1e1d;--panel:#30302e;--line:#434340;--text:#ece9e2;--muted:#a3a098;--accent:#10a37f;--eye:#ffc86b}
 *{box-sizing:border-box}[hidden]{display:none!important}
@@ -293,6 +300,38 @@ details.flowd{margin-top:8px}details.flowd summary{cursor:pointer;color:var(--mu
 .tspot{position:fixed;border-radius:12px;box-shadow:0 0 0 9999px rgba(0,0,0,.66);border:2px solid var(--accent);pointer-events:none;transition:all .25s}
 .tcard{position:fixed;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:0 14px 40px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:6px}
 .tcard small{color:var(--muted)}.tcard p{margin:0;font-size:14px;line-height:1.5;color:var(--muted)}.tcard .bar{margin-top:6px}
+/* ===== Revision 5: skeleton, banner, key hints, motion ===== */
+.skel{display:flex;flex-direction:column;gap:9px;margin:10px 0 4px;max-width:520px}
+.skel i{display:block;height:11px;border-radius:6px;background:linear-gradient(90deg,var(--panel) 25%,var(--line) 50%,var(--panel) 75%);background-size:200% 100%;animation:ao-shim 1.5s linear infinite}
+.skel i:nth-child(1){width:92%}.skel i:nth-child(2){width:78%}.skel i:nth-child(3){width:54%}
+@keyframes ao-shim{to{background-position:-200% 0}}
+#netbar{display:flex;align-items:center;justify-content:center;gap:10px;overflow:hidden;max-height:0;opacity:0;padding:0 14px;font-size:13.5px;font-weight:600;position:relative;z-index:3;background:#3a2f12;color:#ffd98a;border-bottom:1px solid transparent;transition:max-height .25s ease,opacity .2s ease,padding .25s ease}
+#netbar.on{max-height:60px;opacity:1;padding:8px 14px;border-bottom-color:rgba(255,200,107,.35)}
+#netbar i{width:9px;height:9px;border-radius:50%;background:currentColor;flex:none}
+#netbar[data-s="busy"] i{animation:vp 1s infinite}
+#netbar[data-s="online"]{background:rgba(16,163,127,.18);color:#6ee7c0;border-bottom-color:rgba(16,163,127,.4)}
+#netbar[data-s="error"]{background:#3b1a1a;color:#ffb3b3;border-bottom-color:rgba(255,107,107,.4)}
+[data-theme="light"] #netbar{background:#fff4d6;color:#7a4b00}[data-theme="light"] #netbar[data-s="error"]{background:#ffe3e3;color:#9b1c1c}[data-theme="light"] #netbar[data-s="online"]{color:#0d8a6a}
+kbd{font:600 11px/1 Consolas,ui-monospace,monospace;background:rgba(255,255,255,.08);border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:3px 6px;color:var(--muted);display:inline-block;min-width:22px;text-align:center}
+[data-theme="light"] kbd{background:#fff}
+.kk{display:inline-flex;gap:3px;margin-left:8px;vertical-align:middle;flex:none}.cmi .kk{margin-left:0}
+#tip kbd{background:rgba(255,255,255,.14);border-color:#555;color:#eee;padding:2px 5px}
+.sopt kbd{margin-left:8px;flex:none}.sopt.danger kbd{color:#ff8a8a}
+#keys{z-index:45}.krow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:7px 0;font-size:14.5px;border-bottom:1px solid var(--line)}.krow:last-child{border-bottom:0}
+.khint{opacity:.8}@media(hover:none){.khint{display:none}}
+.row{animation:ao-fade .22s ease-out both}
+.fups,.src,.flowd{animation:ao-fade .25s ease-out both}
+@keyframes ao-fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+#sug:not([hidden]),#mpanel:not([hidden]),#cmenu{animation:ao-up .16s ease-out both}
+@keyframes ao-up{from{opacity:0;transform:translateY(8px) scale(.985)}to{opacity:1;transform:none}}
+#vmenu:not([hidden]){animation:ao-vm .16s ease-out both}
+@keyframes ao-vm{from{opacity:0;transform:translate(-50%,6px)}to{opacity:1;transform:translateX(-50%)}}
+.ov2:not([hidden]){animation:ao-in .16s ease-out both}.ov2:not([hidden]) .mod{animation:ao-pop .2s ease-out both}
+@keyframes ao-in{from{opacity:0}to{opacity:1}}
+@keyframes ao-pop{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+body:not(.fold) #side{animation:ao-side .22s ease-out both}
+@keyframes ao-side{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
+#voice.on{animation:ao-in .25s ease-out both}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
@@ -312,6 +351,7 @@ details.flowd{margin-top:8px}details.flowd summary{cursor:pointer;color:var(--mu
 <div class="bar"><button class="shr" id="share" data-tip="Share chat"><span data-ic="share"></span><span class="bt">Share</span></button><button   class="shr"   id="automateBtn"   type="button"   aria-label="Open Alpha-O Automate workspace"   data-tip="Open Automate workspace" >   <svg aria-hidden="true" viewBox="0 0 24 24" focusable="false">     <path style="fill:none;stroke:currentColor;stroke-width:0.85;stroke-linecap:round;stroke-linejoin:round" d="M10.65 6.57 L11.04 5.17 L12.96 5.17 L13.35 6.57 L14.88 7.2 L16.15 6.49 L17.51 7.85 L16.8 9.12 L17.43 10.65 L18.83 11.04 L18.83 12.96 L17.43 13.35 L16.8 14.88 L17.51 16.15 L16.15 17.51 L14.88 16.8 L13.35 17.43 L12.96 18.83 L11.04 18.83 L10.65 17.43 L9.12 16.8 L7.85 17.51 L6.49 16.15 L7.2 14.88 L6.57 13.35 L5.17 12.96 L5.17 11.04 L6.57 10.65 L7.2 9.12 L6.49 7.85 L7.85 6.49 L9.12 7.2ZM7.8 12a4.2 4.2 0 1 0 8.4 0a4.2 4.2 0 1 0 -8.4 0M12 8.4V13.2M11.2 14a0.8 0.8 0 1 0 1.6 0a0.8 0.8 0 1 0 -1.6 0M10.6 8.6V10L9.9 10.8M8.6 11.5a0.7 0.7 0 1 0 1.4 0a0.7 0.7 0 1 0 -1.4 0M13.4 8.6V10L14.1 10.8M14 11.5a0.7 0.7 0 1 0 1.4 0a0.7 0.7 0 1 0 -1.4 0M7 3.34A10 10 0 0 1 19.66 5.57M19.63 3.51L19.66 5.57L17.64 5.18M21.06 7.77A10 10 0 0 1 19.88 18.16M21.89 17.7L19.88 18.16L19.84 16.1M16.23 21.06A10 10 0 0 1 5.57 19.66M5.96 21.68L5.57 19.66L7.63 19.69M2.94 16.23A10 10 0 0 1 4.12 5.84M2.11 6.3L4.12 5.84L4.16 7.9"></path>   </svg>   <span class="bt">Automate</span> </button><button class="ib" id="newTop" data-tip="New chat" data-ic="plus" aria-label="New chat"></button></div>
 
   </div>
+  <div id="netbar" role="status" aria-live="polite" aria-atomic="true" data-s="offline"><i aria-hidden="true"></i><span id="nbtxt"></span></div>
   <div id="chat" aria-live="polite"></div>
   <div id="comp">
     <div id="sug" role="dialog" aria-label="Suggested prompts" hidden></div>
@@ -321,7 +361,7 @@ details.flowd{margin-top:8px}details.flowd summary{cursor:pointer;color:var(--mu
       <textarea id="input" rows="1" placeholder="Ask Alpha-O anything or write your request..."></textarea>
       <div class="tools"><button class="ib" id="attach" data-tip="Attach a file" data-ic="clip" aria-label="Attach a file"></button><button class="ib" id="modeBtn" type="button" data-tip="Assistant mode" aria-label="Assistant mode" aria-haspopup="true" aria-expanded="false"></button><button class="ib" id="sugBtn" type="button" data-tip="Suggested prompts" data-ic="bulb" aria-label="Suggested prompts" aria-haspopup="true" aria-expanded="false"></button><span class="sp"></span><button class="ib" id="voiceBtn2" data-tip="Voice mode" data-ic="wave" aria-label="Voice mode"></button><button id="stop" data-tip="Stop" data-ic="stop" aria-label="Stop" hidden></button><button id="send" data-tip="Send message" data-ic="up" aria-label="Send"></button></div>
     </div>
-    <footer><span id="copy"></span> Alpha-O can make mistakes. Check important information. <a href="#" id="priv">Privacy</a></footer>
+    <footer><span id="copy"></span> Alpha-O can make mistakes. Check important information. <a href="#" id="priv">Privacy</a><span class="khint"> · Press <kbd>?</kbd> for shortcuts</span></footer>
   </div>
   <input type="file" id="file" hidden accept="image/*,.txt,.md,.csv,.json,.js,.py,.html,.css,.cs">
 </main>
@@ -330,6 +370,7 @@ details.flowd{margin-top:8px}details.flowd summary{cursor:pointer;color:var(--mu
 <div class="ov2" id="pv" hidden><div class="mod wide pvm" role="dialog" aria-label="Code preview"><div class="mh"><b id="pvt">Preview</b><span class="bar"><button class="cab" id="pvr" type="button">Reload</button><button class="ib" id="pvx" data-ic="x" data-tip="Close" aria-label="Close preview"></button></span></div><p class="note">Runs in an isolated sandbox: no access to your chats or storage, and no network requests.</p><iframe id="pvf" title="Code preview" sandbox="allow-scripts allow-modals allow-forms"></iframe></div></div>
 <div id="dropz" hidden><div>Drop a file to attach it</div></div>
 <div id="tour" hidden><div id="tspot" class="tspot"></div><div id="tcard" class="tcard" role="dialog" aria-label="Quick tour"><small id="tcount"></small><b id="ttitle"></b><p id="tdesc"></p><div class="bar"><button id="tskip" type="button" class="cab">Skip</button><span class="sp"></span><button id="tback" type="button" class="cab">Back</button><button id="tnext" type="button" class="pri cab">Next</button></div></div></div>
+<div class="ov2" id="keys" hidden><div class="mod" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts"><div class="mh"><b>Keyboard shortcuts</b><button class="ib" id="kx" data-ic="x" data-tip="Close" aria-label="Close"></button></div><div id="kbody"></div></div></div>
 <div id="toast" role="status"></div>
 <div class="ov2" id="set" hidden><div class="mod" role="dialog" aria-label="Settings">
   <div class="mh"><b>Settings</b><button class="ib" id="setx" data-ic="x" data-tip="Close" aria-label="Close"></button></div>
@@ -341,7 +382,9 @@ details.flowd{margin-top:8px}details.flowd summary{cursor:pointer;color:var(--mu
   <label class="sw"><input type="checkbox" id="swNotify"> Desktop notification when a reply is ready (asks permission)</label>
   <h4>Privacy</h4><p class="note">Your chat history is saved in this browser. To answer, messages go through a Cloudflare Worker to Google Gemini, Groq, or Cloudflare Workers AI. For analytics, Alpha-O records a random browser ID, visit and request timestamps, response status, provider, and a short excerpt (up to 200 characters) of your latest prompt. The backend supports 90-day analytics cleanup; that cleanup must be enabled in Cloudflare before automatic deletion begins. Full conversations and attached files are not stored in the analytics database. Please do not share passwords or private information.</p>
   <button class="dng" id="clrAll">Clear all history</button>
-  <h4>Keyboard shortcuts</h4><p class="note">Ctrl+K command palette, Alt+N new chat, Ctrl+/ message box, Ctrl+B sidebar, Ctrl+, settings, Ctrl+Shift+V voice mode, Esc close.</p>
+  <h4>Keyboard shortcuts</h4><p class="note">Ctrl+K command palette, Alt+N new chat, Ctrl+/ message box, Ctrl+B sidebar, Ctrl+, settings, Ctrl+Shift+V voice mode, Esc close, ? all shortcuts.</p>
+  <button type="button" class="cab" id="openKeys" style="margin-top:8px">Show all shortcuts</button>
+  <h4>App</h4><p class="note" id="installNote"></p><button type="button" class="cab pri" id="installBtn" style="margin-top:8px">Install Alpha-O</button>
 </div></div>
 <div id="voice">
   <div id="face" role="img" aria-label="3D robot face"></div>
@@ -546,7 +589,18 @@ async function ask(live){
   const payload = {messages: history.map(m => ({role: m.role, text: m.text})), file, search: S.search, voice: askVoice, visitor_id: VISITOR_ID};
   if (!askVoice) payload.stream = true;
   if (curMode) payload.mode = curMode;
-  const r = await fetch(API_URL, {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload), signal: ctl.signal});
+  const body = JSON.stringify(payload); let r, tries = 0;
+  for (;;){
+    try { r = await fetch(API_URL, {method:"POST", headers:{"Content-Type":"application/json"}, body: body, signal: ctl.signal}); }
+    catch(e){
+      if (e && e.name === "AbortError"){ netHide(); throw e; }
+      if (!navigator.onLine || tries >= 2){ if (navigator.onLine) netBar("error", "Can\u2019t reach Alpha-O right now. Check your connection and try again.", 6000); throw e; }
+      tries++; netBar("busy", "Connection hiccup, retrying (" + tries + "/2)\u2026"); await nap(1000 * tries, ctl.signal); continue;
+    }
+    if ((r.status === 429 || r.status >= 500) && tries < 2){ tries++; netBar("busy", "Provider busy, retrying (" + tries + "/2)\u2026"); await nap(1200 * tries, ctl.signal); continue; }
+    break;
+  }
+  if (tries){ if (r.ok) netHide(); else netBar("error", "Provider is busy right now. Please try again in a moment.", 6000); }
   if (r.ok && r.body && (r.headers.get("content-type") || "").indexOf("text/event-stream") >= 0){
     const out = await readSSE(r, live); streamed = true;
     return out.cut ? out.text + "\n\n*The response was interrupted.*" : out.text;
@@ -569,7 +623,7 @@ async function answer(spoken){
   const mine = history, myId = curId;
   busy = true; file = lastFile; askVoice = !!spoken && S.short;
   const m = add("", "bot"), labels = file ? ["Reading your file...", "Thinking..."] : ["Thinking..."], timers = [];
-  const show = txt => { m.innerHTML = '<span class="dots"><i></i><i></i><i></i></span><span class="stp">' + txt + '</span>'; setFace("thinking", txt); phase = txt.replace(/\.\.\.$/, "\u2026"); tick(); };
+  const show = txt => { if (!m.querySelector(".skel")) m.innerHTML = '<span class="dots"><i></i><i></i><i></i></span><div class="skel" aria-hidden="true"><i></i><i></i><i></i></div>'; setFace("thinking", txt); phase = txt.replace(/\.\.\.$/, "\u2026"); tick(); };
   const av = m.closest(".row").querySelector(".av svg"), setAv = c => { if (av) av.setAttribute("class", c); }; setAv("think");
   document.querySelectorAll(".fups").forEach(x => x.remove());
   const stl = stlOf(m), t0 = performance.now(); let phase = "Thinking\u2026";
@@ -905,7 +959,7 @@ addEventListener("keydown", e => { if (e.key === "Escape"){ if (!$("vmenu").hidd
 const tip = document.createElement("div"); tip.id = "tip"; document.body.appendChild(tip);
 function showTip(el){
   const t = el.dataset.tip; if (!t) return;
-  tip.textContent = t; tip.style.display = "block";
+  tip.textContent = t; if (el.dataset.key) tip.insertAdjacentHTML("beforeend", keysHtml(el.dataset.key)); tip.style.display = "block";
   const r = el.getBoundingClientRect(), w = tip.offsetWidth;
   tip.style.left = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), innerWidth - w - 8) + "px";
   let y = r.top - tip.offsetHeight - 8; if (y < 8) y = r.bottom + 8; tip.style.top = y + "px";
@@ -1043,6 +1097,7 @@ function applyTheme(){ document.documentElement.dataset.theme = S.theme === "sys
 function toast(t){ const e = $("toast"); e.textContent = t; e.classList.add("on"); clearTimeout(e._t); e._t = setTimeout(() => e.classList.remove("on"), 1800); }
 function friendly(e){
   if (e && e.name === "AbortError") return "Stopped.";
+  if (!navigator.onLine) return "You’re offline. Reconnect and try again.";
   if (e instanceof TypeError) return "I can’t reach Alpha-O right now. Please check your internet connection and try again.";
   return (e && e.message) || "I couldn’t get an answer right now. Please try again.";
 }
@@ -1147,10 +1202,10 @@ function renderModes(){
   $("modeBtn").dataset.tip = "Assistant mode: " + cur[1];
   const box = $("mpanel"); box.innerHTML = "";
   const h = document.createElement("h5"); h.textContent = "Assistant mode"; box.appendChild(h);
-  MODE_LIST.forEach(x => {
+  MODE_LIST.forEach((x, i) => {
     const b = document.createElement("button"); b.type = "button"; b.className = "sopt"; b.setAttribute("role", "menuitemradio");
     b.setAttribute("aria-checked", String(x[0] === curMode));
-    b.innerHTML = ic(x[2]) + '<span class="st"><b></b><small></small></span><span class="ck" aria-hidden="true">\u2713</span>';
+    b.innerHTML = ic(x[2]) + '<span class="st"><b></b><small></small></span><kbd>' + (i + 1) + '</kbd><span class="ck" aria-hidden="true">\u2713</span>';
     b.querySelector("b").textContent = x[1]; b.querySelector("small").textContent = x[3];
     b.onclick = () => { curMode = x[0]; try { localStorage.setItem("alphaO_mode", curMode); } catch(e){} renderModes(); closeMode(); toast(x[1] + " mode"); };
     box.appendChild(b);
@@ -1392,11 +1447,19 @@ markStars();
 function closeCMenu(){ const o = $("cmenu"); if (o) o.remove(); }
 function openCMenu(btn, c){
   closeCMenu(); const mn = document.createElement("div"); mn.id = "cmenu"; mn.setAttribute("role", "menu");
-  const item = (icon, label, fn, cls) => { const b = document.createElement("button"); b.type = "button"; b.className = "sopt " + (cls || ""); b.setAttribute("role", "menuitem"); b.innerHTML = ic(icon) + "<span></span>"; b.lastChild.textContent = label; b.onclick = () => { closeCMenu(); fn(); }; mn.appendChild(b); };
+  const CK = ["P", "R", "E", "Del"]; let ckn = 0;
+  const item = (icon, label, fn, cls) => { const key = CK[ckn++], b = document.createElement("button"); b.dataset.k = key.toLowerCase() === "del" ? "delete" : key.toLowerCase(); b.type = "button"; b.className = "sopt " + (cls || ""); b.setAttribute("role", "menuitem"); b.innerHTML = ic(icon) + "<span></span>"; b.lastChild.textContent = label; b.insertAdjacentHTML("beforeend", "<kbd>" + key + "</kbd>"); b.onclick = () => { closeCMenu(); fn(); }; mn.appendChild(b); };
   item("pin", c.pin ? "Unpin" : "Pin", () => { c.pin = !c.pin; persist(); renderSide(); });
   item("pen", "Rename", () => { const v = prompt("Rename chat", c.title); if (v && v.trim()){ c.title = v.trim().slice(0, 60); c.custom = true; persist(); renderSide(); } });
   item("download", "Export", () => exportChat(c));
   item("trash", "Delete", () => { if (confirm("Delete this chat?")){ chats = chats.filter(x => x.id !== c.id); persist(); if (c.id === curId) newChat(); else renderSide(); } }, "danger");
+  mn.addEventListener("keydown", e => {
+    const bs = Array.from(mn.querySelectorAll("button")), i = bs.indexOf(document.activeElement);
+    if (e.key === "ArrowDown"){ e.preventDefault(); bs[(i + 1) % bs.length].focus(); }
+    else if (e.key === "ArrowUp"){ e.preventDefault(); bs[(i - 1 + bs.length) % bs.length].focus(); }
+    else if (e.key === "Escape"){ e.preventDefault(); closeCMenu(); btn.focus(); }
+    else if (!e.ctrlKey && !e.metaKey && !e.altKey){ const k = (e.key === "Delete" || e.key === "Backspace") ? "delete" : e.key.toLowerCase(), hit = bs.find(b => b.dataset.k === k); if (hit){ e.preventDefault(); hit.click(); } }
+  });
   document.body.appendChild(mn);
   const r = btn.getBoundingClientRect(), w = mn.offsetWidth, h = mn.offsetHeight;
   mn.style.left = Math.max(8, Math.min(r.right - w, innerWidth - w - 8)) + "px"; mn.style.top = (r.bottom + 4 + h > innerHeight - 8 ? Math.max(8, r.top - h - 4) : r.bottom + 4) + "px";
@@ -1416,6 +1479,8 @@ function cmdItems(){
   A("Open Automate", "Action", () => $("automateBtn").click());
   A("Start voice mode", "Action", () => $("voiceBtn2").click(), "Ctrl+Shift+V");
   A("Take the quick tour", "Action", () => startTour(true));
+  A("Keyboard shortcuts", "Action", openKeys, "?");
+  if (!isStandalone()) A("Install Alpha-O app", "Action", installApp);
   MODE_LIST.forEach(x => A("Mode: " + x[1], "Mode", () => { curMode = x[0]; try { localStorage.setItem("alphaO_mode", curMode); } catch(e){} renderModes(); toast(x[1] + " mode"); }, x[3]));
   PRESETS.forEach(p => A("Voice: " + p.label, "Voice", () => { vp = p.id; try { localStorage.setItem("alphaO_voice", vp); } catch(e){} sample(); }));
   ["dark", "light", "system"].forEach(t => A("Theme: " + t[0].toUpperCase() + t.slice(1), "Theme", () => { S.theme = t; saveS(); applyTheme(); }));
@@ -1430,7 +1495,7 @@ function renderCmd(){
   if (!cmdRows.length){ box.innerHTML = '<p class="note" style="padding:10px">No matches.</p>'; return; }
   cmdRows.forEach((x, i) => {
     const d = document.createElement("div"); d.className = "cmi" + (i === 0 ? " on" : ""); d.setAttribute("role", "option");
-    d.innerHTML = "<span></span><small></small>"; d.firstChild.textContent = x.label; d.lastChild.textContent = x.hint || x.kind;
+    d.innerHTML = "<span></span><small></small>"; d.firstChild.textContent = x.label; if (/^((Ctrl|Alt)\+|\?$)/.test(x.hint)) d.lastChild.innerHTML = keysHtml(x.hint); else d.lastChild.textContent = x.hint || x.kind;
     d.onclick = () => runCmd(x); d.onmousemove = () => setCmdSel(i); box.appendChild(d);
   });
 }
@@ -1515,6 +1580,56 @@ addEventListener("keydown", e => {
   if (tourI >= 0) endTour(); else if (!$("pv").hidden) closePv(); else if (!$("cmdk").hidden) closeCmd(); else if (!$("saved").hidden) closeSaved(); else closeCMenu();
 });
 setTimeout(() => { if ($("set").hidden && !voiceOn) startTour(false); }, 1400);
+
+/* ===== Revision 5: offline/error banner, shortcuts sheet, install, key hints ===== */
+const MAC = /Mac|iPhone|iPad/i.test(navigator.platform || navigator.userAgent), IOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+function keysHtml(k){ return '<span class="kk">' + k.split("+").map(p => "<kbd>" + escH(MAC && p === "Ctrl" ? "\u2318" : p) + "</kbd>").join("") + "</span>"; }
+[["newchat", "New chat", "Alt+N"], ["newTop", "", "Alt+N"], ["fold", "", "Ctrl+B"], ["menu", "", "Ctrl+B"], ["gear", "", "Ctrl+,"], ["voiceBtn2", "", "Ctrl+Shift+V"], ["send", "", "Enter"]].forEach(a => { const el = $(a[0]); if (!el) return; if (a[1]) el.dataset.tip = a[1]; el.dataset.key = a[2]; });
+
+/* banner */
+let nbT = 0;
+function netBar(state, msg, ms){ clearTimeout(nbT); const b = $("netbar"); b.dataset.s = state; $("nbtxt").textContent = msg; b.classList.add("on"); if (ms) nbT = setTimeout(netHide, ms); }
+function netHide(){ clearTimeout(nbT); $("netbar").classList.remove("on"); }
+function nap(ms, sig){ return new Promise((res, rej) => { const t = setTimeout(res, ms); if (sig) sig.addEventListener("abort", () => { clearTimeout(t); rej(new DOMException("Stopped", "AbortError")); }, {once: true}); }); }
+addEventListener("offline", () => netBar("offline", "You\u2019re offline. Alpha-O will answer again when you reconnect."));
+addEventListener("online", () => netBar("online", "Back online", 2500));
+if (!navigator.onLine) netBar("offline", "You\u2019re offline. Alpha-O will answer again when you reconnect.");
+
+/* shortcuts sheet (press ?) */
+const KEYS = [["Navigate", [["Command palette", "Ctrl+K"], ["New chat", "Alt+N"], ["Focus message box", "Ctrl+/"], ["Show or hide sidebar", "Ctrl+B"], ["Open settings", "Ctrl+,"], ["Voice mode", "Ctrl+Shift+V"]]], ["Write", [["Send message", "Enter"], ["New line", "Shift+Enter"], ["Pick a mode (mode menu open)", "1\u20136"]]], ["Anywhere", [["Close panel, menu or voice mode", "Esc"], ["Show this sheet", "?"]]]];
+let keysBack = null;
+function openKeys(){ if (!$("keys").hidden) return; keysBack = document.activeElement; $("kbody").innerHTML = KEYS.map(g => "<h4>" + g[0] + "</h4>" + g[1].map(r => '<div class="krow"><span>' + r[0] + "</span>" + keysHtml(r[1]) + "</div>").join("")).join(""); $("keys").hidden = false; $("kx").focus(); }
+function closeKeys(){ $("keys").hidden = true; try { if (keysBack && keysBack.focus) keysBack.focus(); } catch(e){} }
+$("kx").onclick = closeKeys; $("keys").onclick = e => { if (e.target === $("keys")) closeKeys(); }; $("openKeys").onclick = () => { closeSet(); openKeys(); };
+addEventListener("keydown", e => { if (e.key === "Escape" && !$("keys").hidden){ e.preventDefault(); e.stopImmediatePropagation(); closeKeys(); } }, true);
+addEventListener("keydown", e => {
+  if (e.key !== "?" || e.ctrlKey || e.metaKey || e.altKey || tourI >= 0 || document.body.classList.contains("alpha-automate-open")) return;
+  const t = e.target; if (t && ((t.matches && t.matches("input,textarea,select")) || t.isContentEditable)) return;
+  e.preventDefault(); if ($("keys").hidden) openKeys(); else closeKeys();
+});
+addEventListener("keydown", e => {
+  if ($("mpanel").hidden || e.ctrlKey || e.metaKey || e.altKey || (e.target.matches && e.target.matches("input,textarea,select"))) return;
+  const n = +e.key; if (n >= 1 && n <= MODE_LIST.length){ e.preventDefault(); const b = $("mpanel").querySelectorAll(".sopt")[n - 1]; if (b) b.click(); }
+});
+
+/* install as an app */
+let dip = null;
+function isStandalone(){ return matchMedia("(display-mode: standalone)").matches || navigator.standalone === true; }
+function syncInstall(){
+  const b = $("installBtn"), n = $("installNote");
+  if (isStandalone()){ b.hidden = true; n.textContent = "Alpha-O is running as an installed app."; return; }
+  b.hidden = false;
+  n.textContent = dip ? "Install Alpha-O to open it in its own window or from your home screen." : IOS ? "On iPhone or iPad: tap Share, then Add to Home Screen." : "Use your browser menu and choose Install app or Add to Home Screen.";
+}
+async function installApp(){
+  if (dip){ dip.prompt(); try { await dip.userChoice; } catch(e){} dip = null; syncInstall(); }
+  else if (isStandalone()) toast("Alpha-O is already installed");
+  else toast(IOS ? "Tap Share, then Add to Home Screen" : "Open your browser menu and choose Install app");
+}
+addEventListener("beforeinstallprompt", e => { e.preventDefault(); dip = e; syncInstall(); });
+addEventListener("appinstalled", () => { dip = null; syncInstall(); toast("Alpha-O installed"); });
+$("installBtn").onclick = installApp; syncInstall();
+if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
 
 renderModes();
 $("scrim").onclick = () => document.body.classList.add("fold");
