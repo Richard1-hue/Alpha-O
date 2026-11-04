@@ -1,16 +1,18 @@
 /* Alpha-O service worker: app shell works offline; chat/API requests are never cached. */
-const VERSION = "alpha-o-v2";
+const VERSION = "alpha-o-v3";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png", "favicon.png"];
 const CDN = ["https://cdnjs.cloudflare.com/"];
 
 self.addEventListener("install", e => {
-  e.waitUntil(caches.open(VERSION).then(c => Promise.allSettled(SHELL.map(u => c.add(u)))).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(VERSION).then(c => Promise.allSettled(SHELL.map(u => c.add(u)))));
 });
+self.addEventListener("message", e => { if (e.data === "SKIP_WAITING") self.skipWaiting(); });
 self.addEventListener("activate", e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
 self.addEventListener("fetch", e => {
   const req = e.request; if (req.method !== "GET") return;
+  if (req.url.indexOf("_chk=") > -1) return; // update checks always go to the network
   const url = new URL(req.url), same = url.origin === location.origin, cdn = CDN.some(p => req.url.startsWith(p));
   if (!same && !cdn) return; // the AI backend and analytics always go straight to the network
   if (req.mode === "navigate"){
