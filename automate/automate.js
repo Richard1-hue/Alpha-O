@@ -2967,9 +2967,55 @@
     };
   }
 
+  const AI_VALID_TYPES = ["business", "communication", "productivity", "reporting", "other"];
+  const AI_VALID_TRIGGERS = ["manual", "schedule", "new-email", "form-submission", "file-added", "webhook"];
+  const AI_VALID_ACTIONS = ["summarize", "draft-email", "create-task", "analyze-data", "notify", "process-file"];
+
+  // Never trust model output: force every field into what this workspace supports.
+  function sanitizeAiProposal(raw) {
+    const p = raw && typeof raw === "object" ? raw : {};
+    const str = (value, max) => clip(String(value == null ? "" : value).replace(/\s+/g, " ").trim(), max);
+
+    return {
+      name: str(p.name, 100) || "New workflow",
+      type: AI_VALID_TYPES.includes(p.type) ? p.type : "other",
+      trigger: AI_VALID_TRIGGERS.includes(p.trigger) ? p.trigger : DEFAULT_TRIGGER,
+      action: AI_VALID_ACTIONS.includes(p.action) ? p.action : DEFAULT_ACTION,
+      condition: str(p.condition, 300),
+      description: clip(String(p.description || "").trim(), 2000)
+    };
+  }
+
   const aiAdapter = {
     mode: "local-rules",
     async generate(prompt) {
+      // Real AI: goes through your Cloudflare Worker. The provider key lives
+      // only on the server. Needs the admin token, so only when connected.
+      if (cloudConnected) {
+        try {
+          const data = await cloudRequest("/admin/ai/propose", {
+            method: "POST",
+            body: JSON.stringify({ prompt: clip(prompt, 2000) })
+          });
+
+          if (!data || typeof data.proposal !== "object") throw new Error("Empty AI response");
+
+          return {
+            source: "ai",
+            provider: typeof data.provider === "string" ? clip(data.provider, 40) : "",
+            notes: (Array.isArray(data.notes) ? data.notes : [])
+              .slice(0, 6).map(n => clip(String(n), 300)).filter(Boolean),
+            proposal: sanitizeAiProposal(data.proposal)
+          };
+        } catch (error) {
+          console.warn("Alpha-O Automate: AI service failed, using local rules.", error);
+          const fallback = interpretPrompt(prompt);
+
+          fallback.notes.unshift("The AI service could not be reached, so I used local keyword rules instead.");
+          return fallback;
+        }
+      }
+
       await wait(450); // Short pause so the busy state is visible.
       return interpretPrompt(prompt);
     }
@@ -3117,7 +3163,7 @@
 
     $("#aiProposalSource").textContent = result.source === "local-rules"
       ? "Source: local keyword rules. No AI model was used."
-      : "Source: connected AI service.";
+      : `Source: connected AI service${result.provider ? " (" + result.provider + ")" : ""}.`;
 
     const notes = $("#aiProposalNotes");
 
@@ -3180,7 +3226,11 @@
       const result = await aiAdapter.generate(text);
 
       pending.busy = false;
-      pending.text = "No AI model is connected yet, so I matched keywords in your request to the triggers and actions this workspace supports. The proposal is on the right. Review and edit it before saving anything.";
+      pending.text = result.source === "ai"
+        ? "I read your request and drafted a proposal on the right. Review and edit it before saving anything."
+        : cloudConnected
+          ? "The AI service did not answer, so I matched keywords instead. The proposal is on the right. Review and edit it before saving anything."
+          : "Connect your workspace (Cloud connection on the Dashboard) to use the real AI. For now I matched keywords in your request. The proposal is on the right. Review and edit it before saving anything.";
       loadProposal(result);
     } catch (error) {
       console.error("Alpha-O Automate: Could not build a proposal.", error);
@@ -3320,7 +3370,7 @@
     session.chat = [{
       role: "assistant",
       busy: false,
-      text: "Hi, I'm ALPHA-O AUTOMATE AI. Describe an automation in plain language and I will propose a trigger, condition and action. In this preview no AI model is connected, so I match keywords to what this workspace supports. You stay in control: nothing is saved until you accept it, and nothing becomes active."
+      text: "Hi, I'm ALPHA-O AUTOMATE AI. Describe an automation in plain language and I will propose a trigger, condition and action. Once your workspace is connected to Cloudflare I use the same AI as Alpha-O; until then I match keywords. You stay in control: nothing is saved until you accept it, and nothing becomes active."
     }];
 
     renderChat();
