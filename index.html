@@ -332,6 +332,24 @@ kbd{font:600 11px/1 Consolas,ui-monospace,monospace;background:rgba(255,255,255,
 body:not(.fold) #side{animation:ao-side .22s ease-out both}
 @keyframes ao-side{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
 #voice.on{animation:ao-in .25s ease-out both}
+/* ===== Revision 6: formatting + UI polish ===== */
+.skel{margin:6px 0 4px}
+.msg.you{background:linear-gradient(135deg,rgba(16,163,127,.18),var(--panel));border-color:rgba(16,163,127,.3)}
+[data-theme="light"] .msg.you{background:linear-gradient(135deg,rgba(13,138,106,.12),var(--panel))}
+.msg strong{font-weight:650}.msg li::marker{color:var(--accent)}.msg a{text-underline-offset:3px}
+.msg mark{background:rgba(255,200,107,.28);color:inherit;padding:0 4px;border-radius:4px}
+.msg del{opacity:.6}.msg kbd{font-size:.8em}
+.msg blockquote{margin:0 0 .8em;padding:2px 14px;border-left:3px solid var(--accent);background:rgba(16,163,127,.07);border-radius:0 10px 10px 0;color:var(--muted)}
+.msg blockquote p{margin:.45em 0}
+.msg hr{border:0;height:1px;background:linear-gradient(90deg,transparent,var(--line),transparent);margin:1.2em 0}
+.msg li.task{list-style:none;margin-left:-1.2em}.msg li.task input{accent-color:var(--accent);margin-right:6px;vertical-align:-1px}
+.msg h4.h1{font-size:22px}.msg h4.h2{font-size:20px}.msg h4.h3{font-size:18px}.msg h4.h4{font-size:16px;border:0;color:var(--muted)}
+.cb{box-shadow:0 4px 18px rgba(0,0,0,.18)}
+.top{backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.card{transition:transform .2s,border-color .2s,background .2s}.card:hover{background:rgba(255,255,255,.04);transform:translateY(-2px)}
+#jump{position:absolute;right:22px;bottom:100%;margin-bottom:10px;width:38px;height:38px;padding:0;border-radius:50%;background:var(--panel);border:1px solid var(--line);color:var(--text);box-shadow:0 6px 20px rgba(0,0,0,.35);z-index:5;animation:ao-up .18s ease-out both}
+#jump:hover{border-color:var(--accent);color:var(--accent)}
+.resume{max-width:760px;margin:0 auto 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);font-size:14px;animation:ao-fade .25s ease-out both}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
@@ -354,6 +372,7 @@ body:not(.fold) #side{animation:ao-side .22s ease-out both}
   <div id="netbar" role="status" aria-live="polite" aria-atomic="true" data-s="offline"><i aria-hidden="true"></i><span id="nbtxt"></span></div>
   <div id="chat" aria-live="polite"></div>
   <div id="comp">
+    <button class="ib" id="jump" type="button" hidden data-tip="Scroll to latest" aria-label="Scroll to latest"></button>
     <div id="sug" role="dialog" aria-label="Suggested prompts" hidden></div>
     <div id="mpanel" role="dialog" aria-label="Assistant mode" hidden></div>
     <div id="chip"><span id="fname"></span><span class="fnote" id="fnote" role="status"></span><button id="clearfile" data-tip="Remove file" aria-label="Remove file">x</button></div>
@@ -464,10 +483,17 @@ function hl(h, lg){
 }
 function md(src){
   const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-  const inl = s => esc(s).replace(/`([^`]+)`/g,"<code>$1</code>").replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>")
-    .replace(/(^|[^*\w])\*([^*\n]+)\*/g,"$1<em>$2</em>")
-    .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s"]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
-  let out = "", para = [], list = "", code = null, lang = "";
+  const inl = s => {
+    const keep = [];
+    s = esc(s).replace(/`([^`]+)`/g, (m, c) => "\u0000" + (keep.push("<code>" + c + "</code>") - 1) + "\u0000");
+    s = s.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/~~(?=\S)(.+?)(?<=\S)~~/g, "<del>$1</del>").replace(/==(?=\S)(.+?)(?<=\S)==/g, "<mark>$1</mark>")
+      .replace(/\[\[([^\]]{1,24})\]\]/g, (m, k) => "<kbd>" + k + "</kbd>")
+      .replace(/(^|[^*\w])\*([^*\n]+)\*/g, "$1<em>$2</em>")
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s"]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+      .replace(/(^|[\s(])(https?:\/\/[^\s<)]+[^\s<).,;:!?])/g, '$1<a href="$2" target="_blank" rel="noopener">$2</a>');
+    return s.replace(/\u0000(\d+)\u0000/g, (m, i) => keep[+i]);
+  };
+  let out = "", para = [], list = "", code = null, lang = "", quote = false;
   const cb = (lg, ls) => {
     if (/^flow$/i.test(lg)) return flowHtml(ls.join("\n"));
     const run = /^(html|css|js|javascript|svg)$/i.test(lg || ""), rl = /^(js|javascript)$/i.test(lg || "") ? "Run" : "Preview";
@@ -475,13 +501,18 @@ function md(src){
   };
   const fp = () => { if (para.length){ out += "<p>" + para.join("<br>") + "</p>"; para = []; } };
   const fl = () => { if (list){ out += "</" + list + ">"; list = ""; } };
+  const fq = () => { if (quote){ out += "</blockquote>"; quote = false; } };
   const lines = src.split("\n");
   for (let li = 0; li < lines.length; li++){ const ln = lines[li];
     if (/^\s*```/.test(ln)){
-      if (code === null){ fp(); fl(); code = []; lang = (ln.match(/```\s*([\w#+-]*)/) || [])[1] || ""; } else { out += cb(lang, code); code = null; }
+      if (code === null){ fp(); fl(); fq(); code = []; lang = (ln.match(/```\s*([\w#+-]*)/) || [])[1] || ""; } else { out += cb(lang, code); code = null; }
       continue;
     }
     if (code !== null){ code.push(ln); continue; }
+    const qm = ln.match(/^\s*>\s?(.*)/);
+    if (qm){ fp(); fl(); if (!quote){ out += "<blockquote>"; quote = true; } out += "<p>" + inl(qm[1]) + "</p>"; continue; }
+    fq();
+    if (/^\s*([-*_])(\s*\1){2,}\s*$/.test(ln)){ fp(); fl(); out += "<hr>"; continue; }
     if (/^\s*\|.*\|\s*$/.test(ln) && /^\s*\|?[\s:|-]*-[\s:|-]*\|?\s*$/.test(lines[li + 1] || "")){
       const cells = r => r.trim().replace(/^\||\|$/g, "").split("|").map(x => inl(x.trim()));
       fp(); fl(); let t = '<div class="tw"><table><thead><tr>' + cells(ln).map(x => "<th>" + x + "</th>").join("") + "</tr></thead><tbody>";
@@ -489,14 +520,14 @@ function md(src){
       li--; out += t + "</tbody></table></div>"; continue;
     }
     let m;
-    if (m = ln.match(/^\s*[-*]\s+(.*)/)){ fp(); if (list !== "ul"){ fl(); out += "<ul>"; list = "ul"; } out += "<li>" + inl(m[1]) + "</li>"; }
+    if (m = ln.match(/^\s*[-*]\s+(.*)/)){ fp(); if (list !== "ul"){ fl(); out += "<ul>"; list = "ul"; } const tk = m[1].match(/^\[([ xX])\]\s+(.*)/); out += tk ? '<li class="task"><input type="checkbox" disabled' + (tk[1] !== " " ? " checked" : "") + "> " + inl(tk[2]) + "</li>" : "<li>" + inl(m[1]) + "</li>"; }
     else if (m = ln.match(/^\s*\d+[.)]\s+(.*)/)){ fp(); if (list !== "ol"){ fl(); out += "<ol>"; list = "ol"; } out += "<li>" + inl(m[1]) + "</li>"; }
-    else if (m = ln.match(/^#{1,4}\s+(.*)/)){ fp(); fl(); out += "<h4>" + inl(m[1]) + "</h4>"; }
+    else if (m = ln.match(/^(#{1,4})\s+(.*)/)){ fp(); fl(); out += '<h4 class="h' + m[1].length + '">' + inl(m[2]) + "</h4>"; }
     else if (!ln.trim()){ fp(); fl(); }
     else { fl(); para.push(inl(ln)); }
   }
   if (code !== null) out += cb(lang, code);
-  fp(); fl(); return out;
+  fp(); fl(); fq(); return out;
 }
 function botAvatar(){
   return '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="31" fill="url(#gB)"/><ellipse cx="32" cy="55" rx="14" ry="2.6" fill="#000" opacity=".4"/><g class="hd"><line x1="32" y1="9" x2="32" y2="15" stroke="#9aa0a8" stroke-width="2" stroke-linecap="round"/><circle class="glow" cx="32" cy="8" r="8" fill="url(#gG)"/><circle class="ant" cx="32" cy="8" r="3" fill="url(#gE)"/><rect x="9" y="29" width="4" height="10" rx="2" fill="url(#gE)"/><rect x="51" y="29" width="4" height="10" rx="2" fill="url(#gE)"/><rect x="12" y="15" width="40" height="36" rx="14" fill="url(#gH)"/><rect x="17" y="23" width="30" height="20" rx="9" fill="url(#gV)"/><circle class="eye" cx="25.5" cy="33" r="3.8" fill="url(#gE)"/><circle class="eye" cx="38.5" cy="33" r="3.8" fill="url(#gE)"/><path d="M27 39.5Q32 43 37 39.5" fill="none" stroke="#ffc86b" stroke-width="1.8" stroke-linecap="round"/><ellipse cx="23" cy="19.5" rx="8" ry="2.6" fill="#fff" opacity=".55"/></g></svg>';
@@ -615,7 +646,7 @@ async function send(text, spoken){
   busy = true; const w = $("welcome"); if (w) w.remove();
   const now = Date.now();
   add(text, "you", now, history.length, fInfo);
-  history.push({role:"user", text, file: file ? file.name : "", fi: fInfo, ts: now});
+  history.push({role:"user", text, file: file ? file.name : "", fi: fInfo, ts: now}); saveChat();
   lastFile = file; file = null; fInfo = null; $("chip").style.display = "none"; $("file").value = "";
   await answer(spoken);
 }
@@ -623,7 +654,7 @@ async function answer(spoken){
   const mine = history, myId = curId;
   busy = true; file = lastFile; askVoice = !!spoken && S.short;
   const m = add("", "bot"), labels = file ? ["Reading your file...", "Thinking..."] : ["Thinking..."], timers = [];
-  const show = txt => { if (!m.querySelector(".skel")) m.innerHTML = '<span class="dots"><i></i><i></i><i></i></span><div class="skel" aria-hidden="true"><i></i><i></i><i></i></div>'; setFace("thinking", txt); phase = txt.replace(/\.\.\.$/, "\u2026"); tick(); };
+  const show = txt => { if (!m.querySelector(".skel")) m.innerHTML = '<div class="skel" aria-hidden="true"><i></i><i></i><i></i></div>'; setFace("thinking", txt); phase = txt.replace(/\.\.\.$/, "\u2026"); tick(); };
   const av = m.closest(".row").querySelector(".av svg"), setAv = c => { if (av) av.setAttribute("class", c); }; setAv("think");
   document.querySelectorAll(".fups").forEach(x => x.remove());
   const stl = stlOf(m), t0 = performance.now(); let phase = "Thinking\u2026";
@@ -662,7 +693,7 @@ async function regen(){
   const rows = $("chat").querySelectorAll(".row.bot"); rows[rows.length - 1].remove();
   await answer(false);
 }
-$("send").onclick = () => { if (busy) return; if (fInfo && !file){ toast("Please wait, the file is still loading."); return; } const v = $("input").value; $("input").value = ""; $("input").style.height = ""; send(v, false); };
+$("send").onclick = () => { if (busy) return; if (fInfo && !file){ toast("Please wait, the file is still loading."); return; } const v = $("input").value; $("input").value = ""; $("input").style.height = ""; try { localStorage.removeItem("alphaO_draft"); } catch(e){} send(v, false); };
 $("input").onkeydown = e => { if (e.key === "Enter" && !e.shiftKey){ e.preventDefault(); $("send").click(); } };
 $("input").oninput = () => { const t = $("input"); t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, 200) + "px"; };
 $("newchat").onclick = $("newTop").onclick = newChat;
@@ -889,13 +920,13 @@ function renderSide(){
 function loadChat(id){
   const c = chats.find(x => x.id === id); if (!c) return;
   stopAll();
-  curId = id; history = c.msgs; file = null; $("chip").style.display = "none"; $("chat").innerHTML = "";
+  curId = id; rememberCur(); history = c.msgs; file = null; $("chip").style.display = "none"; $("chat").innerHTML = "";
   history.forEach((m, k) => { if (m.role === "user") add(m.text, "you", m.ts, k, m.fi || (m.file ? {name: m.file} : null)); else { const mm = add(m.text, "bot", m.ts); addSources(mm, m.src); if (m.dur) stlOf(mm).textContent = "Answered in " + m.dur + "s"; if (m.mode === "automation") addFlow(mm, m.text); } });
   markStars(); renderSide(); closeSide();
 }
 function newChat(){
   stopAll();
-  history = []; file = null; curId = Date.now().toString(36); $("chip").style.display = "none"; $("input").value = "";
+  history = []; file = null; curId = Date.now().toString(36); rememberCur(); try { localStorage.removeItem("alphaO_draft"); } catch(e){} $("chip").style.display = "none"; $("input").value = "";
   $("chat").innerHTML = '<div id="welcome"><span class="lgw"><svg class="lg big" viewBox="0 0 64 64"><use href="#logo"/></svg></span><p id="greet"></p><h2>How can I assist you?</h2><div class="cards"></div><p class="sughint">Tap the lightbulb below for ideas</p></div>';
   $("greet").textContent = greeting();
   pickPrompts().forEach(x => {
@@ -1633,7 +1664,35 @@ if ("serviceWorker" in navigator && (location.protocol === "https:" || location.
 
 renderModes();
 $("scrim").onclick = () => document.body.classList.add("fold");
-newChat();
+/* ===== Revision 6: resume where you left off ===== */
+function rememberCur(){ try { localStorage.setItem("alphaO_cur", curId); } catch(e){} }
+function showResume(){
+  const d = document.createElement("div"); d.className = "resume"; d.append("Your last message didn\u2019t get a reply before the page reloaded.");
+  const b = document.createElement("button"); b.type = "button"; b.className = "cab pri"; b.textContent = "Get reply";
+  b.onclick = () => { if (busy) return; d.remove(); lastFile = null; answer(false); }; d.appendChild(b);
+  $("chat").appendChild(d); $("chat").scrollTop = $("chat").scrollHeight;
+}
+IC.down = '<path d="M12 5v14M5 12l7 7 7-7"/>'; $("jump").innerHTML = ic("down");
+$("jump").onclick = () => $("chat").scrollTo({top: $("chat").scrollHeight, behavior: reduce ? "auto" : "smooth"});
+(function boot(){
+  let id = null, draft = "", pos = null, fold = null;
+  try { id = localStorage.getItem("alphaO_cur"); draft = localStorage.getItem("alphaO_draft") || ""; pos = JSON.parse(localStorage.getItem("alphaO_scroll") || "null"); fold = localStorage.getItem("alphaO_fold"); } catch(e){}
+  if (innerWidth >= 800 && fold === "1") document.body.classList.add("fold");
+  if (id && chats.some(c => c.id === id)){
+    loadChat(id); const last = history[history.length - 1];
+    if (last && last.role === "user") showResume();
+  } else newChat();
+  if (draft){ $("input").value = draft; $("input").dispatchEvent(new Event("input")); }
+  requestAnimationFrame(() => {
+    const c = $("chat"); if (pos && pos.id === curId && !pos.end && !document.querySelector(".resume")) c.scrollTop = pos.y;
+    let t = 0; c.addEventListener("scroll", () => {
+      $("jump").hidden = c.scrollHeight - c.scrollTop - c.clientHeight < 240;
+      clearTimeout(t); t = setTimeout(() => { try { localStorage.setItem("alphaO_scroll", JSON.stringify({id: curId, y: c.scrollTop, end: c.scrollHeight - c.scrollTop - c.clientHeight < 60})); } catch(e){} }, 250);
+    }, {passive: true});
+  });
+  $("input").addEventListener("input", () => { try { localStorage.setItem("alphaO_draft", $("input").value); } catch(e){} });
+  new MutationObserver(() => { try { localStorage.setItem("alphaO_fold", document.body.classList.contains("fold") ? "1" : "0"); } catch(e){} }).observe(document.body, {attributes: true, attributeFilter: ["class"]});
+})();
 </script>
 
 <!-- ALPHA-O AUTOMATE SLIDE-OUT PANEL -->
