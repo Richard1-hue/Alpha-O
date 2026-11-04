@@ -1,89 +1,85 @@
 /* ==========================================================================
-   ALPHA-O AUTOMATE: Claude-style theme
-   Warm paper tones, clay accent, serif headings, calm motion.
-   Light by default, dark automatically with the device setting.
-   Only visual styling lives here: no selector or layout rule was removed.
+   ALPHA-O AUTOMATE: Alpha-O theme
+   Same look as the main Alpha-O app: charcoal surfaces, green accent,
+   Segoe UI type, lifted buttons with a soft shimmer, smooth scroll.
+   Dark by default, light when the page sets data-theme="light" on <html>.
+   Only visual styling changed: no selector, class, id or layout rule was removed.
    ========================================================================== */
-@import url("https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&display=swap");
 
 :root {
-  color-scheme: light dark;
+  color-scheme: dark;
 
-  /* Surfaces */
-  --bg: #faf9f5;
-  --surface: #ffffff;
-  --raised: #f5f4ed;
-  --hover: #efede4;
+  /* Surfaces (Alpha-O: --bg, --side, --panel) */
+  --bg: #262624;
+  --surface: #30302e;
+  --raised: #383836;
+  --hover: #41413e;
 
   /* Lines */
-  --border: rgba(31, 30, 29, 0.1);
-  --border-strong: rgba(31, 30, 29, 0.18);
+  --border: #3a3a37;
+  --border-strong: #434340;
 
   /* Text */
-  --text: #1f1e1d;
-  --text-2: #4a4944;
-  --muted: #6f6e68;
-  --faint: #8d8c85;
+  --text: #ece9e2;
+  --text-2: #cfccc4;
+  --muted: #a3a098;
+  --faint: #7f7d76;
 
-  /* Accent (kept under the old variable names so every rule still works) */
-  --amber: #c15f3c;
-  --amber-deep: #a94e2f;
-  --amber-soft: rgba(193, 95, 60, 0.1);
-  --accent-btn: #c15f3c;
-  --accent-btn-hover: #a94e2f;
+  /* Accent: Alpha-O green, kept under the old variable names so every rule still works */
+  --amber: #10a37f;
+  --amber-deep: #0d8a6a;
+  --amber-soft: rgba(16, 163, 127, 0.14);
+  --accent-btn: #10a37f;
+  --accent-btn-hover: #12b58d;
+  --glow: rgba(16, 163, 127, 0.24);
 
   /* Status colours */
-  --blue: #3f6fa6;
-  --violet: #7a62a8;
-  --success: #3f7d58;
-  --danger: #b4382e;
-  --warn: #a8691a;
+  --blue: #8fd0ff;
+  --violet: #b3a1e0;
+  --success: #4cc38a;
+  --danger: #ff6b6b;
+  --warn: #ffc86b;
 
-  --overlay: rgba(31, 30, 29, 0.38);
-  --shadow: rgba(60, 50, 30, 0.12);
-  --shadow-sm: 0 1px 2px rgba(60, 50, 30, 0.06), 0 1px 1px rgba(60, 50, 30, 0.04);
-  --shadow-md: 0 4px 14px rgba(60, 50, 30, 0.08), 0 1px 3px rgba(60, 50, 30, 0.06);
-  --shadow-lg: 0 24px 64px rgba(40, 32, 20, 0.2), 0 4px 14px rgba(40, 32, 20, 0.08);
+  --overlay: rgba(0, 0, 0, 0.55);
+  --shadow: rgba(0, 0, 0, 0.45);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.32);
+  --shadow-lg: 0 28px 70px rgba(0, 0, 0, 0.55);
 
   --radius: 14px;
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
-  --serif: "Source Serif 4", "Tiempos Text", "Iowan Old Style", Georgia, "Times New Roman", serif;
-  font-family: "Inter", "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  --serif: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #262624;
-    --surface: #30302e;
-    --raised: #383836;
-    --hover: #424240;
-
-    --border: rgba(250, 249, 245, 0.1);
-    --border-strong: rgba(250, 249, 245, 0.18);
-
-    --text: #faf9f5;
-    --text-2: #d6d4cb;
-    --muted: #a3a198;
-    --faint: #82807a;
-
-    --amber: #e08a68;
-    --amber-deep: #c96f4d;
-    --amber-soft: rgba(224, 138, 104, 0.14);
-    --accent-btn: #c96442;
-    --accent-btn-hover: #d9754f;
-
-    --blue: #82aee0;
-    --violet: #b3a1e0;
-    --success: #7cc196;
-    --danger: #ee8b80;
-    --warn: #e2b25e;
-
-    --overlay: rgba(0, 0, 0, 0.55);
-    --shadow: rgba(0, 0, 0, 0.45);
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.32);
-    --shadow-lg: 0 28px 70px rgba(0, 0, 0, 0.55);
-  }
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #ffffff;
+  --surface: #f4f4f6;
+  --raised: #eeeef2;
+  --hover: #e6e6ec;
+  --border: #e3e3e8;
+  --border-strong: #d9d9df;
+  --text: #1b1b1f;
+  --text-2: #3a3a42;
+  --muted: #6a6a74;
+  --faint: #8c8c96;
+  --amber: #0d8a6a;
+  --amber-deep: #0a7458;
+  --amber-soft: rgba(13, 138, 106, 0.1);
+  --accent-btn: #0d8a6a;
+  --accent-btn-hover: #0a7458;
+  --glow: rgba(13, 138, 106, 0.2);
+  --blue: #2f7fc0;
+  --violet: #7a62a8;
+  --success: #1f8a5b;
+  --danger: #d64545;
+  --warn: #b7791f;
+  --overlay: rgba(20, 20, 30, 0.38);
+  --shadow: rgba(30, 30, 50, 0.14);
+  --shadow-sm: 0 1px 2px rgba(30, 30, 50, 0.07);
+  --shadow-md: 0 6px 18px rgba(30, 30, 50, 0.1);
+  --shadow-lg: 0 24px 64px rgba(30, 30, 50, 0.2);
 }
 * { box-sizing: border-box; }
 html { min-height: 100%; background: var(--bg); scroll-behavior: smooth; }
@@ -1065,3 +1061,80 @@ button:disabled, button:disabled:hover, button:disabled:active { transform: none
   .app-nav { border-radius: 10px; }
   .editor-card, .dialog-card { border-radius: 16px; }
 }
+
+/* ==========================================================================
+   ALPHA-O DESIGN LAYER: buttons, scroll, motion (appended; overrides only visuals)
+   ========================================================================== */
+::selection { background: rgba(16, 163, 127, 0.35); color: inherit; }
+
+/* Smooth scroll everywhere */
+html { scroll-behavior: smooth; scroll-padding-top: 84px; overscroll-behavior-y: none; }
+body { background: transparent; font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif; }
+.drawer-body, .dialog-body, .drawer-panel, .editor-card, .table-panel, .workflow-editor { scroll-behavior: smooth; overscroll-behavior: contain; }
+* { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border: 3px solid transparent; border-radius: 10px; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: var(--faint); background-clip: content-box; }
+
+/* Ambient green glow, same as the main app */
+body::before {
+  content: ""; position: fixed; top: -140px; right: -100px; z-index: -1; width: 560px; height: 440px;
+  background: radial-gradient(closest-side, var(--glow), transparent); opacity: 0.8; pointer-events: none;
+}
+
+/* Calm, consistent transitions on anything clickable (zero specificity: never beats a rule above) */
+:where(a, button, input, select, textarea, summary, label, [role="button"], [role="tab"]) {
+  transition-property: background-color, border-color, color, box-shadow, transform, opacity;
+  transition-duration: 0.18s; transition-timing-function: var(--ease);
+}
+
+/* Header + brand */
+.app-header { background: color-mix(in srgb, var(--bg) 82%, transparent); border-bottom: 1px solid var(--border); }
+.brand-logo { width: 44px; height: 44px; overflow: visible; border-radius: 0; background: none; box-shadow: none; }
+.brand-logo img { object-fit: contain; filter: drop-shadow(0 0 6px rgba(143, 208, 255, 0.25)); }
+.brand-name { font-size: 19px; font-weight: 600; letter-spacing: 0; }
+.welcome-section h1 { font-weight: 650; letter-spacing: -0.02em; }
+.stat-value, .section-heading h2, .editor-heading h2, .drawer-heading h2, .dialog-card h2, .monitor-cell strong { font-weight: 600; }
+
+/* Buttons: lift, soft shimmer sweep, accent glow, gentle press */
+.primary-button, .secondary-button, .icon-button, .action-button, .chip, .link-button { position: relative; overflow: hidden; isolation: isolate; border-radius: 10px; }
+.primary-button::after, .secondary-button::after, .icon-button::after, .action-button::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.16) 50%, transparent 70%); transform: translateX(-130%);
+}
+.primary-button:hover::after, .secondary-button:hover::after, .icon-button:hover::after, .action-button:hover::after { transform: translateX(130%); transition: transform 0.7s var(--ease); }
+.primary-button { color: #fff; box-shadow: 0 2px 10px var(--glow); }
+.secondary-button, .icon-button, .action-button { background: var(--surface); border: 1px solid var(--border-strong); color: var(--text); }
+.primary-button:hover, .secondary-button:hover, .icon-button:hover, .action-button:hover { transform: translateY(-1px); }
+.primary-button:hover { box-shadow: 0 8px 24px var(--glow); }
+.secondary-button:hover, .icon-button:hover, .action-button:hover { background: var(--hover); border-color: color-mix(in srgb, var(--amber) 55%, var(--border-strong)); box-shadow: 0 6px 18px var(--glow); }
+.primary-button.danger:hover { box-shadow: 0 8px 22px color-mix(in srgb, var(--danger) 35%, transparent); }
+.primary-button:active, .secondary-button:active, .icon-button:active, .action-button:active { transform: translateY(0) scale(0.97); box-shadow: var(--shadow-sm); }
+button:disabled, button:disabled:hover { transform: none; box-shadow: none; }
+button:disabled::after { display: none; }
+.chip:hover { border-color: color-mix(in srgb, var(--amber) 55%, var(--border-strong)); }
+
+/* Fields */
+.text-field { transition: border-color 0.18s, box-shadow 0.18s, background-color 0.18s; }
+.text-field:focus, .text-field:focus-visible { outline: none; border-color: var(--amber); box-shadow: 0 0 0 3px var(--amber-soft); }
+
+/* Cards: soft border, lift on hover */
+.stat-card, .template-card, .workflow-card, .int-card, .lib-card, .panel, .editor-card, .table-panel { border-color: var(--border-strong); }
+.workflow-card, .int-card, .lib-card, .template-card { transition: transform 0.2s var(--ease), border-color 0.2s, box-shadow 0.2s, background-color 0.2s; }
+.workflow-card:hover, .int-card:hover, .lib-card:hover, .template-card:hover {
+  transform: translateY(-2px); border-color: color-mix(in srgb, var(--amber) 45%, var(--border-strong));
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.26), 0 0 0 1px var(--amber-soft);
+}
+.template-grid > * { animation: card-in 0.35s var(--ease) both; }
+.template-grid > *:nth-child(2) { animation-delay: 0.04s; } .template-grid > *:nth-child(3) { animation-delay: 0.08s; }
+.template-grid > *:nth-child(4) { animation-delay: 0.12s; } .template-grid > *:nth-child(5) { animation-delay: 0.16s; } .template-grid > *:nth-child(6) { animation-delay: 0.2s; }
+
+/* Status badges read better with Alpha-O's palette */
+.badge-draft { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 30%, transparent); background: color-mix(in srgb, var(--warn) 12%, transparent); }
+.badge-sim { color: var(--blue); border-color: color-mix(in srgb, var(--blue) 35%, transparent); background: color-mix(in srgb, var(--blue) 12%, transparent); }
+
+/* Layers: softer overlay, smoother entrance */
+.dialog-layer, .drawer-layer { animation: fade 0.18s ease both; }
+.toast { box-shadow: var(--shadow-md); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.nav-link { border-radius: 10px; }
