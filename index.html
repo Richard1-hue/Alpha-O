@@ -239,22 +239,18 @@ main::before{background:radial-gradient(closest-side,rgba(16,163,127,.12),transp
 @keyframes lgglow{0%,100%{box-shadow:0 0 18px 2px rgba(16,163,127,.28)}50%{box-shadow:0 0 30px 6px rgba(16,163,127,.5)}}
 .av svg{overflow:visible}
 .av .hd{transform-origin:32px 51px}
-.av .eye{transform-box:fill-box;transform-origin:center}
-.av .mo-f,.av .mo-h,.av .hap{display:none}
-.av svg.think .mo-s,.av svg.happy .mo-s{display:none}
-.av svg.think .mo-f{display:inline}
-.av svg.happy .mo-h,.av svg.happy .hap{display:inline}
-.av svg.happy .eye{display:none}
-.av svg.think .hd{animation:avthink 2.6s ease-in-out infinite}
-.av svg.think .eyes{animation:avorbit 2.4s linear infinite}
-.av svg.think .eye{animation:avblink 2.2s infinite}
-.av svg.think .ant{animation:avant .9s ease-in-out infinite}
-.av svg.happy .hd{animation:avhappy 1.1s ease-in-out infinite}
-@keyframes avthink{0%,100%{transform:rotate(-9deg)}50%{transform:rotate(9deg) translateY(-1px)}}
-@keyframes avblink{0%,40%,50%,100%{transform:scaleY(1)}45%{transform:scaleY(.1)}}
-@keyframes avorbit{0%,100%{transform:translate(0,-2.4px)}12.5%{transform:translate(1.7px,-1.7px)}25%{transform:translate(2.4px,0)}37.5%{transform:translate(1.7px,1.7px)}50%{transform:translate(0,2.4px)}62.5%{transform:translate(-1.7px,1.7px)}75%{transform:translate(-2.4px,0)}87.5%{transform:translate(-1.7px,-1.7px)}}
-@keyframes avant{0%,100%{opacity:.45}50%{opacity:1}}
-@keyframes avhappy{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-1.6px) rotate(3deg)}}
+.av .eye,.av .glow{transform-box:fill-box;transform-origin:center}
+.av .glow{opacity:0}
+.av svg.think .glow,.av svg.happy .glow{opacity:.9}
+.av svg.think .glow{animation:avglow 2.2s ease-in-out infinite}
+.av svg.think .ant{animation:avant 2.2s ease-in-out infinite}
+.av svg.think .eye,.av svg.happy .eye{animation:avblink 3.4s ease-in-out infinite}
+.av svg.happy .eye{animation-duration:4.2s;animation-delay:.8s}
+.av svg.happy .hd{animation:avtilt 3.6s ease-in-out infinite}
+@keyframes avglow{0%,100%{opacity:.12;transform:scale(.75)}50%{opacity:.95;transform:scale(1.15)}}
+@keyframes avant{0%,100%{opacity:.6}50%{opacity:1}}
+@keyframes avblink{0%,86%,94%,100%{transform:scaleY(1)}90%{transform:scaleY(.08)}}
+@keyframes avtilt{0%,100%{transform:rotate(0)}25%{transform:rotate(-7deg)}75%{transform:rotate(7deg)}}
 /* ===== Revision 4: new features ===== */
 #toast{z-index:10070}
 .ci.on .ib,.ci:focus-within .ib{opacity:1}
@@ -356,7 +352,7 @@ details.flowd{margin-top:8px}details.flowd summary{cursor:pointer;color:var(--mu
 <script>
 const OWNER = "Ituze Richard";
 const S = {theme: "dark", short: true, search: false, sound: true, notify: false};
-const LOGO_INNER = '<defs><radialGradient id="gH" cx="35%" cy="28%" r="80%"><stop offset="0" stop-color="#fff"/><stop offset=".55" stop-color="#c9ccd1"/><stop offset="1" stop-color="#6b7078"/></radialGradient><radialGradient id="gE" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#fff3c9"/><stop offset=".5" stop-color="#ffc86b"/><stop offset="1" stop-color="#e08a1e"/></radialGradient><linearGradient id="gV" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2d33"/><stop offset="1" stop-color="#07080a"/></linearGradient><radialGradient id="gB" cx="50%" cy="30%" r="80%"><stop offset="0" stop-color="#3a3f48"/><stop offset="1" stop-color="#0d0e11"/></radialGradient></defs><circle cx="32" cy="32" r="31" fill="url(#gB)"/><ellipse cx="32" cy="55" rx="14" ry="2.6" fill="#000" opacity=".4"/><line x1="32" y1="9" x2="32" y2="15" stroke="#9aa0a8" stroke-width="2" stroke-linecap="round"/><circle cx="32" cy="8" r="3" fill="url(#gE)"/><rect x="9" y="29" width="4" height="10" rx="2" fill="url(#gE)"/><rect x="51" y="29" width="4" height="10" rx="2" fill="url(#gE)"/><rect x="12" y="15" width="40" height="36" rx="14" fill="url(#gH)"/><rect x="17" y="23" width="30" height="20" rx="9" fill="url(#gV)"/><circle cx="25.5" cy="33" r="3.8" fill="url(#gE)"/><circle cx="38.5" cy="33" r="3.8" fill="url(#gE)"/><path d="M27 39.5Q32 43 37 39.5" fill="none" stroke="#ffc86b" stroke-width="1.8" stroke-linecap="round"/><ellipse cx="23" cy="19.5" rx="8" ry="2.6" fill="#fff" opacity=".55"/>';
+const LOGO_INNER = '<defs><radialGradient id="gG"><stop offset="0" stop-color="#ffe9a8" stop-opacity=".95"/><stop offset=".5" stop-color="#ffc86b" stop-opacity=".45"/><stop offset="1" stop-color="#ffc86b" stop-opacity="0"/></radialGradient><radialGradient id="gH" cx="35%" cy="28%" r="80%"><stop offset="0" stop-color="#fff"/><stop offset=".55" stop-color="#c9ccd1"/><stop offset="1" stop-color="#6b7078"/></radialGradient><radialGradient id="gE" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#fff3c9"/><stop offset=".5" stop-color="#ffc86b"/><stop offset="1" stop-color="#e08a1e"/></radialGradient><linearGradient id="gV" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a2d33"/><stop offset="1" stop-color="#07080a"/></linearGradient><radialGradient id="gB" cx="50%" cy="30%" r="80%"><stop offset="0" stop-color="#3a3f48"/><stop offset="1" stop-color="#0d0e11"/></radialGradient></defs><circle cx="32" cy="32" r="31" fill="url(#gB)"/><ellipse cx="32" cy="55" rx="14" ry="2.6" fill="#000" opacity=".4"/><line x1="32" y1="9" x2="32" y2="15" stroke="#9aa0a8" stroke-width="2" stroke-linecap="round"/><circle cx="32" cy="8" r="3" fill="url(#gE)"/><rect x="9" y="29" width="4" height="10" rx="2" fill="url(#gE)"/><rect x="51" y="29" width="4" height="10" rx="2" fill="url(#gE)"/><rect x="12" y="15" width="40" height="36" rx="14" fill="url(#gH)"/><rect x="17" y="23" width="30" height="20" rx="9" fill="url(#gV)"/><circle cx="25.5" cy="33" r="3.8" fill="url(#gE)"/><circle cx="38.5" cy="33" r="3.8" fill="url(#gE)"/><path d="M27 39.5Q32 43 37 39.5" fill="none" stroke="#ffc86b" stroke-width="1.8" stroke-linecap="round"/><ellipse cx="23" cy="19.5" rx="8" ry="2.6" fill="#fff" opacity=".55"/>';
 const LOGO_USE = '<svg viewBox="0 0 64 64" aria-hidden="true"><use href="#logo"/></svg>';
 const IC = {chat:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>',search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',panel:'<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/>',plus:'<path d="M12 5v14M5 12h14"/>',clip:'<path d="m21 11-8.5 8.5a5 5 0 0 1-7-7L14 4a3.5 3.5 0 0 1 5 5l-8.5 8.5a2 2 0 0 1-3-3L15 7"/>',wave:'<path d="M4 10v4M8 6v12M12 3v18M16 7v10M20 10v4"/>',up:'<path d="M12 19V5M5 12l7-7 7 7"/>',pin:'<path d="M12 17v5M9 3h6l-1 6 3 3H7l3-3z"/>',trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>'};
 IC.refresh = '<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/>';
@@ -460,8 +456,14 @@ function md(src){
   fp(); fl(); return out;
 }
 function botAvatar(){
-  const st = 'fill="none" stroke="#ffc86b" stroke-linecap="round"';
-  return '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="31" fill="url(#gB)"/><ellipse cx="32" cy="55" rx="14" ry="2.6" fill="#000" opacity=".4"/><g class="hd"><line x1="32" y1="9" x2="32" y2="15" stroke="#9aa0a8" stroke-width="2" stroke-linecap="round"/><circle class="ant" cx="32" cy="8" r="3" fill="url(#gE)"/><rect x="9" y="29" width="4" height="10" rx="2" fill="url(#gE)"/><rect x="51" y="29" width="4" height="10" rx="2" fill="url(#gE)"/><rect x="12" y="15" width="40" height="36" rx="14" fill="url(#gH)"/><rect x="17" y="23" width="30" height="20" rx="9" fill="url(#gV)"/><g class="eyes"><circle class="eye" cx="25.5" cy="33" r="3.8" fill="url(#gE)"/><circle class="eye" cx="38.5" cy="33" r="3.8" fill="url(#gE)"/><path class="hap" d="M21.7 34Q25.5 28.6 29.3 34M34.7 34Q38.5 28.6 42.3 34" ' + st + ' stroke-width="2.4"/></g><path class="mo-s" d="M27 39.5Q32 43 37 39.5" ' + st + ' stroke-width="1.8"/><path class="mo-f" d="M28.5 40H35.5" ' + st + ' stroke-width="1.8"/><path class="mo-h" d="M26 38Q32 44.6 38 38" ' + st + ' stroke-width="2"/><ellipse cx="23" cy="19.5" rx="8" ry="2.6" fill="#fff" opacity=".55"/></g></svg>';
+  return '<svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="31" fill="url(#gB)"/><ellipse cx="32" cy="55" rx="14" ry="2.6" fill="#000" opacity=".4"/><g class="hd"><line x1="32" y1="9" x2="32" y2="15" stroke="#9aa0a8" stroke-width="2" stroke-linecap="round"/><circle class="glow" cx="32" cy="8" r="8" fill="url(#gG)"/><circle class="ant" cx="32" cy="8" r="3" fill="url(#gE)"/><rect x="9" y="29" width="4" height="10" rx="2" fill="url(#gE)"/><rect x="51" y="29" width="4" height="10" rx="2" fill="url(#gE)"/><rect x="12" y="15" width="40" height="36" rx="14" fill="url(#gH)"/><rect x="17" y="23" width="30" height="20" rx="9" fill="url(#gV)"/><circle class="eye" cx="25.5" cy="33" r="3.8" fill="url(#gE)"/><circle class="eye" cx="38.5" cy="33" r="3.8" fill="url(#gE)"/><path d="M27 39.5Q32 43 37 39.5" fill="none" stroke="#ffc86b" stroke-width="1.8" stroke-linecap="round"/><ellipse cx="23" cy="19.5" rx="8" ry="2.6" fill="#fff" opacity=".55"/></g></svg>';
+}
+function calmAv(av){
+  if (!av) return;
+  const h = av.querySelector(".hd");
+  if (!h || !av.classList.contains("happy")){ av.setAttribute("class", ""); return; }
+  const done = () => { h.removeEventListener("animationiteration", done); av.setAttribute("class", ""); };
+  h.addEventListener("animationiteration", done); setTimeout(done, 4200);
 }
 function stamp(ts){ const d = new Date(ts || Date.now()); return {t: d.toLocaleTimeString([], {hour: "numeric", minute: "2-digit"}), full: d.toLocaleString([], {weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit"})}; }
 function add(text, who, ts, idx, fi){
@@ -589,7 +591,7 @@ async function answer(spoken){
   let failed = false;
   try { reply = await ask(live); } catch(e){ reply = friendly(e); failed = true; }
   clearInterval(tickT); const dur = (performance.now() - t0) / 1000;
-  if (failed){ setAv(""); stl.remove(); } else { setAv("happy"); setTimeout(() => setAv(""), 3000); stl.textContent = "Answered in " + dur.toFixed(1) + "s"; }
+  if (failed){ setAv(""); stl.remove(); } else { setAv("happy"); setTimeout(() => calmAv(av), 800); stl.textContent = "Answered in " + dur.toFixed(1) + "s"; }
   if (pend){ cancelAnimationFrame(pend); pend = 0; }
   timers.forEach(clearTimeout); file = null; m.closest(".row").classList.remove("loading");
   const srcs = lastSources; mine.push({role:"model", text:reply, ts:Date.now(), src: srcs, dur: failed ? 0 : +dur.toFixed(1), mode: curMode});
