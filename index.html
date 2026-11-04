@@ -243,7 +243,7 @@ main::before{background:radial-gradient(closest-side,rgba(16,163,127,.12),transp
 @media(max-width:600px),(max-height:500px) and (hover:none){#welcome .cards{display:none}#welcome .sughint{display:block}}
 /* ===== Revision 3: circular logo glow, animated avatar ===== */
 .lg.big{filter:none;animation:none}
-.lgw{display:grid;width:fit-content;border-radius:50%;animation:lgglow 3.5s ease-in-out infinite}
+.lgw{display:grid;width:fit-content}
 @keyframes lgglow{0%,100%{box-shadow:0 0 18px 2px rgba(16,163,127,.28)}50%{box-shadow:0 0 30px 6px rgba(16,163,127,.5)}}
 .av svg{overflow:visible}
 .av .hd{transform-origin:32px 51px}
@@ -365,6 +365,12 @@ body:not(.fold) #side{animation:ao-side .22s ease-out both}
 @keyframes lgn{0%,58%,92%,100%{opacity:1}66%,84%{opacity:0}}
 .lg.big.live{animation:lgturn 8s ease-in-out infinite}
 @keyframes lgturn{0%,100%{transform:perspective(300px) rotateY(0)}30%{transform:perspective(300px) rotateY(-18deg)}70%{transform:perspective(300px) rotateY(18deg)}}
+/* ===== Revision 8: glow that follows the robot's own shape ===== */
+.lg.big.live{animation:lgturn 8s ease-in-out infinite,rglow 3.6s ease-in-out infinite}
+@keyframes rglow{0%,100%{filter:drop-shadow(0 0 2px rgba(150,212,255,.3)) drop-shadow(0 0 8px rgba(110,190,255,.18))}50%{filter:drop-shadow(0 0 3px rgba(190,228,255,.55)) drop-shadow(0 0 14px rgba(110,190,255,.4))}}
+.lg.big .glow{display:none}
+.lg.big .eye{filter:drop-shadow(0 0 .9px rgba(255,255,255,.7))}
+.lg.live .ant{animation:avant 2.2s ease-in-out infinite}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
