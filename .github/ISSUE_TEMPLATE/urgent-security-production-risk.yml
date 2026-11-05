@@ -1,0 +1,63 @@
+name: Urgent security/production risk
+description: Report an urgent issue that may affect system security or production stability.
+title: "[Urgent risk]: "
+labels: ["urgent", "security", "production-risk"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This template is for critical issues that need immediate attention. Use it only for time-sensitive production or security problems.
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - Critical
+        - High
+        - Medium
+    validations:
+      required: true
+
+  - type: input
+    id: affected_area
+    attributes:
+      label: Affected area
+      description: Server, app feature, API, database, frontend, or deployment area.
+      placeholder: Example: authentication API
+    validations:
+      required: true
+
+  - type: textarea
+    id: issue
+    attributes:
+      label: What is the issue?
+      description: Explain the problem and how it was discovered.
+      placeholder: Describe the incident or vulnerability.
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: Explain the risk to users, system stability, or security.
+      placeholder: What might break or be compromised?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction or evidence
+      description: Provide steps, logs, screenshots, or URLs if available.
+      placeholder: Add logs or steps to reproduce.
+
+  - type: textarea
+    id: owners
+    attributes:
+      label: Notify
+      description: Mention the responsible collaborators or team.
+      placeholder: "@username @team-name"
+    validations:
+      required: true

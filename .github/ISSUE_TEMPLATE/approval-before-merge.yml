@@ -1,0 +1,60 @@
+name: Approval before merge
+description: Request formal approval from collaborators before the code is merged.
+title: "[Approval required]: "
+labels: ["approval", "merge-gate"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to request explicit approval before merging into `main`.
+
+  - type: input
+    id: pr_link
+    attributes:
+      label: Pull request link
+      placeholder: https://github.com/owner/repository/pull/123
+    validations:
+      required: true
+
+  - type: input
+    id: branch
+    attributes:
+      label: Branch or release
+      placeholder: feature/new-module
+    validations:
+      required: true
+
+  - type: textarea
+    id: change_summary
+    attributes:
+      label: Summary of changes
+      placeholder: Describe the update and the reason for the merge.
+    validations:
+      required: true
+
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks or concerns
+      description: List any concerns that need approval before merging.
+      placeholder: Mention dependencies, regressions, or blockers.
+
+  - type: textarea
+    id: approvers
+    attributes:
+      label: Approvers needed
+      description: List people or teams whose approval is required.
+      placeholder: "@username @team-name"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Merge gate checklist
+      options:
+        - label: The change has been reviewed.
+        - label: The code has been tested or validated.
+        - label: All requested feedback has been addressed.
+        - label: Final approval is required before merge.
+          required: true

@@ -1,0 +1,52 @@
+name: Code review request
+description: Request peer review before merging code into the main branch.
+title: "[Code review]: "
+labels: ["code-review"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please review the changes below before merging into `main`.
+
+  - type: input
+    id: pr_link
+    attributes:
+      label: Pull request link
+      description: Add the PR or branch link that needs review.
+      placeholder: https://github.com/owner/repository/pull/123
+    validations:
+      required: true
+
+  - type: input
+    id: files
+    attributes:
+      label: Files changed
+      placeholder: src/app.ts, api/auth.js
+    validations:
+      required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary of the change
+      description: Describe what was added or changed.
+      placeholder: Explain the purpose of this update.
+    validations:
+      required: true
+
+  - type: textarea
+    id: review_focus
+    attributes:
+      label: What should reviewers focus on?
+      description: Mention logic, bug risk, UX, performance, or edge cases.
+      placeholder: List the main areas that need review.
+    validations:
+      required: true
+
+  - type: textarea
+    id: collaborators
+    attributes:
+      label: Collaborators to notify
+      placeholder: "@username @team-name"
+    validations:
+      required: true
