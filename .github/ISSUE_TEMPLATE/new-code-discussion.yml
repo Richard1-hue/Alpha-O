@@ -1,0 +1,60 @@
+name: New code discussion
+ description: Notify collaborators about new code and request discussion before it reaches the main branch.
+ title: "[Code discussion]: "
+ labels: ["code-review", "discussion"]
+ body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this issue to notify collaborators that new code is ready for discussion. Open a pull request for the code and link it below. Do not merge directly into `main` before discussion and review are complete.
+  - type: input
+    id: pr_link
+    attributes:
+      label: Pull request link
+      description: Link to the pull request containing the new code.
+      placeholder: https://github.com/owner/repository/pull/123
+    validations:
+      required: true
+  - type: input
+    id: files
+    attributes:
+      label: Files changed
+      description: List the main files or paths collaborators should review.
+      placeholder: src/example.ts
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: What changed?
+      description: Summarize the new code and why it was added.
+      placeholder: Describe the change and its purpose.
+    validations:
+      required: true
+  - type: textarea
+    id: discussion
+    attributes:
+      label: Discussion requested
+      description: What should collaborators discuss or check before this is merged?
+      placeholder: List questions, risks, or areas where feedback is needed.
+    validations:
+      required: true
+  - type: textarea
+    id: notify
+    attributes:
+      label: Collaborators to notify
+      description: Mention collaborators or a team here (for example, @org/team) so GitHub notifies them.
+      placeholder: "@username @org/team"
+    validations:
+      required: true
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Before merging
+      options:
+        - label: The code is in a pull request; it has not been committed directly to `main`.
+          required: true
+        - label: Collaborators have been notified and had a chance to discuss the changes.
+          required: true
+        - label: Requested reviews and checks are complete before merging.
+          required: true
