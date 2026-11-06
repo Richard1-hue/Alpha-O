@@ -3325,5 +3325,745 @@ button:active:not(:disabled):not(.card){transform:translateY(0) scale(.96)}
 })();
 </script>
 
+
+<!-- ===== Alpha-O Voice Plus (additive only: nothing above this line was changed) =====
+     1 local voice commands · 2 auto language · 3 hands-free + wake phrase + silence timeout
+     4 change voice mid-sentence and carry on · 5 typing box in voice mode
+     6 clearer Transcript / Language icons · 7 floating robot head when reading an answer aloud -->
+<style id="ao-vp-css">
+/* ---------- 6. clearer toolbar icons ---------- */
+#voice #aoTools{flex-wrap:wrap;justify-content:flex-end;max-width:calc(100vw - 20px)}
+#aoLang{display:inline-flex;align-items:center;gap:4px;width:auto;padding:7px 9px}
+#aoLang .lg{width:auto;height:auto;min-width:0;font-size:11px;order:2}
+#aoLang svg{order:1}
+#aoTrBtn,#aoHFBtn,#aoSetBtn{display:inline-flex;align-items:center;gap:6px;width:auto;padding:7px 10px}
+.aoLbl{font-size:12.5px;font-weight:600;letter-spacing:.01em;white-space:nowrap}
+#aoHFBtn.on{color:#6ee7c0;background:rgba(16,163,127,.2)}
+@media(max-width:560px){.aoLbl{display:none}#aoTrBtn,#aoHFBtn,#aoSetBtn{padding:7px}}
+
+/* ---------- 5. typing box in voice mode (captions and bars move up to make room) ---------- */
+#voice #aoVText{position:fixed;left:50%;transform:translateX(-50%);bottom:max(10px,env(safe-area-inset-bottom));width:min(760px,94vw);height:46px;margin:0;display:flex;align-items:center;gap:8px;z-index:4;padding:0 6px 0 16px;border-radius:23px;background:var(--panel);border:1px solid var(--line);color:var(--text);box-shadow:0 8px 26px rgba(0,0,0,.35)}
+#voice #aoVText:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(16,163,127,.16),0 8px 26px rgba(0,0,0,.35)}
+#aoVIn{flex:1;min-width:0;background:none;border:0;outline:none;color:var(--text);font:inherit;font-size:15px}
+#aoVIn::placeholder{color:var(--muted)}
+#aoVSend{background:var(--accent);color:#fff;border-radius:50%;width:34px;height:34px;padding:0}
+#aoVSend:hover{color:#fff;background:var(--accent)}
+#voice.ao-hasin{--ao-in-h:60px}
+#voice.ao-hasin #aoCap{bottom:calc(max(12px,env(safe-area-inset-bottom)) + var(--ao-in-h))}
+#voice.ao-hasin #aoBars{bottom:calc(var(--ao-cap-h,96px) + 18px + var(--ao-in-h))}
+@media(min-height:521px){
+  #voice.on.ao-hasin{padding-bottom:calc(var(--ao-cap-h,96px) + 58px + var(--ao-in-h))}
+  #voice.on.rv2.ao-hasin #face{width:min(780px,96vw,calc(100dvh - 350px - var(--ao-in-h)))}
+}
+
+/* ---------- 3 / 2 / speed: voice settings panel ---------- */
+#voice #aoVPanel{position:fixed;top:calc(max(10px,env(safe-area-inset-top)) + 54px);right:max(10px,env(safe-area-inset-right));width:min(340px,calc(100vw - 20px));max-height:calc(100dvh - 90px);overflow:auto;z-index:6;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:16px;padding:10px 14px 14px;box-shadow:0 14px 40px rgba(0,0,0,.55);overscroll-behavior:contain;animation:ao-up .16s ease-out both}
+#aoVPanel .aoPh{display:flex;align-items:center;justify-content:space-between;font-size:15px}
+#aoVPanel h5{margin:12px 0 2px;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+#aoVPanel .aoRow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;font-size:14px;line-height:1.35}
+#aoVPanel .aoRow.col{flex-direction:column;align-items:stretch;gap:6px}
+#aoVPanel .aoRow small{display:block;color:var(--muted);font-size:12px}
+#aoVPanel input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);flex:none}
+#aoVPanel input[type=range]{width:100%;accent-color:var(--accent)}
+#aoVPanel input[type=text]{width:100%;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font:inherit;font-size:14px}
+#aoVPanel .aoHint{margin:4px 0 0;font-size:13px;line-height:1.6;color:var(--muted)}
+
+/* ---------- 7. floating robot head (chat mode, "read aloud") ---------- */
+#aoFloat{position:fixed;right:max(14px,3vw);bottom:calc(150px + env(safe-area-inset-bottom));width:clamp(120px,22vmin,190px);aspect-ratio:1;z-index:8;opacity:0;visibility:hidden;transform:scale(.82) translateY(14px);transition:opacity .55s ease,transform .55s cubic-bezier(.2,.8,.2,1);cursor:pointer;-webkit-tap-highlight-color:transparent}
+#aoFloat.on{opacity:1;transform:none}
+#aoFloat .aoFg{position:absolute;inset:-18%;border-radius:50%;background:radial-gradient(closest-side,rgba(var(--glow,16,163,127),.35),transparent 70%);animation:aoFgl 3.2s ease-in-out infinite;pointer-events:none}
+#aoFloat .aoFi{position:absolute;inset:0;animation:aoFbob 4.2s ease-in-out infinite;filter:drop-shadow(0 10px 22px rgba(0,0,0,.45))}
+#aoFloat canvas,#aoFloat img{width:100%!important;height:100%!important;display:block;object-fit:contain}
+@keyframes aoFbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes aoFgl{0%,100%{opacity:.55}50%{opacity:1}}
+@media print{#aoFloat{display:none!important}}
+</style>
+
+<script id="ao-vp-js">
+(function(){
+"use strict";
+var $ = function(id){ return document.getElementById(id); };
+var V = $("voice"), FACE = $("face"), MIC = $("mic"), TOOLS = $("aoTools");
+if (!V || !FACE || !MIC) return;
+var SRX = window.SpeechRecognition || window.webkitSpeechRecognition;
+var SYN = window.speechSynthesis;
+
+/* ---------- small helpers ---------- */
+function ls(k, d){ try { var v = localStorage.getItem(k); return v === null ? d : v; } catch(e){ return d; } }
+function lsw(k, v){ try { localStorage.setItem(k, v); } catch(e){} }
+function clamp(x, a, b){ return Math.max(a, Math.min(b, x)); }
+function say(t){ try { if (typeof toast === "function") toast(t); } catch(e){} }
+function isVoiceOn(){ try { return !!voiceOn; } catch(e){ return false; } }
+function isBusy(){ try { return !!busy; } catch(e){ return false; } }
+function norm(t){ return String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\p{L}\p{N}\s'-]/gu, " ").replace(/\s+/g, " ").trim(); }
+function speakingNow(){ return !!(SYN && (SYN.speaking || SYN.pending)); }
+function youCap(t){ var a = document.querySelector("#aoCap .you"); if (a) a.textContent = t || ""; }
+function aiCap(t){ var a = document.querySelector("#aoCap .ai"); if (a){ a.className = "ai"; a.textContent = t; } }
+
+var P2 = {
+  auto: ls("ao_vp_auto", "1") === "1",
+  rate: clamp(parseFloat(ls("ao_vp_rate", "1")) || 1, .6, 1.5),
+  wake: ls("ao_vp_wake", "hey alpha") || "hey alpha",
+  sil: clamp(parseFloat(ls("ao_vp_sil", "2")) || 2, 1, 6),
+  hf: ls("ao_vp_hf", "0") === "1",
+  intr: ls("ao_vp_intr", "0") === "1",
+  float: ls("ao_vp_float", "1") === "1"
+};
+
+/* ---------- languages ---------- */
+var REGION = {en:"en-US",fr:"fr-FR",rw:"rw-RW",sw:"sw-KE",es:"es-ES",pt:"pt-BR",de:"de-DE",it:"it-IT",ar:"ar-SA",hi:"hi-IN",zh:"zh-CN",ja:"ja-JP",ko:"ko-KR",ru:"ru-RU",tr:"tr-TR"};
+var LNAME = {en:"English",fr:"French",rw:"Kinyarwanda",sw:"Swahili",es:"Spanish",pt:"Portuguese",de:"German",it:"Italian",ar:"Arabic",hi:"Hindi",zh:"Chinese",ja:"Japanese",ko:"Korean",ru:"Russian",tr:"Turkish"};
+var NAMES = {
+  en:["english","anglais","ingles","englisch","inglese","kiingereza","icyongereza"],
+  fr:["french","francais","frances","franzosisch","francese","kifaransa","igifaransa"],
+  rw:["kinyarwanda","ikinyarwanda"],
+  sw:["swahili","kiswahili","souahili"],
+  es:["spanish","espanol","espagnol","spanisch","kihispania"],
+  pt:["portuguese","portugues","portugais","portugiesisch"],
+  de:["german","deutsch","allemand","aleman","kijerumani"],
+  it:["italian","italiano","italien"],
+  ar:["arabic","arabe","kiarabu"],
+  hi:["hindi"],
+  zh:["chinese","mandarin","chinois","chino","中文","汉语"],
+  ja:["japanese","japonais","japones","日本語"],
+  ko:["korean","coreen","coreano","한국어"],
+  ru:["russian","russe","ruso","russisch"],
+  tr:["turkish","turc","turco","turkce"]
+};
+var NAME2 = {}; Object.keys(NAMES).forEach(function(k){ NAMES[k].forEach(function(n){ NAME2[norm(n)] = k; }); });
+var CONFIRM = {
+  en:"Okay, switching to English.", fr:"D'accord, je passe au français.", es:"De acuerdo, cambio a español.",
+  pt:"Certo, mudando para português.", de:"Okay, ich wechsle zu Deutsch.", it:"Va bene, passo all'italiano.",
+  sw:"Sawa, ninabadilisha kwa Kiswahili.", rw:"Ni byiza, ngiye gukoresha Ikinyarwanda.", ar:"حسنًا، سأتحدث بالعربية.",
+  hi:"ठीक है, अब मैं हिन्दी में बात करूँगा।", zh:"好的，我现在说中文。", ja:"わかりました、日本語に切り替えます。",
+  ko:"알겠습니다. 한국어로 전환합니다.", ru:"Хорошо, перехожу на русский.", tr:"Tamam, Türkçeye geçiyorum."
+};
+var WORDS = {
+  en:"the and is you to of that it in for with are this have what how can your not but was they will would there their about which when from just like please thanks hello".split(" "),
+  fr:"le la les des est une un et que pour dans pas vous nous je tu il elle sur avec ce cette sont mais ou comment quoi plus tres aussi etre avez peux fait de du".split(" "),
+  es:"el los las es una un y que para en con por como pero muy esto esta puedo puedes quiero donde cuando tambien soy eres de del".split(" "),
+  pt:"os as que para em nao com por como mas muito isso esta posso voce voces quero onde quando tambem sou uma um de do da".split(" "),
+  de:"der die das und ist nicht ich du sie wir mit fur ein eine auf den dem zu von aber auch wie was bitte kann habe sind wird".split(" "),
+  it:"il lo gli di che un una per non con come ma molto questo questa posso puoi voglio dove quando anche sono sei".split(" "),
+  sw:"na ya wa kwa ni katika kama hii hiyo sana nini naomba unaweza nina sijui ndiyo hapana mimi wewe yako kuwa lakini pia sasa leo".split(" "),
+  rw:"ni na mu kuri ko yego oya nkeneye mfasha gute none uko ibyo iki uyu kandi cyangwa ariko nta ndashaka nshaka cyane byose njye wowe hari".split(" "),
+  tr:"bir ve bu da de icin ne nasil evet hayir ben sen var yok cok ama gibi".split(" ")
+};
+var STRONG = {bonjour:"fr",merci:"fr",hola:"es",gracias:"es",ola:"pt",obrigado:"pt",obrigada:"pt",hallo:"de",danke:"de",ciao:"it",grazie:"it",habari:"sw",asante:"sw",jambo:"sw",muraho:"rw",murakoze:"rw",amakuru:"rw",merhaba:"tr",tesekkurler:"tr"};
+var SETS = {}; Object.keys(WORDS).forEach(function(k){ var o = {}; WORDS[k].forEach(function(w){ o[w] = 1; }); SETS[k] = o; });
+function detectLang(t){
+  t = String(t || "");
+  if (/[\u0600-\u06FF]/.test(t)) return {code:"ar", conf:5};
+  if (/[\u0900-\u097F]/.test(t)) return {code:"hi", conf:5};
+  if (/[\u3040-\u30FF]/.test(t)) return {code:"ja", conf:5};
+  if (/[\uAC00-\uD7AF]/.test(t)) return {code:"ko", conf:5};
+  if (/[\u4E00-\u9FFF]/.test(t)) return {code:"zh", conf:5};
+  if (/[\u0400-\u04FF]/.test(t)) return {code:"ru", conf:5};
+  var toks = norm(t).split(" ").filter(Boolean); if (!toks.length) return null;
+  var sc = {}; Object.keys(SETS).forEach(function(k){ var s = 0; toks.forEach(function(w){ if (SETS[k][w]) s++; if (STRONG[w] === k) s += 2; }); sc[k] = s; });
+  var low = t.toLowerCase();
+  if (/[çœêèùâîôû]/.test(low)) sc.fr += 1;
+  if (/[ñ¿¡]/.test(low)) sc.es += 2;
+  if (/[ãõ]/.test(low)) sc.pt += 2;
+  if (/[ßäöü]/.test(low)) sc.de += 2;
+  if (/[ğşı]/.test(low)) sc.tr += 2;
+  var ks = Object.keys(sc).sort(function(a, b){ return sc[b] - sc[a]; });
+  var best = sc[ks[0]], second = sc[ks[1]] || 0;
+  return {code:ks[0], conf: (best - second >= 1) ? best : 0};
+}
+var cur = {code:"", lock:false};     /* language of the replies: "" = not decided yet */
+var pendingLang = null;              /* {code,name} added to the request as a one-line instruction */
+function langNameFrom(words){
+  var w = words.map(norm).filter(Boolean), i;
+  for (i = w.length - 1; i >= 0; i--){ if (NAME2[w[i]]) return NAME2[w[i]]; }
+  return null;
+}
+function voiceForLang(region, g){
+  if (!SYN) return null;
+  var all = SYN.getVoices() || [], rl = region.toLowerCase().replace("_", "-"), pre = rl.split("-")[0];
+  var ex = all.filter(function(v){ return (v.lang || "").toLowerCase().replace("_", "-") === rl; });
+  var pool = ex.length ? ex : all.filter(function(v){ return (v.lang || "").toLowerCase().split(/[-_]/)[0] === pre; });
+  if (!pool.length) return null;
+  var gm = pool.filter(function(v){ try { return vgender(v) === g; } catch(e){ return false; } }), use = gm.length ? gm : pool;
+  var loc = use.filter(function(v){ return v.localService; });
+  return (loc.length ? loc : use)[0];
+}
+function setMicLang(code){
+  var reg = REGION[code]; if (!reg) return;
+  if (String(window.AO_VOICE_LANG || "").toLowerCase().split("-")[0] === code) return;
+  var menu = $("aoLangMenu"), done = false;
+  if (menu) Array.prototype.forEach.call(menu.querySelectorAll("button"), function(b){ var s = b.querySelector("small"); if (!done && s && s.textContent === reg){ done = true; b.click(); } });
+  if (!done) window.AO_VOICE_LANG = reg;
+}
+
+/* ===================================================================
+   4. keep reading from where it stopped (voice change, speed change)
+   =================================================================== */
+var T = null, resumeUntil = 0, lastSpoken = "";
+function isUtt(x){ return typeof SpeechSynthesisUtterance !== "undefined" && x instanceof SpeechSynthesisUtterance; }
+function realUtts(){ return (T && T.arr ? T.arr : []).filter(isUtt); }
+function trackUtt(u){
+  var arr = window._utts; if (!arr) return;
+  if (!T || T.arr !== arr){
+    var nx = window.__aoNext || null; window.__aoNext = null;
+    T = {arr:arr, tok:spk, cur:-1, b:0, hasB:false, t0:0, rate:1, done:false, root:nx ? nx.root : null, off:nx ? nx.off : 0, emo:nx ? nx.emo : null, code:null};
+  }
+  if (u.__aoT) return; u.__aoT = 1; var tt = T;
+  u.addEventListener("start", function(){ var i = realUtts().indexOf(u); tt.cur = i < 0 ? 0 : i; tt.b = 0; tt.hasB = false; tt.t0 = performance.now(); tt.rate = u.rate || 1; });
+  u.addEventListener("boundary", function(e){ if (typeof e.charIndex === "number"){ tt.b = e.charIndex; tt.hasB = true; } });
+  u.addEventListener("end", function(){ var r = realUtts(); if (r.indexOf(u) === r.length - 1) tt.done = true; });
+}
+function canResume(){ return !!(T && T.tok === spk && !T.done && speakingNow()); }
+function curOffset(real){
+  var i = Math.max(0, T.cur), before = 0, k;
+  for (k = 0; k < i && k < real.length; k++) before += real[k].text.length;
+  var txt = (real[i] || {text:""}).text, within = 0;
+  if (T.cur < 0) within = 0;
+  else if (T.hasB) within = T.b;
+  else {
+    var el = Math.max(0, (performance.now() - T.t0) / 1000), cps = 14 * (T.rate || 1);
+    within = Math.min(Math.max(0, txt.length - 1), Math.floor(el * cps));
+    var sp = txt.lastIndexOf(" ", within); if (sp > 0) within = sp + 1;
+  }
+  return before + within;
+}
+function resetReadTips(){ Array.prototype.forEach.call(document.querySelectorAll('.act .ib[data-tip="Stop reading"]'), function(b){ b.dataset.tip = "Read aloud"; }); }
+function speakSeg(rest, root, off, skip, emo, tok, keepReading){
+  var parts = rest.match(/[^.!?]+[.!?]*\s*/g) || [rest], chunks = [], c2 = "";
+  parts.forEach(function(p){ if (c2 && (c2 + p).length > 200){ chunks.push(c2); c2 = p; } else c2 += p; });
+  if (c2) chunks.push(c2);
+  var P = curPreset(), v = pickVoice(P);
+  try { mouthFor(emo); } catch(e){}
+  window._utts = [{text:skip}];
+  window.__aoNext = {root:root, off:off, emo:emo};
+  try { SYN.resume(); } catch(e){}
+  if (keepReading != null){ try { reading = keepReading; } catch(e){} }
+  chunks.forEach(function(c, i){
+    var u = new SpeechSynthesisUtterance(c); u.lang = "en-US"; if (v) u.voice = v; u.pitch = pitchFor(P, v); u.rate = P.rate;
+    u.onstart = function(){ if (tok === spk){ FACE.setAttribute("class", "speaking " + emo); $("status").textContent = "Speaking..."; } };
+    if (i === chunks.length - 1) u.onend = u.onerror = function(){
+      if (tok !== spk) return;
+      setFace(emo, "Tap the mic to reply");
+      try { if (keepReading != null) reading = null; } catch(e){}
+      resetReadTips();
+      if (isVoiceOn()) setTimeout(listen, 500);
+    };
+    window._utts.push(u); SYN.speak(u);
+  });
+}
+function resumeNow(){
+  if (!canResume()) return false;
+  var real = realUtts(); if (!real.length) return false;
+  var root = T.root != null ? T.root : real.map(function(x){ return x.text; }).join("");
+  var pos = T.off + curOffset(real);
+  var rest0 = root.slice(pos), lead = rest0.search(/\S/);
+  if (lead < 0) return false;
+  var rest = rest0.slice(lead);
+  var sents = (root.match(/[^.!?]+[.!?]*\s*/g) || [root]).filter(function(s){ return s.trim(); }), acc = 0, k = 0;
+  for (; k < sents.length; k++){ if (acc + sents[k].length > pos) break; acc += sents[k].length; }
+  var skip = sents.slice(0, k).join("");
+  var emo = T.emo != null ? T.emo : (typeof emotion === "function" ? emotion(root) : "");
+  var tok = ++spk, keep = null; try { keep = reading; } catch(e){}
+  resumeUntil = Date.now() + 1400;
+  try { SYN.cancel(); } catch(e){}
+  setTimeout(function(){ if (tok === spk) speakSeg(rest, root, pos + lead, skip, emo, tok, keep); }, 130);
+  return true;
+}
+if (typeof sample === "function"){
+  var _sample = sample;
+  sample = function(){
+    if (canResume() && resumeNow()){
+      try { var P = curPreset(), v = pickVoice(P); say(P.label + (v ? " \u00b7 " + v.name : "") + " \u00b7 continuing where I left off"); } catch(e){}
+      return;
+    }
+    return _sample.apply(this, arguments);
+  };
+}
+
+/* ---------- speech wrapper: tracking, speed, language-aware voice (outermost) ---------- */
+var PD = {};
+try { ["voice", "lang"].forEach(function(p){ PD[p] = Object.getOwnPropertyDescriptor(SpeechSynthesisUtterance.prototype, p); }); } catch(e){}
+function setReal(u, p, val){ var d = PD[p]; if (d && d.set) d.set.call(u, val); }
+function lockProp(u, p){
+  var d = PD[p]; if (!d || !d.get) return; var val = d.get.call(u);
+  try { Object.defineProperty(u, p, {configurable:true, enumerable:true, get:function(){ return val; }, set:function(){}}); } catch(e){}
+}
+function applyLang(u){
+  var d = detectLang(u.text), code;
+  if (d && d.conf >= 2){ code = d.code; if (T && !T.code) T.code = code; }
+  else code = (T && T.code) || cur.code || String(window.AO_VOICE_LANG || "en-US").split("-")[0];
+  if (!REGION[code]) code = "en";
+  var P = curPreset();
+  if (code === "en"){ setReal(u, "lang", (u.voice && u.voice.lang) || "en-US"); }
+  else {
+    var v = voiceForLang(REGION[code], P.g);
+    setReal(u, "lang", REGION[code]); setReal(u, "voice", v || null);
+    if (v){ try { u.pitch = pitchFor(P, v); } catch(e){} }
+  }
+  lockProp(u, "lang"); lockProp(u, "voice");
+}
+if (SYN && SYN.speak){
+  var _prevSpeak = SYN.speak.bind(SYN);
+  SYN.speak = function(u){
+    try {
+      if (window._utts && window._utts.indexOf(u) > -1 && isUtt(u)){
+        trackUtt(u);
+        u.rate = clamp((u.rate || 1) * P2.rate, .5, 2);
+        applyLang(u);
+      }
+    } catch(e){}
+    return _prevSpeak(u);
+  };
+}
+
+/* ---------- face watchdog: no more mouth moving after the voice stopped ---------- */
+var stuck = 0;
+function stopSpeech(){
+  spk++; resumeUntil = 0;
+  try { if (SYN) SYN.cancel(); } catch(e){}
+}
+function killRec(){
+  try { if (typeof rec !== "undefined" && rec){ rec.onend = rec.onerror = rec.onresult = rec.onstart = null; rec.abort(); } } catch(e){}
+  try { listening = false; } catch(e){}
+  MIC.classList.remove("live"); MIC.textContent = "Start talking";
+}
+
+/* ===================================================================
+   1. local voice commands
+   =================================================================== */
+var RE = {
+  stop:/^(?:stop(?: (?:talking|it|now|please))?|be quiet|quiet|shut up|enough|that's enough|that s enough|pause|cancel|arrete(?:-toi)?|tais-toi|tais toi|stoppe|para|detente|silencio|basta|acha|simama|nyamaza|hagarara|halt|stopp|ferma|fermati|durdur)$/,
+  repeat:/^(?:repeat(?: (?:that|it|please|again))?|say (?:that|it) again|once more|again|what did you say|come again|repete(?: ca)?|repite(?: eso)?|rudia|subiramo|wiederhole(?: das)?|ripeti|repita)$/,
+  slower:/^(?:(?:(?:speak|talk|go|say it|read it) )?(?:more )?slower|slow down|(?:speak )?(?:more )?slowly|plus lentement|parle plus lentement|moins vite|mas despacio|habla mas despacio|polepole|langsamer|piu lentamente|piu piano)$/,
+  faster:/^(?:(?:(?:speak|talk|go|say it) )?(?:faster|more quickly|quicker)|speed up|plus vite|mas rapido|haraka|schneller|piu veloce)$/,
+  auto:/^(?:auto(?:matic)?(?:[ -]?detect)?(?: (?:my )?language)?|detect (?:my )?language|reply in my language|use my language)$/,
+  sw:/^(?:switch|change|go|talk|speak|reply|respond|answer|continue|translate|passe|parle|habla|cambia|sprich|ongea|zungumza|say it)\b[\p{L} ]*$/u,
+  inl:/^(?:in|en|auf|na) [\p{L}]+$/u
+};
+function parseCommand(raw){
+  var n = norm(raw).replace(/^(?:(?:hey|ok|okay) )?alpha(?: o)?[ ,]*/, "").replace(/ (?:please|now|for me)$/, "").trim();
+  if (!n || n.split(" ").length > 7) return null;
+  if (RE.stop.test(n)) return {k:"stop"};
+  if (RE.repeat.test(n)) return {k:"repeat"};
+  if (RE.slower.test(n)) return {k:"slower"};
+  if (RE.faster.test(n)) return {k:"faster"};
+  if (RE.auto.test(n)) return {k:"auto"};
+  if (RE.sw.test(n) || RE.inl.test(n)){ var c = langNameFrom(n.split(" ")); if (c) return {k:"lang", code:c}; }
+  return null;
+}
+function lastReplyText(){
+  if (lastSpoken) return lastSpoken;
+  try { for (var i = history.length - 1; i >= 0; i--) if (history[i].role === "model" && history[i].text) return history[i].text; } catch(e){}
+  return "";
+}
+function setRate(r, quiet){
+  P2.rate = clamp(Math.round(r * 100) / 100, .6, 1.5); lsw("ao_vp_rate", String(P2.rate));
+  var s = $("aoVRate"), o = $("aoVRateV"); if (s) s.value = P2.rate; if (o) o.textContent = P2.rate.toFixed(2) + "\u00d7";
+  if (!quiet) say("Speaking speed " + P2.rate.toFixed(2) + "\u00d7");
+}
+function sayLocal(text, code, done){
+  if (!SYN){ if (done) done(); return; }
+  var tok = ++spk; try { SYN.cancel(); } catch(e){} aiCap(text);
+  setTimeout(function(){
+    if (tok !== spk) return;
+    var P = curPreset(), u = new SpeechSynthesisUtterance(text), region = REGION[code] || "en-US";
+    var v = code === "en" ? pickVoice(P) : voiceForLang(region, P.g);
+    u.lang = region; if (v) u.voice = v; try { u.pitch = pitchFor(P, v); } catch(e){} u.rate = clamp((P.rate || 1) * P2.rate, .5, 2);
+    u.onstart = function(){ if (tok === spk){ FACE.setAttribute("class", "speaking"); $("status").textContent = "Speaking..."; } };
+    u.onend = u.onerror = function(){ if (tok !== spk) return; setFace("", "Tap the mic to reply"); if (done) done(); };
+    SYN.speak(u);
+  }, 110);
+}
+function afterCmd(){ if (isVoiceOn()) setTimeout(function(){ if (isVoiceOn()) listen(); }, 500); }
+function runCommand(c, raw){
+  youCap("You said: " + raw);
+  if (HF.on){ HF.mode = "busy"; HF.act = Date.now(); }
+  if (c.k === "stop"){
+    stopSpeech(); killRec();
+    if (HF.on){ hfStart("standby"); } else setFace("", "Stopped. Tap the mic to reply");
+  } else if (c.k === "repeat"){
+    var t = lastReplyText();
+    if (!t) sayLocal("There is nothing to repeat yet.", "en", afterCmd);
+    else { stopSpeech(); speak(t); }
+  } else if (c.k === "slower" || c.k === "faster"){
+    setRate(P2.rate + (c.k === "slower" ? -.15 : .15));
+    if (canResume() && resumeNow()) return;
+    var t2 = lastReplyText();
+    if (t2){ stopSpeech(); speak(t2); } else sayLocal("Okay.", "en", afterCmd);
+  } else if (c.k === "lang"){
+    cur.code = c.code; cur.lock = true; setMicLang(c.code); langNow();
+    say("Language: " + LNAME[c.code]);
+    stopSpeech(); sayLocal(CONFIRM[c.code] || CONFIRM.en, c.code, afterCmd);
+  } else if (c.k === "auto"){
+    cur.lock = false; cur.code = ""; P2.auto = true; lsw("ao_vp_auto", "1");
+    var ch = $("aoVAuto"); if (ch) ch.checked = true; langNow();
+    say("Auto language on"); stopSpeech(); sayLocal("Okay, I will reply in the language you speak.", "en", afterCmd);
+  }
+}
+
+/* ===================================================================
+   2. reply in the language you spoke  (+ spoken / typed turns)
+   =================================================================== */
+if (typeof send === "function"){
+  var _send2 = send;
+  send = function(text, spoken){
+    try {
+      if (spoken && typeof text === "string"){
+        var raw = text.trim(), cmd = parseCommand(raw);
+        if (cmd){ runCommand(cmd, raw); return Promise.resolve(); }
+        if (!isBusy()){
+          if (P2.auto && !cur.lock){
+            var d = detectLang(raw);
+            if (d && d.conf >= 2 && d.code !== cur.code){ cur.code = d.code; setMicLang(d.code); langNow(); }
+          }
+          pendingLang = ((cur.lock || P2.auto) && cur.code && (cur.lock || cur.code !== "en")) ? {code:cur.code, name:LNAME[cur.code]} : null;
+        }
+      } else if (typeof text === "string" && !isBusy()) pendingLang = null;
+    } catch(e){}
+    return _send2.apply(this, arguments);
+  };
+}
+/* the instruction is added to the outgoing request only (never shown in the chat or saved) */
+(function(){
+  var _fetch = window.fetch; if (!_fetch) return;
+  window.fetch = function(url, opts){
+    try {
+      if (pendingLang && opts && typeof opts.body === "string" && API_URL && String(url).indexOf(API_URL) === 0){
+        var j = JSON.parse(opts.body);
+        if (j && Array.isArray(j.messages) && j.messages.length){
+          var l = j.messages[j.messages.length - 1];
+          if (l && l.role === "user" && typeof l.text === "string"){
+            l.text = l.text + "\n\n[Reply in " + pendingLang.name + ".]";
+            opts = Object.assign({}, opts, {body: JSON.stringify(j)});
+          }
+        }
+      }
+    } catch(e){}
+    return _fetch.call(this, url, opts);
+  };
+})();
+if (typeof speak === "function"){
+  var _speak2 = speak;
+  speak = function(text){
+    if (typeof text === "string" && text.length > 1) lastSpoken = text;
+    var out = _speak2.apply(this, arguments);
+    try {
+      if (HF.on && P2.intr && isVoiceOn()){
+        setTimeout(function(){ if (HF.on && P2.intr && isVoiceOn() && speakingNow() && HF.mode !== "capture") hfStart("cmd"); }, 900);
+      }
+    } catch(e){}
+    return out;
+  };
+}
+
+/* ===================================================================
+   3. hands-free: wake phrase + silence auto-stop
+   =================================================================== */
+var HF = {on:false, mode:"off", rec:null, wakeIdx:-1, last:"", silT:0, nsT:0, t0:0, skip:0, follow:false, ends:[], act:Date.now()};
+function muted(){ var m = $("aoMute"); return !!(m && m.classList.contains("on")); }
+function wakeMatch(tx){
+  var p = String(P2.wake || "hey alpha").toLowerCase().trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/alpha/g, "(?:alpha|alfa|alpa|alfaa|elfa)").replace(/^hey\b/, "(?:hey|hay|hi)").replace(/\s+/g, "[\\s,.!-]+");
+  var re; try { re = new RegExp("(?:^|[\\s,.!?])" + p + "(?:[\\s,.!-]+o)?(?=$|[\\s,.!?])", "i"); } catch(e){ return null; }
+  var m = re.exec(tx); if (!m) return null;
+  return {rest: tx.slice(m.index + m[0].length).replace(/^[\s,.!?:;-]+/, "")};
+}
+function hfStop(abort){
+  clearTimeout(HF.silT); clearTimeout(HF.nsT); HF.silT = 0; HF.nsT = 0;
+  var r = HF.rec; HF.rec = null;
+  if (r){ r.onresult = r.onend = r.onerror = r.onstart = null; try { abort ? r.abort() : r.stop(); } catch(e){} }
+}
+function hfUI(mode){
+  if (mode === "standby"){ MIC.classList.remove("live"); MIC.textContent = "Start talking"; setFace("", "Say \u201c" + P2.wake + "\u201d to talk"); }
+  else if (mode === "capture"){ MIC.classList.add("live"); MIC.textContent = "Listening..."; setFace("listening", "Listening\u2026 I stop after " + P2.sil + "s of silence"); youCap(""); }
+}
+function armNoSpeech(){
+  clearTimeout(HF.nsT);
+  HF.nsT = setTimeout(function(){ if (HF.mode === "capture" && !HF.last){ youCap(""); hfStart("standby"); } }, HF.follow ? 7000 : 8000);
+}
+function hfStart(mode){
+  if (!HF.on || !SRX || !isVoiceOn()) return;
+  hfStop(true);
+  if (muted()){ HF.mode = "off"; setFace("", "Microphone is muted. Unmute to use hands-free."); return; }
+  HF.mode = mode; HF.wakeIdx = -1; HF.last = ""; HF.t0 = Date.now(); HF.skip = 0;
+  var r = new SRX(); r.continuous = true; r.interimResults = true; r.maxAlternatives = 1;
+  try { r.lang = window.AO_VOICE_LANG || "en-US"; } catch(e){}
+  r.onresult = function(e){ if (HF.rec === r) hfResult(e); };
+  r.onerror = function(e){ if (HF.rec === r) hfError(e); };
+  r.onend = function(){ if (HF.rec === r){ HF.rec = null; hfEnded(); } };
+  HF.rec = r;
+  try { r.start(); } catch(err){ HF.rec = null; setTimeout(function(){ if (HF.on && HF.mode === mode && !HF.rec) hfStart(mode); }, 600); return; }
+  hfUI(mode);
+  if (mode === "capture") armNoSpeech();
+}
+function hfBegin(follow){ HF.follow = !!follow; hfStart("capture"); }
+function hfResult(e){
+  var res = e.results, n = res.length, i, m;
+  if (HF.mode === "standby" || HF.mode === "cmd"){
+    for (i = Math.max(HF.skip || 0, n - 3); i < n; i++){
+      m = wakeMatch(res[i][0].transcript);
+      if (m){
+        if (HF.mode === "cmd") stopSpeech();
+        HF.mode = "capture"; HF.wakeIdx = i; HF.follow = false; HF.last = ""; hfUI("capture"); armNoSpeech(); break;
+      }
+    }
+    if (HF.mode === "cmd"){
+      if (Date.now() - HF.t0 < 700) return;
+      var tx = res[n - 1][0].transcript, c = parseCommand(tx);
+      if (c && c.k !== "lang" && c.k !== "auto"){ HF.skip = n; runCommand(c, tx); }
+      return;
+    }
+    if (HF.mode !== "capture") return;
+  }
+  if (HF.mode === "capture") hfCapture(res);
+}
+function hfCapture(res){
+  var n = res.length, out = "", i, start = HF.wakeIdx >= 0 ? HF.wakeIdx : 0;
+  for (i = start; i < n; i++){
+    var t = res[i][0].transcript;
+    if (i === HF.wakeIdx){ var m = wakeMatch(t); t = m ? m.rest : ""; }
+    t = t.trim(); if (t) out += (out ? " " : "") + t;
+  }
+  out = out.trim();
+  if (out !== HF.last){
+    HF.last = out; youCap(out ? "\u2026" + out : "Listening\u2026"); clearTimeout(HF.nsT);
+    clearTimeout(HF.silT); HF.silT = out ? setTimeout(hfFinish, Math.round(P2.sil * 1000)) : 0;
+  } else if (out && !HF.silT) HF.silT = setTimeout(hfFinish, Math.round(P2.sil * 1000));
+}
+function hfFinish(){
+  clearTimeout(HF.silT); HF.silT = 0;
+  var t = (HF.last || "").trim(); if (!t) return;
+  hfStop(true); HF.mode = "busy"; HF.act = Date.now(); HF.last = "";
+  MIC.classList.remove("live"); MIC.textContent = "Start talking";
+  setFace("thinking", "You said: " + t);
+  try { send(t, true); } catch(e){ hfStart("standby"); }
+}
+function hfEnded(){
+  if (!HF.on || !isVoiceOn()) return;
+  if (HF.mode === "capture" && HF.last){ hfFinish(); return; }
+  if (HF.mode === "standby" || HF.mode === "capture" || HF.mode === "cmd"){
+    var now = Date.now(), md = HF.mode;
+    HF.ends = HF.ends.filter(function(x){ return now - x < 10000; }); HF.ends.push(now);
+    setTimeout(function(){ if (HF.on && !HF.rec && HF.mode === md) hfStart(md); }, HF.ends.length > 6 ? 2000 : 250);
+  }
+}
+function hfError(e){
+  var er = e && e.error;
+  if (er === "not-allowed" || er === "service-not-allowed"){ hfSet(false); setFace("", "Microphone blocked. Allow it in your browser, then turn hands-free on."); }
+  else if (er === "audio-capture"){ hfSet(false); setFace("", "No microphone found."); }
+  else if (er === "network"){ setFace("", "Speech recognition needs an internet connection."); }
+}
+function hfSet(on){
+  if (on && !SRX){ say("Hands-free needs Chrome or Edge"); return; }
+  HF.on = on; P2.hf = on; lsw("ao_vp_hf", on ? "1" : "0");
+  var b = $("aoHFBtn"), c = $("aoVHF"); if (b){ b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); } if (c) c.checked = on;
+  if (on){ say("Hands-free on \u00b7 say \u201c" + P2.wake + "\u201d"); if (V.classList.contains("on")){ if (speakingNow() && P2.intr) HF.mode = "busy"; else hfStart("standby"); } }
+  else { hfStop(true); HF.mode = "off"; if (V.classList.contains("on")){ MIC.classList.remove("live"); MIC.textContent = "Start talking"; if (!speakingNow()) setFace("", "Tap the mic and speak"); } say("Hands-free off"); }
+}
+HF.on = P2.hf && !!SRX;
+/* the mic button and the automatic "listen again after a reply" both land here */
+if (typeof listen === "function"){
+  var _listen2 = listen;
+  listen = function(){
+    if (HF.on && isVoiceOn()){
+      if (isBusy()) return;
+      if (HF.mode === "capture" && HF.rec){ if (HF.last) hfFinish(); else hfUI("capture"); return; }
+      hfBegin(true); return;
+    }
+    return _listen2.apply(this, arguments);
+  };
+}
+
+/* ---------- 3 + 4. housekeeping tick ---------- */
+setInterval(function(){
+  var sp = speakingNow(), now = Date.now();
+  if (sp || isBusy()) HF.act = now;
+  if (FACE.classList.contains("speaking") && !sp && now > resumeUntil){
+    if (++stuck >= 2){ stuck = 0; setFace("", (HF.on && isVoiceOn()) ? "Tap the mic or say \u201c" + P2.wake + "\u201d" : "Tap the mic to reply"); }
+  } else stuck = 0;
+  if (HF.on && isVoiceOn() && now > resumeUntil){
+    if (HF.mode === "busy" && now - HF.act > 2500) hfStart("standby");
+    else if (HF.mode === "cmd" && now - HF.act > 1600) hfStart("standby");
+  }
+  var fl = $("aoFloat");
+  if (fl && fl.classList.contains("on")){
+    if (isVoiceOn()) floatHide();
+    else if (!sp && now > resumeUntil && now - FL.shownAt > 1200){ if (++FL.idle >= 3) floatHide(); } else FL.idle = 0;
+  }
+}, 300);
+
+/* ===================================================================
+   5. typing box in voice mode
+   =================================================================== */
+var form = document.createElement("form");
+form.id = "aoVText"; form.setAttribute("autocomplete", "off"); form.setAttribute("aria-label", "Type a message to Alpha-O");
+form.innerHTML = '<input id="aoVIn" type="text" enterkeyhint="send" maxlength="2000" placeholder="Type here and Alpha-O will answer out loud\u2026" aria-label="Type a message"><button type="submit" id="aoVSend" class="ib" data-tip="Send" aria-label="Send"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>';
+V.appendChild(form); V.classList.add("ao-hasin");
+form.addEventListener("submit", function(e){
+  e.preventDefault();
+  var inp = $("aoVIn"), v = inp.value.trim(); if (!v) return;
+  if (isBusy()){ say("Wait for the current answer to finish"); return; }
+  inp.value = "";
+  stopSpeech(); killRec();
+  if (HF.on){ hfStop(true); HF.mode = "busy"; HF.act = Date.now(); }
+  send(v, true);
+});
+
+/* ===================================================================
+   6. toolbar: clear icons, hands-free button, settings button
+   =================================================================== */
+var ICON = {
+  globe:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/></svg>',
+  chat:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12.5h5"/></svg>',
+  head:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/></svg>',
+  sliders:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>',
+  x:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>'
+};
+var btnHF, btnSet;
+if (TOOLS){
+  var bl = $("aoLang"); if (bl) bl.insertAdjacentHTML("beforeend", ICON.globe);   /* the language code stays first, so the language picker keeps working */
+  if (bl) bl.dataset.tip = "Language you speak (mic language)";
+  var bt = $("aoTrBtn"); if (bt){ bt.innerHTML = ICON.chat + '<span class="aoLbl">Transcript</span>'; bt.dataset.tip = "Transcript: everything said in this voice chat (T)"; bt.setAttribute("aria-label", "Open transcript"); }
+  btnHF = document.createElement("button"); btnHF.type = "button"; btnHF.id = "aoHFBtn"; btnHF.className = "ib";
+  btnHF.dataset.tip = "Hands-free: say \u201cHey Alpha\u201d"; btnHF.setAttribute("aria-label", "Hands-free mode"); btnHF.setAttribute("aria-pressed", String(HF.on));
+  btnHF.innerHTML = ICON.head + '<span class="aoLbl">Hands-free</span>'; btnHF.classList.toggle("on", HF.on);
+  btnSet = document.createElement("button"); btnSet.type = "button"; btnSet.id = "aoSetBtn"; btnSet.className = "ib";
+  btnSet.dataset.tip = "Voice settings"; btnSet.setAttribute("aria-label", "Voice settings"); btnSet.setAttribute("aria-haspopup", "true");
+  btnSet.innerHTML = ICON.sliders + '<span class="aoLbl">Voice</span>';
+  var mb = $("aoMute"); TOOLS.insertBefore(btnHF, mb); TOOLS.insertBefore(btnSet, mb);
+  btnHF.onclick = function(e){ e.stopPropagation(); hfSet(!HF.on); };
+}
+var panel = document.createElement("div");
+panel.id = "aoVPanel"; panel.hidden = true; panel.setAttribute("role", "dialog"); panel.setAttribute("aria-label", "Voice settings");
+panel.innerHTML =
+  '<div class="aoPh"><b>Voice settings</b><button type="button" class="ib" id="aoVPx" data-tip="Close" aria-label="Close">' + ICON.x + '</button></div>' +
+  '<h5>Hands-free</h5>' +
+  '<label class="aoRow"><span>Hands-free mode</span><input type="checkbox" id="aoVHF"></label>' +
+  '<label class="aoRow col"><span>Wake phrase</span><input type="text" id="aoVWake" maxlength="40" placeholder="hey alpha"></label>' +
+  '<label class="aoRow col"><span>Stop listening after <b id="aoVSilV"></b> of silence</span><input type="range" id="aoVSil" min="1" max="6" step=".5"></label>' +
+  '<label class="aoRow"><span>Interrupt it by voice while it speaks<small>Say \u201cstop\u201d or \u201cHey Alpha\u201d. Best with headphones.</small></span><input type="checkbox" id="aoVIntr"></label>' +
+  '<h5>Language</h5>' +
+  '<label class="aoRow"><span>Reply in the language I speak</span><input type="checkbox" id="aoVAuto"></label>' +
+  '<div class="aoRow"><span id="aoVLangNow"></span><button type="button" class="cab" id="aoVAutoBtn">Auto</button></div>' +
+  '<h5>Speaking speed</h5>' +
+  '<label class="aoRow col"><span><b id="aoVRateV"></b></span><input type="range" id="aoVRate" min=".6" max="1.5" step=".05"></label>' +
+  '<h5>You can say</h5><p class="aoHint">\u201cStop\u201d \u00b7 \u201cRepeat that\u201d \u00b7 \u201cSlower\u201d \u00b7 \u201cFaster\u201d \u00b7 \u201cSwitch to French\u201d \u00b7 \u201cAuto language\u201d</p>';
+V.appendChild(panel);
+function langNow(){
+  var el = $("aoVLangNow"); if (!el) return;
+  el.textContent = "Replies: " + (cur.code ? LNAME[cur.code] + (cur.lock ? " (locked)" : " (detected)") : "auto-detect");
+}
+(function wirePanel(){
+  var wake = $("aoVWake"), sil = $("aoVSil"), silv = $("aoVSilV"), intr = $("aoVIntr"), auto = $("aoVAuto"), rate = $("aoVRate"), hfc = $("aoVHF");
+  wake.value = P2.wake; sil.value = P2.sil; silv.textContent = P2.sil + "s"; intr.checked = P2.intr; auto.checked = P2.auto; hfc.checked = HF.on; setRate(P2.rate, true); langNow();
+  hfc.onchange = function(){ hfSet(hfc.checked); };
+  wake.onchange = function(){ P2.wake = wake.value.trim() || "hey alpha"; wake.value = P2.wake; lsw("ao_vp_wake", P2.wake); if (HF.on && HF.mode === "standby") hfUI("standby"); };
+  sil.oninput = function(){ P2.sil = parseFloat(sil.value) || 2; silv.textContent = P2.sil + "s"; lsw("ao_vp_sil", String(P2.sil)); };
+  intr.onchange = function(){ P2.intr = intr.checked; lsw("ao_vp_intr", P2.intr ? "1" : "0"); };
+  auto.onchange = function(){ P2.auto = auto.checked; lsw("ao_vp_auto", P2.auto ? "1" : "0"); };
+  rate.oninput = function(){ setRate(parseFloat(rate.value) || 1, true); };
+  $("aoVAutoBtn").onclick = function(){ cur.lock = false; cur.code = ""; P2.auto = true; auto.checked = true; lsw("ao_vp_auto", "1"); langNow(); say("Auto language on"); };
+  $("aoVPx").onclick = function(){ panel.hidden = true; };
+})();
+if (btnSet) btnSet.onclick = function(e){ e.stopPropagation(); panel.hidden = !panel.hidden; };
+V.addEventListener("click", function(e){ if (!panel.hidden && !panel.contains(e.target) && !(btnSet && btnSet.contains(e.target))) panel.hidden = true; });
+window.addEventListener("keydown", function(e){
+  if (e.key === "Escape" && !panel.hidden && V.classList.contains("on")){ e.preventDefault(); e.stopImmediatePropagation(); panel.hidden = true; }
+}, true);
+
+/* mute button: pause / resume hands-free listening */
+(function(){
+  var m = $("aoMute"); if (!m) return;
+  new MutationObserver(function(){
+    if (!HF.on || !isVoiceOn()) return;
+    if (muted()){ hfStop(true); HF.mode = "off"; setFace("", "Microphone is muted. Unmute to use hands-free."); }
+    else if (HF.mode === "off") hfStart("standby");
+  }).observe(m, {attributes:true, attributeFilter:["class"]});
+})();
+/* voice mode opens / closes */
+(function(){
+  var was = V.classList.contains("on");
+  new MutationObserver(function(){
+    var on = V.classList.contains("on"); if (on === was) return; was = on;
+    if (on){ floatHide(); if (HF.on) setTimeout(function(){ if (HF.on && V.classList.contains("on") && HF.mode !== "capture" && !speakingNow()) hfStart("standby"); }, 900); }
+    else { hfStop(true); HF.mode = "off"; panel.hidden = true; }
+  }).observe(V, {attributes:true, attributeFilter:["class"]});
+})();
+
+/* ===================================================================
+   7. floating robot head while a chat answer is read aloud
+   =================================================================== */
+var FL = {el:null, R:null, renderer:null, cam:null, clock:null, on:false, raf:0, shownAt:0, idle:0, hideT:0, nb:2, bl:0};
+function floatFit(){
+  if (!FL.renderer || !FL.el) return;
+  var s = Math.max(80, FL.el.clientWidth || 160); FL.renderer.setSize(s, s, false); FL.cam.aspect = 1; FL.cam.updateProjectionMatrix();
+}
+function floatInit(){
+  if (FL.el) return;
+  var el = document.createElement("div"); el.id = "aoFloat"; el.setAttribute("aria-hidden", "true"); el.title = "Tap to stop reading";
+  el.innerHTML = '<div class="aoFg"></div><div class="aoFi"></div>';
+  document.body.appendChild(el); FL.el = el;
+  var holder = el.querySelector(".aoFi");
+  try {
+    if (!window.THREE || typeof buildRobotHead !== "function") throw new Error("no3d");
+    var r = new THREE.WebGLRenderer({antialias:true, alpha:true}); r.setClearColor(0x000000, 0); r.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    holder.appendChild(r.domElement);
+    var R = {scene:new THREE.Scene()}, cam = new THREE.PerspectiveCamera(40, 1, .1, 60); cam.position.set(0, 0, 10);
+    buildRobotHead(R);                     /* the same head as voice mode, as a separate small copy */
+    R.rob.scale.setScalar(1.45); R.rob.position.y = -.45;
+    FL.R = R; FL.renderer = r; FL.cam = cam; FL.clock = new THREE.Clock();
+  } catch(e){ FL.R = null; holder.innerHTML = '<img alt="" src="' + (typeof LOGO_HEAD !== "undefined" ? LOGO_HEAD : "") + '">'; }
+  el.addEventListener("click", function(){ stopSpeech(); try { reading = null; } catch(e){} resetReadTips(); floatHide(); });
+  addEventListener("resize", floatFit);
+}
+function floatFrame(){
+  if (!FL.on){ FL.raf = 0; return; }
+  FL.raf = requestAnimationFrame(floatFrame);
+  var R = FL.R; if (!R) return;
+  var t = FL.clock.getElapsedTime(), sp = !!(SYN && SYN.speaking);
+  R.hd.rotation.y = Math.sin(t * .6) * .22; R.hd.rotation.x = Math.sin(t * .9) * .05; R.hd.rotation.z = sp ? Math.sin(t * 2.2) * .04 : 0;
+  R.rob.position.y = -.45 + Math.sin(t * 1.4) * .08;
+  if (t > FL.nb){ FL.bl = 1; FL.nb = t + 2 + Math.random() * 3; }
+  FL.bl = Math.max(0, FL.bl - .12);
+  var ey = 1.3 * (1 - .9 * Math.sin(FL.bl * Math.PI));
+  R.eyes.forEach(function(e){ e.scale.set(1, ey, .45); });
+  R.talk.visible = sp; R.line.visible = false; R.arc.visible = !sp; R.arc.rotation.z = Math.PI; R.arc.position.y = .15;
+  R.talk.scale.y = .3 + .7 * Math.abs(Math.sin(t * 13));
+  R.cyan.emissiveIntensity = 1 + .3 * Math.sin(t * 2.2) + (sp ? .5 : 0); R.shell.emissiveIntensity = .3 + .1 * Math.sin(t * 2);
+  FL.renderer.render(R.scene, FL.cam);
+}
+function floatShow(){
+  if (!P2.float || isVoiceOn()) return;
+  floatInit(); FL.shownAt = Date.now(); FL.idle = 0;
+  if (FL.hideT){ clearTimeout(FL.hideT); FL.hideT = 0; }
+  FL.el.style.visibility = "visible"; void FL.el.offsetWidth; FL.el.classList.add("on"); floatFit();
+  if (!FL.on){ FL.on = true; if (FL.R && !FL.raf) FL.raf = requestAnimationFrame(floatFrame); }
+}
+function floatHide(){
+  if (!FL.el || !FL.el.classList.contains("on")) return;
+  FL.el.classList.remove("on");
+  FL.hideT = setTimeout(function(){ FL.el.style.visibility = "hidden"; FL.on = false; if (FL.raf){ cancelAnimationFrame(FL.raf); FL.raf = 0; } }, 650);
+}
+if (typeof readAloud === "function"){
+  var _ra = readAloud;
+  readAloud = function(m, b){
+    var wasOn = false; try { wasOn = (reading === m); } catch(e){}
+    var out = _ra.apply(this, arguments);
+    if (wasOn) floatHide(); else if (!isVoiceOn() && SYN) floatShow();
+    return out;
+  };
+}
+/* a switch for it in the normal Settings window */
+(function(){
+  var sw = $("swShort"); if (!sw || !sw.parentNode) return;
+  var lab = document.createElement("label"); lab.className = "sw";
+  lab.innerHTML = '<input type="checkbox" id="aoSwFloat"> Show the floating robot while an answer is read aloud';
+  sw.parentNode.insertAdjacentElement("afterend", lab);
+  var c = lab.querySelector("input"); c.checked = P2.float;
+  c.onchange = function(){ P2.float = c.checked; lsw("ao_vp_float", c.checked ? "1" : "0"); if (!c.checked) floatHide(); };
+})();
+})();
+</script>
+<!-- ===== end Alpha-O Voice Plus ===== -->
+
 </body>
 </html>
