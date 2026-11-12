@@ -1,6 +1,6 @@
 /* Alpha-O service worker: app shell works offline; chat/API requests are never cached. */
-const VERSION = "alpha-o-v3";
-const SHELL = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png", "favicon.png"];
+const VERSION = "alpha-o-v4";
+const SHELL = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png", "favicon.png", "components/sidebar.html", "components/chat.html", "components/settings.html", "components/dialogs.html", "components/app-updates.html", "components/voice-mode.html", "components/robot-3d.html", "components/read-aloud.html", "components/automate.html", "components/startup.html", "components/chat-extras.html", "components/voice-extras.html", "components/voice-plus.html"];
 const CDN = ["https://cdnjs.cloudflare.com/"];
 
 self.addEventListener("install", e => {
