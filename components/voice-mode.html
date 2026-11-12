@@ -8,7 +8,7 @@
   <div id="face" role="img" aria-label="3D robot face"></div>
   <div class="vstate" id="vstate" data-s="ready"><i></i><span>Ready</span></div>
   <div id="status" role="status" aria-live="polite">Tap the mic and speak</div>
-  <div class="bar"><span class="vw"><button class="ib" id="vpick" data-ic="person" data-tip="Choose voice" aria-label="Choose voice"></button><div id="vmenu" hidden></div></span><button id="mic" data-tip="Speak to Alpha-O">Start talking</button><button id="closeVoice" data-tip="Close voice mode">Close</button></div>
+  <div class="bar"><span class="vw"><button class="ib" id="vpick" data-ic="person" data-tip="Choose voice" aria-label="Choose voice"></button><div id="vmenu" hidden></div></span><button id="mic" data-tip="Start talking" aria-label="Start talking">Start talking</button><button class="ib" id="closeVoice" data-tip="Close" aria-label="Close voice mode" data-ic="close"></button></div>
 </div>
 </template>
 <style>
@@ -19,7 +19,7 @@
 #status{color:var(--muted);font-size:17px;min-height:26px;text-align:center;padding:0 20px}
 #mic.live{background:var(--accent);color:#fff}
 .vw{position:relative}
-#vmenu{position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:6px;min-width:190px;z-index:8;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+#vmenu{position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:6px;min-width:190px;z-index:8;max-height:min(60dvh,320px);overflow:auto}
 .vopt{display:block;width:100%;text-align:left;border-radius:8px;background:none;border-color:transparent;padding:8px 12px}
 .vopt.on{background:rgba(16,163,127,.2)}
 #voice{height:100vh;height:100dvh;padding:12px;overflow:auto}
@@ -59,7 +59,7 @@ function listen(){
   rec = new SR(); rec.lang = "en-US"; rec.interimResults = false; rec.maxAlternatives = 1;
   let got = false;
   rec.onstart = () => { listening = true; $("mic").classList.add("live"); $("mic").textContent = "Listening..."; setFace("listening", "Listening..."); mouthFor(""); };
-  rec.onresult = e => { got = true; const t = e.results[0][0].transcript; setFace("thinking", "You said: " + t); send(t, true); };
+  rec.onresult = e => { got = true; const t = (e.results[0][0].transcript || "").trim(); if (t && window.speechSynthesis && speechSynthesis.speaking && (!window.ROBOT_AUDIO_LEVEL || window.ROBOT_AUDIO_LEVEL >= .35)) { spk++; speechSynthesis.cancel(); } setFace("thinking", "You said: " + t); send(t, true); };
   rec.onerror = e => {
     const m = (e.error === "not-allowed" || e.error === "service-not-allowed") ? "Microphone blocked. Allow it in your browser, then tap the mic."
       : e.error === "network" ? "Speech recognition needs an internet connection."
@@ -76,7 +76,8 @@ function speak(text){
   const tok = ++spk, emo = emotion(text); mouthFor(emo);
   if (!window.speechSynthesis){ setFace(emo, "Voice output is not supported in this browser."); return; }
   const clean = text.replace(/```[\s\S]*?```/g, " code block. ").replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/[*#`_>~]/g, "").replace(/\s+/g, " ").trim();
-  const spoken = curPreset().stacc ? clean.split(" ").reduce((a, w, i) => a + w + (i % 2 && !/[.!?,;:]$/.test(w) ? ", " : " "), "").trim() : clean, parts = spoken.match(/[^.!?]+[.!?]*\s*/g) || [spoken], chunks = []; let cur = "";
+  const spoken = curPreset().stacc ? clean.split(" ").reduce((a, w, i) => a + w + (i % 2 && !/[.!?,;:]$/.test(w) ? ", " : " "), "").trim() : clean, parts = spoken.match(/[^.!?]+[.!?]*\s*/g) || [spoken];
+  const chunks = []; let cur = "";
   parts.forEach(p => { if (cur && (cur + p).length > 200){ chunks.push(cur); cur = p; } else cur += p; });
   if (cur) chunks.push(cur);
   speechSynthesis.cancel(); speechSynthesis.resume(); window._utts = [];
@@ -87,7 +88,7 @@ function speak(text){
       const u = new SpeechSynthesisUtterance(c); u.lang = "en-US"; if (v) u.voice = v; u.pitch = pitchFor(P, v); u.rate = P.rate;
       u.onstart = () => { if (tok === spk){ $("face").setAttribute("class", "speaking " + emo); $("status").textContent = "Speaking..."; } };
       if (i === chunks.length - 1) u.onend = u.onerror = () => { if (tok !== spk) return; setFace(emo, "Tap the mic to reply"); if (voiceOn) setTimeout(listen, 500); };
-      u.addEventListener("error", e => { if (tok === spk && e.error && e.error !== "interrupted" && e.error !== "canceled") $("status").textContent = "Sound problem (" + e.error + "). Tap the mic to continue."; });
+      u.addEventListener("error", e => { if (tok === spk && e.error && e.error !== "interrupted" && e.error !== "canceled") $("status").textContent = "Sound problem (" + e.error + "). Tap the mic to retry."; });
       window._utts.push(u); speechSynthesis.speak(u);
     });
   }, 120);
@@ -107,8 +108,8 @@ const PRESETS = [
   {id:"robot", label:"Robot", g:"m", slot:3, pitch:.45, rate:1.25, stacc:true}
 ];
 let vp = "female"; try { vp = localStorage.getItem("alphaO_voice") || "female"; } catch(e){}
-const FEM = /(^|[^a-z])(female|woman|girl|zira|aria|jenny|michelle|ana|sonia|libby|maisie|clara|natasha|neerja|emma|ava|ashley|jane|nancy|sara|amber|elizabeth|monica|ayanna|cora|jacqueline|karen|samantha|moira|tessa|victoria|susan|kate|serena|zoe|fiona|allison|nicky|ellen|joanna|salli|kimberly|ivy|kendra|amy|hazel|catherine|heather|linda|eva|vicki|joelle|shelley|sandy|flo|google us english)([^a-z]|$)/i;
-const MAL = /(^|[^a-z])(male|man|boy|david|mark|guy|davis|tony|jason|ryan|thomas|mitchell|ronan|liam|connor|brandon|christopher|eric|roger|steffan|william|alfie|elliot|james|george|richard|sean|rishi|daniel|alex|fred|tom|aaron|oliver|arthur|gordon|lee|evan|nathan|reed|rocko|eddy|matthew|joey|justin|kevin|ralph|bruce|junior|albert)([^a-z]|$)/i;
+const FEM = /(^|[^a-z])(female|woman|girl|zira|aria|jenny|michelle|ana|sonia|libby|maisie|clara|natasha|neerja|emma|ava|ashley|jane|nancy|sara|amber|elizabeth|monica|ayanna|cora|jacqueline|karen|[a-z]*a|[a-z]*e|[a-z]*i)([^a-z]|$)/i;
+const MAL = /(^|[^a-z])(male|man|boy|david|mark|guy|davis|tony|jason|ryan|thomas|mitchell|ronan|liam|connor|brandon|christopher|eric|roger|steffan|william|alfie|elliot|james|george|richard|sean|[a-z]*o|[a-z]*r)([^a-z]|$)/i;
 function vgender(v){ const t = v.name + " " + (v.voiceURI || ""); return FEM.test(t) ? "f" : MAL.test(t) ? "m" : null; }
 function pitchFor(P, v){ const g = v && vgender(v); let p = P.pitch; if (g && g !== P.g) p = P.g === "f" ? Math.min(2, p * 1.45) : Math.max(.2, Math.min(p, 1) * .6); return p; }
 function curPreset(){ return PRESETS.find(x => x.id === vp) || PRESETS[0]; }
@@ -127,13 +128,13 @@ function sample(){
   spk++; speechSynthesis.cancel();
   const P = curPreset(), v = pickVoice(P), u = new SpeechSynthesisUtterance("Hello! I am Alpha-O.");
   u.lang = "en-US"; if (v) u.voice = v; u.pitch = pitchFor(P, v); u.rate = P.rate;
-  toast(P.label + (v ? " \u00b7 " + v.name + (vgender(v) && vgender(v) !== P.g ? " (pitch-adjusted)" : "") : " \u00b7 browser default voice"));
+  toast(P.label + (v ? " · " + v.name + (vgender(v) && vgender(v) !== P.g ? " (pitch-adjusted)" : "") : " · browser default voice"));
   setTimeout(() => speechSynthesis.speak(u), 100);
 }
 function renderVMenu(){
   $("vmenu").innerHTML = "";
   PRESETS.forEach(p => {
-    const b = document.createElement("button"); b.className = "vopt" + (p.id === vp ? " on" : ""); b.textContent = (p.id === vp ? "\u2713 " : "") + p.label;
+    const b = document.createElement("button"); b.className = "vopt" + (p.id === vp ? " on" : ""); b.textContent = (p.id === vp ? "✓ " : "") + p.label;
     b.onclick = () => { vp = p.id; try { localStorage.setItem("alphaO_voice", vp); } catch(e){} $("vmenu").hidden = true; sample(); };
     $("vmenu").appendChild(b);
   });
