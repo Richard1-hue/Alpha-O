@@ -1,0 +1,254 @@
+<!--
+  component: Dialogs/overlays: command palette, saved answers, code preview, shortcuts sheet, onboarding tour
+  Also owns code-block download/run handlers and the star (saved answer) markers.
+  Fragment (not a standalone document). Loaded by index.html.
+-->
+<template data-ao-slot="dialogs-overlays">
+<div class="ov2" id="cmdk" hidden><div class="mod cmd" role="dialog" aria-label="Command palette"><input id="cmdq" placeholder="Search chats, modes, voices, settings…" autocomplete="off" aria-label="Command palette search"><div id="cmdl" role="listbox"></div></div></div>
+<div class="ov2" id="saved" hidden><div class="mod wide" role="dialog" aria-label="Saved answers"><div class="mh"><b>Saved answers</b><button class="ib" id="svx" data-ic="x" data-tip="Close" aria-label="Close"></button></div><input id="svq" class="svq" placeholder="Search saved answers" aria-label="Search saved answers"><div id="svl"></div></div></div>
+<div class="ov2" id="pv" hidden><div class="mod wide pvm" role="dialog" aria-label="Code preview"><div class="mh"><b id="pvt">Preview</b><span class="bar"><button class="cab" id="pvr" type="button">Reload</button><button class="ib" id="pvx" data-ic="x" data-tip="Close" aria-label="Close preview"></button></span></div><p class="note">Runs in an isolated sandbox: no access to your chats or storage, and no network requests.</p><iframe id="pvf" title="Code preview" sandbox="allow-scripts allow-modals allow-forms"></iframe></div></div>
+</template>
+<template data-ao-slot="dialogs-guides">
+<div id="tour" hidden><div id="tspot" class="tspot"></div><div id="tcard" class="tcard" role="dialog" aria-label="Quick tour"><small id="tcount"></small><b id="ttitle"></b><p id="tdesc"></p><div class="bar"><button id="tskip" type="button" class="cab">Skip</button><span class="sp"></span><button id="tback" type="button" class="cab">Back</button><button id="tnext" type="button" class="pri cab">Next</button></div></div></div>
+<div class="ov2" id="keys" hidden><div class="mod" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts"><div class="mh"><b>Keyboard shortcuts</b><button class="ib" id="kx" data-ic="x" data-tip="Close" aria-label="Close"></button></div><div id="kbody"></div></div></div>
+</template>
+<style>
+.mod.wide{width:min(900px,100%)}
+.svq,#cmdq{width:100%;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;font-size:15px;margin:12px 0 8px}
+#cmdq{margin-top:0}
+.mod.cmd{padding:12px;width:min(560px,100%)}
+#cmdk{place-items:start center;padding-top:12vh;z-index:40}
+#saved,#pv{z-index:40}
+#cmdl{max-height:50vh;overflow:auto}
+.cmi{display:flex;justify-content:space-between;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:14.5px}
+.cmi small{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:45%}
+.cmi.on{background:rgba(16,163,127,.18)}
+.cmi span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.svi{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:8px 0}
+.svh{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.svt{flex:1;min-width:140px;text-align:left;background:none;border:0;padding:4px 0;font-weight:600;cursor:pointer;color:var(--text)}
+.svb{margin-top:8px;max-height:5.2em;overflow:hidden;position:relative}
+.svi.open .svb{max-height:none}
+.svi:not(.open) .svb::after{content:"";position:absolute;inset:auto 0 0 0;height:2em;background:linear-gradient(transparent,var(--bg))}
+.svi textarea{width:100%;min-height:160px;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:8px;font:inherit}
+.pvm iframe{width:100%;height:min(65vh,65dvh);border:1px solid var(--line);border-radius:10px;background:#fff;margin-top:8px}
+#tour{position:fixed;inset:0;z-index:10050}
+.tspot{position:fixed;border-radius:12px;box-shadow:0 0 0 9999px rgba(0,0,0,.66);border:2px solid var(--accent);pointer-events:none;transition:all .25s}
+.tcard{position:fixed;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:0 14px 40px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:6px}
+.tcard small{color:var(--muted)}
+.tcard p{margin:0;font-size:14px;line-height:1.5;color:var(--muted)}
+.tcard .bar{margin-top:6px}
+.kk{display:inline-flex;gap:3px;margin-left:8px;vertical-align:middle;flex:none}
+.cmi .kk{margin-left:0}
+#keys{z-index:45}
+.krow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:7px 0;font-size:14.5px;border-bottom:1px solid var(--line)}
+.krow:last-child{border-bottom:0}
+.khint{opacity:.8}
+@media(hover:none){
+  .khint{display:none}
+}
+</style>
+<script data-ao-scope="app">
+/* --- download + preview of code blocks --- */
+const EXT = {html:"index.html", css:"style.css", js:"script.js", javascript:"script.js", ts:"index.ts", typescript:"index.ts", py:"script.py", python:"script.py", json:"data.json", yaml:"config.yml", yml:"config.yml", sql:"query.sql", sh:"script.sh", bash:"script.sh", php:"index.php", java:"Main.java", cs:"Program.cs", csharp:"Program.cs", cpp:"main.cpp", c:"main.c", md:"README.md", markdown:"README.md", svg:"image.svg", xml:"data.xml", txt:"notes.txt"};
+function fileNameFor(lang, code){
+  const first = (code.split("\n")[0] || ""), hit = first.match(/^\s*(?:\/\/|#|<!\-\-|\/\*)\s*(?:file(?:name)?:?\s*)?([\w.-]+\.[A-Za-z0-9]{1,5})\b/i);
+  return hit ? hit[1] : (EXT[(lang || "").toLowerCase()] || "code.txt");
+}
+function downloadCode(cbEl){
+  const code = cbEl.querySelector("code").textContent, lang = (cbEl.querySelector(".ch span").textContent || "").trim();
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([code], {type: "text/plain"})); a.download = fileNameFor(lang, code);
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); toast("Saved " + a.download);
+}
+const CSP = "<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'unsafe-inline' https:; img-src data: blob: https:; font-src data: https:; media-src data: blob:; connect-src 'none'\">";
+function withCsp(h){
+  if (/<head[^>]*>/i.test(h)) return h.replace(/<head[^>]*>/i, x => x + CSP);
+  if (/<html[^>]*>/i.test(h)) return h.replace(/<html[^>]*>/i, x => x + "<head>" + CSP + "</head>");
+  return "<!DOCTYPE html><html><head>" + CSP + "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"></head><body>" + h + "</body></html>";
+}
+function inject(h, tag, where){
+  const re = where === "head" ? /<\/head>/i : /<\/body>/i;
+  return re.test(h) ? h.replace(re, tag + "$&") : (where === "head" ? tag + h : h + tag);
+}
+function blocksOf(msg){ return Array.from(msg.querySelectorAll(".cb")).map(b => ({lang: (b.querySelector(".ch span").textContent || "").trim().toLowerCase(), code: b.querySelector("code").textContent})); }
+function buildDoc(lang, code, msg){
+  const bl = msg ? blocksOf(msg) : [], by = l => bl.filter(x => l.test(x.lang)).map(x => x.code);
+  lang = lang.toLowerCase();
+  const compose = html => {
+    if (!/<style/i.test(html)) { const c = by(/^css$/).join("\n"); if (c) html = inject(html, "<style>" + c + "</style>", "head"); }
+    if (!/<script/i.test(html)) { const j = by(/^(js|javascript)$/).join("\n"); if (j) html = inject(html, "<script>" + j.replace(/<\/script/gi, "<\\/script") + "<\/script>", "body"); }
+    return withCsp(html);
+  };
+  if (lang === "html") return compose(code);
+  if (lang === "css"){
+    const h = by(/^html$/)[0];
+    if (h) return compose(/<style/i.test(h) ? h : inject(h, "<style>" + code + "</style>", "head"));
+    return withCsp("<style>" + code + "</style><h1>Heading</h1><p>A paragraph with a <a href=\"#\">link</a>.</p><button>Button</button><ul><li>One</li><li>Two</li></ul>");
+  }
+  if (lang === "svg") return withCsp("<body style=\"margin:0;display:grid;place-items:center;min-height:100vh;background:#fff\">" + code + "</body>");
+  const h = by(/^html$/)[0];
+  if (h) return compose(/<script/i.test(h) ? h : inject(h, "<script>" + code.replace(/<\/script/gi, "<\\/script") + "<\/script>", "body"));
+  const run = "const o=document.getElementById('o');const w=(c,a)=>{const l=document.createElement('div');if(c)l.className=c;l.textContent=a.map(x=>{try{return typeof x==='object'?JSON.stringify(x):String(x)}catch(e){return String(x)}}).join(' ');o.appendChild(l)};['log','info','warn'].forEach(k=>console[k]=(...a)=>w('',a));console.error=(...a)=>w('e',a);window.onerror=m=>{w('e',['Error: '+m])};try{(0,eval)(" + JSON.stringify(code).replace(/</g, "\\u003c") + ")}catch(e){w('e',['Error: '+e.message])}";
+  return withCsp("<style>body{font:14px monospace;margin:10px;color:#222}.e{color:#c00}</style><div id=\"app\"></div><pre id=\"o\"></pre><script>" + run + "<\/script>");
+}
+let pvState = null;
+function openPreview(cbEl){
+  const lang = (cbEl.querySelector(".ch span").textContent || "").trim(), code = cbEl.querySelector("code").textContent, msg = cbEl.closest(".msg");
+  pvState = {doc: buildDoc(lang, code, msg)}; $("pvt").textContent = (/^(js|javascript)$/i.test(lang) ? "Run output" : "Live preview") + " \u00b7 " + lang;
+  $("pvf").srcdoc = pvState.doc; $("pv").hidden = false;
+}
+function closePv(){ $("pv").hidden = true; $("pvf").srcdoc = ""; pvState = null; }
+$("pvx").onclick = closePv; $("pvr").onclick = () => { if (pvState){ $("pvf").srcdoc = ""; setTimeout(() => { if (pvState) $("pvf").srcdoc = pvState.doc; }, 30); } };
+$("pv").onclick = e => { if (e.target === $("pv")) closePv(); };
+$("chat").addEventListener("click", e => {
+  const r = e.target.closest(".crn"), d = e.target.closest(".cdl");
+  if (r) openPreview(r.closest(".cb")); else if (d) downloadCode(d.closest(".cb"));
+});
+
+/* --- saved answers --- */
+let saved = []; try { saved = JSON.parse(localStorage.getItem("alphaO_saved") || "[]"); if (!Array.isArray(saved)) saved = []; } catch(e){ saved = []; }
+function persistSaved(){ try { localStorage.setItem("alphaO_saved", JSON.stringify(saved)); } catch(e){ toast("Couldn\u2019t save. Browser storage may be full."); } }
+function hashOf(t){ let h = 5381; for (let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0; return String(h >>> 0); }
+function titleOf(t){ const l = t.replace(/```[\s\S]*?```/g, " ").split("\n").map(x => x.replace(/[#*`>_]/g, "").trim()).find(Boolean) || "Saved answer"; return l.slice(0, 60); }
+function markStars(){
+  const set = new Set(saved.map(x => x.h));
+  document.querySelectorAll(".row.bot").forEach(r => {
+    const m = r.querySelector(".msg"), b = r.querySelector(".stb"); if (!m || !b) return;
+    const on = !!m.dataset.raw && set.has(hashOf(m.dataset.raw));
+    b.classList.toggle("on", on); b.dataset.tip = on ? "Saved (click to remove)" : "Save answer"; b.setAttribute("aria-pressed", String(on));
+  });
+}
+function toggleSave(m){
+  const raw = m.dataset.raw; if (!raw){ toast("Nothing to save yet"); return; }
+  const h = hashOf(raw), i = saved.findIndex(x => x.h === h);
+  if (i >= 0){ saved.splice(i, 1); toast("Removed from Saved"); } else { saved.unshift({id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), h: h, title: titleOf(raw), text: raw, ts: Date.now()}); toast("Saved answer"); }
+  persistSaved(); markStars(); if (!$("saved").hidden) renderSaved();
+}
+let openSv = null;
+function renderSaved(){
+  const q = $("svq").value.trim().toLowerCase(), box = $("svl"); box.innerHTML = "";
+  const items = saved.filter(x => !q || x.title.toLowerCase().includes(q) || x.text.toLowerCase().includes(q));
+  if (!items.length){ box.innerHTML = '<p class="note">' + (saved.length ? "No saved answers match your search." : "Nothing saved yet. Tap the star under any answer to keep it here.") + "</p>"; return; }
+  items.forEach(x => {
+    const d = document.createElement("div"); d.className = "svi" + (openSv === x.id ? " open" : "");
+    const head = document.createElement("div"); head.className = "svh";
+    const t = document.createElement("button"); t.className = "svt"; t.type = "button"; t.textContent = x.title; t.onclick = () => { openSv = openSv === x.id ? null : x.id; renderSaved(); };
+    const btn = (label, fn, cls) => { const b = document.createElement("button"); b.type = "button"; b.className = "cab " + (cls || ""); b.textContent = label; b.onclick = fn; head.appendChild(b); };
+    head.appendChild(t);
+    btn("Rename", () => { const v = prompt("Rename saved answer", x.title); if (v && v.trim()){ x.title = v.trim().slice(0, 80); persistSaved(); renderSaved(); } });
+    btn("Edit", () => editSaved(x, d));
+    btn("Copy", () => { if (navigator.clipboard) navigator.clipboard.writeText(x.text); toast("Copied"); });
+    btn("Delete", () => { saved = saved.filter(y => y.id !== x.id); persistSaved(); markStars(); renderSaved(); toast("Removed from Saved"); });
+    const body = document.createElement("div"); body.className = "svb msg bot"; body.innerHTML = md(x.text);
+    d.append(head, body); box.appendChild(d);
+  });
+}
+function editSaved(x, d){
+  const body = d.querySelector(".svb"), ta = document.createElement("textarea"); ta.value = x.text;
+  const bar = document.createElement("div"); bar.className = "bar"; bar.style.marginTop = "8px";
+  const ok = document.createElement("button"); ok.className = "cab pri"; ok.type = "button"; ok.textContent = "Save changes";
+  const no = document.createElement("button"); no.className = "cab"; no.type = "button"; no.textContent = "Cancel";
+  ok.onclick = () => { x.text = ta.value; x.h = hashOf(x.text); persistSaved(); markStars(); renderSaved(); };
+  no.onclick = renderSaved; bar.append(ok, no); body.replaceWith(ta); d.append(bar); ta.focus();
+}
+function openSaved(id){ openSv = typeof id === "string" ? id : null; $("svq").value = ""; renderSaved(); $("saved").hidden = false; $("svq").focus(); }
+function closeSaved(){ $("saved").hidden = true; }
+$("savedBtn").onclick = () => openSaved(); $("svx").onclick = closeSaved; $("svq").oninput = renderSaved; $("saved").onclick = e => { if (e.target === $("saved")) closeSaved(); };
+markStars();
+
+/* --- command palette --- */
+let cmdSel = 0, cmdRows = [];
+function cmdItems(){
+  const it = [], A = (label, kind, fn, hint, hay) => it.push({label: label, kind: kind, fn: fn, hint: hint || "", hay: (label + " " + kind + " " + (hay || "")).toLowerCase()});
+  A("New chat", "Action", () => { newChat(); $("input").focus(); }, "Alt+N");
+  A("Open settings", "Action", openSet, "Ctrl+,");
+  A("Saved answers", "Action", () => openSaved());
+  A("Toggle sidebar", "Action", () => document.body.classList.toggle("fold"), "Ctrl+B");
+  A("Open Automate", "Action", () => $("automateBtn").click());
+  A("Start voice mode", "Action", () => $("voiceBtn2").click(), "Ctrl+Shift+V");
+  A("Take the quick tour", "Action", () => startTour(true));
+  A("Keyboard shortcuts", "Action", openKeys, "?");
+  if (!isStandalone()) A("Install Alpha-O app", "Action", installApp);
+  A("Check for updates", "Action", () => checkUpdate(true));
+  MODE_LIST.forEach(x => A("Mode: " + x[1], "Mode", () => { curMode = x[0]; try { localStorage.setItem("alphaO_mode", curMode); } catch(e){} renderModes(); toast(x[1] + " mode"); }, x[3]));
+  PRESETS.forEach(p => A("Voice: " + p.label, "Voice", () => { vp = p.id; try { localStorage.setItem("alphaO_voice", vp); } catch(e){} sample(); }));
+  ["dark", "light", "system"].forEach(t => A("Theme: " + t[0].toUpperCase() + t.slice(1), "Theme", () => { S.theme = t; saveS(); applyTheme(); }));
+  chats.slice().sort((a, b) => b.ts - a.ts).slice(0, 80).forEach(c => A(c.title, "Chat", () => loadChat(c.id), "", c.msgs.map(m => m.text).join(" ").slice(0, 1500)));
+  saved.slice(0, 50).forEach(x => A(x.title, "Saved", () => openSaved(x.id), "", x.text.slice(0, 800)));
+  return it;
+}
+function renderCmd(){
+  const toks = $("cmdq").value.trim().toLowerCase().split(/\s+/).filter(Boolean), all = cmdItems();
+  let rows = toks.length ? all.filter(x => toks.every(t => x.hay.includes(t))) : all.filter(x => x.kind !== "Chat" && x.kind !== "Saved").concat(all.filter(x => x.kind === "Chat").slice(0, 6));
+  cmdRows = rows.slice(0, 40); cmdSel = 0; const box = $("cmdl"); box.innerHTML = "";
+  if (!cmdRows.length){ box.innerHTML = '<p class="note" style="padding:10px">No matches.</p>'; return; }
+  cmdRows.forEach((x, i) => {
+    const d = document.createElement("div"); d.className = "cmi" + (i === 0 ? " on" : ""); d.setAttribute("role", "option");
+    d.innerHTML = "<span></span><small></small>"; d.firstChild.textContent = x.label; if (/^((Ctrl|Alt)\+|\?$)/.test(x.hint)) d.lastChild.innerHTML = keysHtml(x.hint); else d.lastChild.textContent = x.hint || x.kind;
+    d.onclick = () => runCmd(x); d.onmousemove = () => setCmdSel(i); box.appendChild(d);
+  });
+}
+function setCmdSel(i){ cmdSel = i; Array.from($("cmdl").children).forEach((c, k) => c.classList.toggle("on", k === i)); const c = $("cmdl").children[i]; if (c && c.scrollIntoView) c.scrollIntoView({block: "nearest"}); }
+function runCmd(x){ closeCmd(); setTimeout(x.fn, 30); }
+function openCmd(){ $("cmdk").hidden = false; $("cmdq").value = ""; renderCmd(); $("cmdq").focus(); }
+function closeCmd(){ $("cmdk").hidden = true; }
+$("cmdq").oninput = renderCmd;
+$("cmdq").onkeydown = e => {
+  if (e.key === "ArrowDown"){ e.preventDefault(); if (cmdRows.length) setCmdSel((cmdSel + 1) % cmdRows.length); }
+  else if (e.key === "ArrowUp"){ e.preventDefault(); if (cmdRows.length) setCmdSel((cmdSel - 1 + cmdRows.length) % cmdRows.length); }
+  else if (e.key === "Enter"){ e.preventDefault(); if (cmdRows[cmdSel]) runCmd(cmdRows[cmdSel]); }
+};
+$("cmdk").onclick = e => { if (e.target === $("cmdk")) closeCmd(); };
+addEventListener("keydown", e => { if (e.altKey && !e.ctrlKey && !e.metaKey && e.key.toLowerCase() === "n"){ e.preventDefault(); newChat(); $("input").focus(); } });
+
+/* --- onboarding tour --- */
+const TOUR = [
+  {el: "#modeBtn", t: "Pick a mode", d: "Switch between General, Code, Debug, Architecture, Automation and Planning to focus the answers."},
+  {el: "#voiceBtn2", t: "Talk to Alpha-O", d: "Voice mode lets you speak and hear replies, with a robot that reacts to what is happening."},
+  {el: "#automateBtn", t: "Open Automate", d: "Manage your business workflows in a side panel without leaving the chat."}
+];
+let tourI = -1;
+function tourShow(){
+  let step = TOUR[tourI], el = document.querySelector(step.el);
+  while ((!el || !el.offsetParent) && tourI < TOUR.length - 1){ tourI++; step = TOUR[tourI]; el = document.querySelector(step.el); }
+  if (!el || !el.offsetParent){ endTour(); return; }
+  const r = el.getBoundingClientRect(), pad = 6, sp = $("tspot");
+  sp.style.left = (r.left - pad) + "px"; sp.style.top = (r.top - pad) + "px"; sp.style.width = (r.width + pad * 2) + "px"; sp.style.height = (r.height + pad * 2) + "px";
+  $("ttitle").textContent = step.t; $("tdesc").textContent = step.d; $("tcount").textContent = "Step " + (tourI + 1) + " of " + TOUR.length;
+  $("tnext").textContent = tourI === TOUR.length - 1 ? "Done" : "Next"; $("tback").hidden = tourI === 0;
+  const c = $("tcard"), cw = Math.min(300, innerWidth - 24); c.style.visibility = "hidden"; c.style.width = cw + "px";
+  const ch = c.offsetHeight; let top = r.bottom + pad + 12; if (top + ch > innerHeight - 8) top = r.top - pad - 12 - ch;
+  c.style.top = Math.max(8, top) + "px"; c.style.left = Math.min(Math.max(12, r.left + r.width / 2 - cw / 2), innerWidth - cw - 12) + "px"; c.style.visibility = ""; $("tnext").focus();
+}
+function endTour(){ $("tour").hidden = true; tourI = -1; try { localStorage.setItem("alphaO_toured", "1"); } catch(e){} }
+function startTour(force){
+  if (!force){ try { if (localStorage.getItem("alphaO_toured")) return; } catch(e){} }
+  tourI = 0; $("tour").hidden = false; tourShow();
+}
+$("tnext").onclick = () => { if (tourI >= TOUR.length - 1) endTour(); else { tourI++; tourShow(); } };
+$("tback").onclick = () => { if (tourI > 0){ tourI--; tourShow(); } };
+$("tskip").onclick = endTour;
+addEventListener("resize", () => { if (tourI >= 0) tourShow(); });
+addEventListener("keydown", e => {
+  if (e.key !== "Escape") return;
+  if (tourI >= 0) endTour(); else if (!$("pv").hidden) closePv(); else if (!$("cmdk").hidden) closeCmd(); else if (!$("saved").hidden) closeSaved(); else closeCMenu();
+});
+afterSplash(() => setTimeout(() => { if ($("set").hidden && !voiceOn) startTour(false); }, 700));
+
+/* shortcuts sheet (press ?) */
+const KEYS = [["Navigate", [["Command palette", "Ctrl+K"], ["New chat", "Alt+N"], ["Focus message box", "Ctrl+/"], ["Show or hide sidebar", "Ctrl+B"], ["Open settings", "Ctrl+,"], ["Voice mode", "Ctrl+Shift+V"]]], ["Write", [["Send message", "Enter"], ["New line", "Shift+Enter"], ["Pick a mode (mode menu open)", "1\u20136"]]], ["Anywhere", [["Close panel, menu or voice mode", "Esc"], ["Show this sheet", "?"]]]];
+let keysBack = null;
+function openKeys(){ if (!$("keys").hidden) return; keysBack = document.activeElement; $("kbody").innerHTML = KEYS.map(g => "<h4>" + g[0] + "</h4>" + g[1].map(r => '<div class="krow"><span>' + r[0] + "</span>" + keysHtml(r[1]) + "</div>").join("")).join(""); $("keys").hidden = false; $("kx").focus(); }
+function closeKeys(){ $("keys").hidden = true; try { if (keysBack && keysBack.focus) keysBack.focus(); } catch(e){} }
+$("kx").onclick = closeKeys; $("keys").onclick = e => { if (e.target === $("keys")) closeKeys(); }; $("openKeys").onclick = () => { closeSet(); openKeys(); };
+addEventListener("keydown", e => { if (e.key === "Escape" && !$("keys").hidden){ e.preventDefault(); e.stopImmediatePropagation(); closeKeys(); } }, true);
+addEventListener("keydown", e => {
+  if (e.key !== "?" || e.ctrlKey || e.metaKey || e.altKey || tourI >= 0 || document.body.classList.contains("alpha-automate-open")) return;
+  const t = e.target; if (t && ((t.matches && t.matches("input,textarea,select")) || t.isContentEditable)) return;
+  e.preventDefault(); if ($("keys").hidden) openKeys(); else closeKeys();
+});
+addEventListener("keydown", e => {
+  if ($("mpanel").hidden || e.ctrlKey || e.metaKey || e.altKey || (e.target.matches && e.target.matches("input,textarea,select"))) return;
+  const n = +e.key; if (n >= 1 && n <= MODE_LIST.length){ e.preventDefault(); const b = $("mpanel").querySelectorAll(".sopt")[n - 1]; if (b) b.click(); }
+});
+</script>

@@ -1,0 +1,361 @@
+<!--
+  component: Automate slide-out panel
+  The "Automate" button itself is part of the chat top bar markup (chat.html); this fragment wires it and hosts the panel + iframe (automate/automate.html).
+  Fragment (not a standalone document). Loaded by index.html.
+-->
+<template data-ao-slot="body-end">
+<div
+  id="alpha-automate-overlay"
+  aria-hidden="true"
+></div>
+
+<aside
+  id="alpha-automate-panel"
+  role="dialog"
+  aria-modal="true"
+  aria-label="ALPHA-O Automate"
+  aria-hidden="true"
+>
+  <div
+    id="alpha-automate-resizer"
+    role="separator"
+    aria-orientation="vertical"
+    aria-label="Resize Automate sidebar"
+    aria-valuemin="320"
+    aria-valuemax="1100"
+    aria-valuenow="520"
+    tabindex="0"
+    title="Drag to resize the Automate sidebar"
+  ></div>
+
+  <iframe
+    id="alpha-automate-frame"
+    title="ALPHA-O Automate workspace"
+    src="automate/automate.html"
+  ></iframe>
+</aside>
+</template>
+<style data-ao-stage="late">
+  #alpha-automate-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    background: rgba(0, 0, 0, 0.55);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+  }
+
+  #alpha-automate-overlay.open {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  #alpha-automate-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 9999;
+    width: var(--alpha-automate-width, 520px);
+    max-width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    background: #080d18;
+    border-left: 1px solid #26354c;
+    transform: translateX(100%);
+    transition: transform 0.28s ease;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -15px 0 45px rgba(0, 0, 0, 0.35);
+  }
+
+  #alpha-automate-panel.open {
+    transform: translateX(0);
+  }
+
+  #alpha-automate-frame {
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    border: 0;
+    background: #080d18;
+  }
+
+  /* Resizable left edge */
+  #alpha-automate-resizer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 10px;
+    height: 100%;
+    z-index: 2;
+    cursor: ew-resize;
+    touch-action: none;
+    background: transparent;
+  }
+
+  #alpha-automate-resizer::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 4px;
+    width: 2px;
+    background: transparent;
+    transition: background 0.15s ease;
+  }
+
+  #alpha-automate-resizer:hover::after,
+  #alpha-automate-resizer:focus-visible::after,
+  #alpha-automate-panel.resizing #alpha-automate-resizer::after {
+    background: #10a37f;
+  }
+
+  #alpha-automate-resizer:focus-visible {
+    outline: 2px solid #10a37f;
+    outline-offset: -2px;
+  }
+
+  body.alpha-automate-open {
+    overflow: hidden;
+  }
+
+  body.alpha-automate-resizing {
+    cursor: ew-resize;
+    user-select: none;
+  }
+
+  body.alpha-automate-resizing iframe {
+    pointer-events: none;
+  }
+
+  @media (max-width: 600px) {
+    #alpha-automate-panel {
+      max-width: 100vw;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #alpha-automate-panel,
+    #alpha-automate-overlay,
+    #alpha-automate-resizer::after {
+      transition: none;
+    }
+  }
+</style>
+<script data-ao-scope="late">
+(() => {
+  "use strict";
+
+  const panel = document.getElementById("alpha-automate-panel");
+  const overlay = document.getElementById("alpha-automate-overlay");
+  const automateButton = document.getElementById("automateBtn");
+  const frame = document.getElementById("alpha-automate-frame");
+  const resizer = document.getElementById("alpha-automate-resizer");
+
+  if (!panel || !overlay || !frame || !resizer) {
+    console.error("Alpha-O Automate: Required panel elements are missing.");
+    return;
+  }
+
+  const WIDTH_KEY = "alphaO_automate_panel_width";
+  const DEFAULT_WIDTH = 520;
+  const MIN_WIDTH = 320;
+  const MAX_WIDTH = 1100;
+
+  let currentWidth = DEFAULT_WIDTH;
+  let dragStartX = 0;
+  let dragStartWidth = DEFAULT_WIDTH;
+  let dragging = false;
+
+  function limits() {
+    const max = Math.max(
+      280,
+      Math.min(MAX_WIDTH, window.innerWidth)
+    );
+
+    return {
+      min: Math.min(MIN_WIDTH, max),
+      max
+    };
+  }
+
+  function clampWidth(width) {
+    const { min, max } = limits();
+    return Math.round(Math.max(min, Math.min(max, width)));
+  }
+
+  function applyWidth(width, save = false) {
+    currentWidth = clampWidth(width);
+
+    panel.style.setProperty(
+      "--alpha-automate-width",
+      currentWidth + "px"
+    );
+
+    const bounds = limits();
+
+    resizer.setAttribute("aria-valuemin", String(bounds.min));
+    resizer.setAttribute("aria-valuemax", String(bounds.max));
+    resizer.setAttribute("aria-valuenow", String(currentWidth));
+
+    if (save) {
+      try {
+        localStorage.setItem(WIDTH_KEY, String(currentWidth));
+      } catch (error) {
+        // Resizing still works when storage is unavailable.
+      }
+    }
+  }
+
+  function restoreWidth() {
+    try {
+      const saved = Number(localStorage.getItem(WIDTH_KEY));
+
+      if (Number.isFinite(saved) && saved > 0) {
+        applyWidth(saved);
+        return;
+      }
+    } catch (error) {
+      // Use the default width if storage is unavailable.
+    }
+
+    applyWidth(DEFAULT_WIDTH);
+  }
+
+  function openAutomate() {
+    panel.classList.add("open");
+    overlay.classList.add("open");
+
+    panel.setAttribute("aria-hidden", "false");
+    overlay.setAttribute("aria-hidden", "false");
+
+    document.body.classList.add("alpha-automate-open");
+
+    // Focus the workspace iframe instead of the removed parent Close button.
+    frame.focus();
+  }
+
+  function closeAutomate() {
+    finishResize();
+
+    panel.classList.remove("open");
+    overlay.classList.remove("open");
+
+    panel.setAttribute("aria-hidden", "true");
+    overlay.setAttribute("aria-hidden", "true");
+
+    document.body.classList.remove("alpha-automate-open");
+
+    if (automateButton) {
+      automateButton.focus();
+    }
+  }
+
+  function startResize(event) {
+    if (event.button !== undefined && event.button !== 0) return;
+
+    event.preventDefault();
+
+    dragging = true;
+    dragStartX = event.clientX;
+    dragStartWidth = currentWidth;
+
+    panel.classList.add("resizing");
+    document.body.classList.add("alpha-automate-resizing");
+
+    if (resizer.setPointerCapture && event.pointerId !== undefined) {
+      try {
+        resizer.setPointerCapture(event.pointerId);
+      } catch (error) {
+        // Continue without pointer capture if unavailable.
+      }
+    }
+  }
+
+  function moveResize(event) {
+    if (!dragging) return;
+
+    // The panel is anchored to the right.
+    // Moving its left edge left increases its width.
+    const delta = dragStartX - event.clientX;
+
+    applyWidth(dragStartWidth + delta);
+  }
+
+  function finishResize() {
+    if (!dragging) return;
+
+    dragging = false;
+
+    panel.classList.remove("resizing");
+    document.body.classList.remove("alpha-automate-resizing");
+
+    applyWidth(currentWidth, true);
+  }
+
+  resizer.addEventListener("pointerdown", startResize);
+  resizer.addEventListener("pointermove", moveResize);
+  resizer.addEventListener("pointerup", finishResize);
+  resizer.addEventListener("pointercancel", finishResize);
+  resizer.addEventListener("lostpointercapture", finishResize);
+
+  resizer.addEventListener("keydown", event => {
+    let nextWidth = currentWidth;
+
+    if (event.key === "ArrowLeft") {
+      nextWidth += 20;
+    } else if (event.key === "ArrowRight") {
+      nextWidth -= 20;
+    } else if (event.key === "Home") {
+      nextWidth = limits().min;
+    } else if (event.key === "End") {
+      nextWidth = limits().max;
+    } else {
+      return;
+    }
+
+    event.preventDefault();
+    applyWidth(nextWidth, true);
+  });
+
+  if (automateButton) {
+    automateButton.addEventListener("click", openAutomate);
+  }
+
+  overlay.addEventListener("click", closeAutomate);
+
+  document.addEventListener("keydown", event => {
+    if (
+      event.key === "Escape" &&
+      panel.classList.contains("open")
+    ) {
+      closeAutomate();
+    }
+  });
+
+  window.addEventListener("resize", () => {
+    applyWidth(currentWidth, true);
+  });
+
+  window.addEventListener("message", event => {
+    if (event.origin !== window.location.origin) return;
+
+    if (event.source !== frame.contentWindow) return;
+
+    if (
+      event.data &&
+      event.data.type === "ALPHA_O_AUTOMATE_CLOSE"
+    ) {
+      closeAutomate();
+    }
+  });
+
+  restoreWidth();
+
+  window.AlphaOAutomate = {
+    open: openAutomate,
+    close: closeAutomate
+  };
+})();
+</script>

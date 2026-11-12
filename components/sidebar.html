@@ -1,0 +1,140 @@
+<!--
+  component: Sidebar: brand, new chat, search, chat list, history store, chat menu
+  Owns chats/curId/persist/renderSide/loadChat/newChat and the per-chat menu. Shares one script scope with the other app components (see index.html loader).
+  Fragment (not a standalone document). Loaded by index.html.
+-->
+<template data-ao-slot="sidebar">
+<div id="scrim" aria-hidden="true"></div>
+<aside id="side">
+  <div class="sh"><span class="brand"><svg class="lg" viewBox="0 0 64 64"><use href="#logo"/></svg>Alpha-O<span class="ver">v5.0</span></span><button class="ib" id="fold" data-tip="Close sidebar" data-ic="panel" aria-label="Hide sidebar"></button></div>
+  <div class="srow"><button id="newchat"><span data-ic="plus"></span>New chat</button><button class="ib" id="srch" data-tip="Search chats" data-ic="search" aria-label="Search chats"></button><button class="ib" id="gear" data-tip="Settings" data-ic="gear" aria-label="Settings"></button><button class="ib" id="savedBtn" data-tip="Saved answers" data-ic="star" aria-label="Saved answers"></button></div>
+  <input id="q" placeholder="Search chats" hidden>
+  <div id="list"></div>
+  </aside>
+</template>
+<style>
+#side{width:270px;background:var(--side);padding:14px 10px;display:flex;flex-direction:column;gap:10px;flex:none}
+body.fold #side{display:none}
+.sh{display:flex;align-items:center;justify-content:space-between;padding:0 4px}
+.brand{display:flex;align-items:center;gap:8px;font-size:19px;font-weight:600}
+#q{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 12px;color:var(--text);font-size:14px;font-family:inherit}
+#newchat{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:transparent;border-color:var(--line)}
+#list{flex:1;overflow-y:auto}
+.gh{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:14px 8px 4px}
+.ci{display:flex;align-items:center;border-radius:10px;padding:0 4px 0 10px}
+.ci:hover,.ci.on{background:var(--panel)}
+.ct{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14.5px;padding:8px 0;cursor:pointer}
+.ci .ib{opacity:0}
+.ci:hover .ib{opacity:1}
+.me{display:flex;align-items:center;gap:10px;padding:10px 8px;border-top:1px solid var(--line);font-size:14.5px}
+.avt{width:32px;height:32px;border-radius:50%;background:var(--accent);display:grid;place-items:center;font-size:13px;font-weight:600}
+@media(max-width:800px){
+  #side{position:fixed;inset:0 auto 0 0;z-index:5;width:280px;box-shadow:0 0 40px rgba(0,0,0,.6)}
+}
+.ci.on{box-shadow:inset 2px 0 0 var(--accent)}
+/* --- sidebar alignment --- */
+.sh{padding:2px 0 0 6px;gap:8px}
+.brand{white-space:nowrap;min-width:0}
+.srow{display:flex;align-items:center;gap:6px}
+.srow #newchat{flex:1;width:auto;min-width:0}
+.sh .ib,.srow .ib{flex:none;width:36px;height:36px;padding:0}
+@media(hover:none){
+  .ci .ib{opacity:1}
+}
+#scrim{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4}
+#side{border-right:1px solid var(--line)}
+@media(min-width:801px) and (max-width:1100px){
+  #side{width:240px}
+}
+@media(max-width:800px){
+  #side{width:min(86vw,300px)}
+  body:not(.fold) #scrim{display:block}
+}
+.ci.on .ib,.ci:focus-within .ib{opacity:1}
+#cmenu{position:fixed;z-index:30;min-width:170px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:5px;box-shadow:0 12px 34px rgba(0,0,0,.5)}
+#sug:not([hidden]),#mpanel:not([hidden]),#cmenu{animation:ao-up .16s ease-out both}
+body:not(.fold) #side{animation:ao-side .22s ease-out both}
+@keyframes ao-side{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
+</style>
+<script data-ao-scope="app">
+let chats = [], curId = null;
+try { chats = JSON.parse(localStorage.getItem("alphaO_chats") || "[]"); } catch(e){ chats = []; }
+function persist(){ try { localStorage.setItem("alphaO_chats", JSON.stringify(chats)); } catch(e){} }
+function closeSide(){ if (innerWidth < 800) document.body.classList.add("fold"); }
+function saveChat(){ commitChat(curId, history); }
+function commitChat(id, msgs){
+  if (!msgs.length) return;
+  let c = chats.find(x => x.id === id);
+  if (!c){ c = {id: id, title: msgs[0].text.slice(0, 40), ts: Date.now(), pin: false, msgs: []}; chats.unshift(c); }
+  c.msgs = msgs; c.ts = Date.now(); if (!c.custom) c.title = msgs[0].text.slice(0, 40); persist(); renderSide();
+}
+function renderSide(){
+  const q = $("q").value.toLowerCase(), box = $("list"); box.innerHTML = "";
+  const day = 864e5, t0 = new Date().setHours(0,0,0,0);
+  const groups = [["Pinned", c => c.pin], ["Today", c => !c.pin && c.ts >= t0], ["Yesterday", c => !c.pin && c.ts < t0 && c.ts >= t0 - day], ["Previous 7 days", c => !c.pin && c.ts < t0 - day && c.ts >= t0 - 7 * day], ["Older", c => !c.pin && c.ts < t0 - 7 * day]];
+  groups.forEach(g => {
+    const items = chats.filter(c => g[1](c) && (!q || c.title.toLowerCase().includes(q) || c.msgs.some(m => m.text.toLowerCase().includes(q)))).sort((a, b) => b.ts - a.ts);
+    if (!items.length) return;
+    const h = document.createElement("div"); h.className = "gh"; h.textContent = g[0]; box.appendChild(h);
+    items.forEach(c => {
+      const r = document.createElement("div"); r.className = "ci" + (c.id === curId ? " on" : "");
+      const t = document.createElement("span"); t.className = "ct"; t.textContent = c.title; t.onclick = () => loadChat(c.id);
+      const more = document.createElement("button"); more.className = "ib"; more.dataset.tip = "Chat options"; more.setAttribute("aria-label", "Chat options"); more.setAttribute("aria-haspopup", "menu"); more.innerHTML = ic("dots");
+      more.onclick = e => { e.stopPropagation(); openCMenu(more, c); };
+      r.append(t, more); box.appendChild(r);
+    });
+  });
+  if (!box.children.length) box.innerHTML = '<div class="gh">No chats yet</div>';
+}
+function loadChat(id){
+  const c = chats.find(x => x.id === id); if (!c) return;
+  stopAll();
+  curId = id; rememberCur(); history = c.msgs; file = null; $("chip").style.display = "none"; $("chat").innerHTML = "";
+  history.forEach((m, k) => { if (m.role === "user") add(m.text, "you", m.ts, k, m.fi || (m.file ? {name: m.file} : null)); else { const mm = add(m.text, "bot", m.ts); addSources(mm, m.src); if (m.dur) stlOf(mm).textContent = "Answered in " + m.dur + "s"; if (m.mode === "automation") addFlow(mm, m.text); } });
+  markStars(); renderSide(); closeSide();
+}
+function newChat(){
+  stopAll();
+  history = []; file = null; curId = Date.now().toString(36); rememberCur(); try { localStorage.removeItem("alphaO_draft"); } catch(e){} $("chip").style.display = "none"; $("input").value = "";
+  $("chat").innerHTML = '<div id="welcome"><span class="lgw' + '">' + logoSvg("lg big live") + '</span><p id="greet"></p><h2>How can I assist you?</h2><div class="cards"></div><p class="sughint">Tap the lightbulb below for ideas</p></div>';
+  typeGreet($("greet"), greeting()); staggerWelcome();
+  pickPrompts().forEach(x => {
+    const b = document.createElement("button"); b.type = "button"; b.className = "card";
+    b.innerHTML = ic(x.i) + "<span></span>"; b.lastChild.textContent = x.t;
+    b.onclick = () => usePrompt(x); document.querySelector(".cards").appendChild(b);
+  });
+  renderSide(); closeSide();
+}
+
+$("fold").onclick = () => document.body.classList.add("fold");
+$("menu").onclick = () => document.body.classList.remove("fold");
+$("srch").onclick = () => { $("q").hidden = !$("q").hidden; if (!$("q").hidden) $("q").focus(); else { $("q").value = ""; renderSide(); } };
+$("q").oninput = renderSide;
+
+/* --- chat history menu --- */
+function closeCMenu(){ const o = $("cmenu"); if (o) o.remove(); }
+function openCMenu(btn, c){
+  closeCMenu(); const mn = document.createElement("div"); mn.id = "cmenu"; mn.setAttribute("role", "menu");
+  const CK = ["P", "R", "E", "Del"]; let ckn = 0;
+  const item = (icon, label, fn, cls) => { const key = CK[ckn++], b = document.createElement("button"); b.dataset.k = key.toLowerCase() === "del" ? "delete" : key.toLowerCase(); b.type = "button"; b.className = "sopt " + (cls || ""); b.setAttribute("role", "menuitem"); b.innerHTML = ic(icon) + "<span></span>"; b.lastChild.textContent = label; b.insertAdjacentHTML("beforeend", "<kbd>" + key + "</kbd>"); b.onclick = () => { closeCMenu(); fn(); }; mn.appendChild(b); };
+  item("pin", c.pin ? "Unpin" : "Pin", () => { c.pin = !c.pin; persist(); renderSide(); });
+  item("pen", "Rename", () => { const v = prompt("Rename chat", c.title); if (v && v.trim()){ c.title = v.trim().slice(0, 60); c.custom = true; persist(); renderSide(); } });
+  item("download", "Export", () => exportChat(c));
+  item("trash", "Delete", () => { if (confirm("Delete this chat?")){ chats = chats.filter(x => x.id !== c.id); persist(); if (c.id === curId) newChat(); else renderSide(); } }, "danger");
+  mn.addEventListener("keydown", e => {
+    const bs = Array.from(mn.querySelectorAll("button")), i = bs.indexOf(document.activeElement);
+    if (e.key === "ArrowDown"){ e.preventDefault(); bs[(i + 1) % bs.length].focus(); }
+    else if (e.key === "ArrowUp"){ e.preventDefault(); bs[(i - 1 + bs.length) % bs.length].focus(); }
+    else if (e.key === "Escape"){ e.preventDefault(); closeCMenu(); btn.focus(); }
+    else if (!e.ctrlKey && !e.metaKey && !e.altKey){ const k = (e.key === "Delete" || e.key === "Backspace") ? "delete" : e.key.toLowerCase(), hit = bs.find(b => b.dataset.k === k); if (hit){ e.preventDefault(); hit.click(); } }
+  });
+  document.body.appendChild(mn);
+  const r = btn.getBoundingClientRect(), w = mn.offsetWidth, h = mn.offsetHeight;
+  mn.style.left = Math.max(8, Math.min(r.right - w, innerWidth - w - 8)) + "px"; mn.style.top = (r.bottom + 4 + h > innerHeight - 8 ? Math.max(8, r.top - h - 4) : r.bottom + 4) + "px";
+  const first = mn.querySelector("button"); if (first) first.focus();
+}
+document.addEventListener("click", e => { if (!e.target.closest("#cmenu")) closeCMenu(); });
+$("list").addEventListener("scroll", closeCMenu);
+
+$("scrim").onclick = () => document.body.classList.add("fold");
+</script>

@@ -1,0 +1,84 @@
+<!--
+  component: Settings dialog, theme, global shortcut dispatcher, reply alerts
+  Install/update buttons in this dialog are wired by app-updates.html.
+  Fragment (not a standalone document). Loaded by index.html.
+-->
+<template data-ao-slot="settings">
+<div class="ov2" id="set" hidden><div class="mod" role="dialog" aria-label="Settings">
+  <div class="mh"><b>Settings</b><button class="ib" id="setx" data-ic="x" data-tip="Close" aria-label="Close"></button></div>
+  <h4>Theme</h4><div class="seg" id="segT"><button data-v="dark">Dark</button><button data-v="light">Light</button><button data-v="system">System</button></div>
+  <h4>Voice</h4><select id="selV" aria-label="Voice"></select>
+  <label class="sw"><input type="checkbox" id="swShort"> Short spoken answers in voice mode</label>
+  <label class="sw"><input type="checkbox" id="swSearch"> Search the web for answers (uses more free allowance)</label>
+  <label class="sw"><input type="checkbox" id="swSound"> Soft sound and tab alert when a reply is ready</label>
+  <label class="sw"><input type="checkbox" id="swNotify"> Desktop notification when a reply is ready (asks permission)</label>
+  <h4>Privacy</h4><p class="note">Your chat history is saved in this browser. To answer, messages go through a Cloudflare Worker to Google Gemini, Groq, or Cloudflare Workers AI. For analytics, Alpha-O records a random browser ID, visit and request timestamps, response status, provider, and a short excerpt (up to 200 characters) of your latest prompt. The backend supports 90-day analytics cleanup; that cleanup must be enabled in Cloudflare before automatic deletion begins. Full conversations and attached files are not stored in the analytics database. Please do not share passwords or private information.</p>
+  <button class="dng" id="clrAll">Clear all history</button>
+  <h4>Keyboard shortcuts</h4><p class="note">Ctrl+K command palette, Alt+N new chat, Ctrl+/ message box, Ctrl+B sidebar, Ctrl+, settings, Ctrl+Shift+V voice mode, Esc close, ? all shortcuts.</p>
+  <button type="button" class="cab" id="openKeys" style="margin-top:8px">Show all shortcuts</button>
+  <h4>App</h4><p class="note" id="installNote"></p><button type="button" class="cab pri" id="installBtn" style="margin-top:8px">Install Alpha-O</button>
+  <h4>Updates</h4><p class="note" id="verNote"></p><button type="button" class="cab" id="checkUpd" style="margin-top:8px">Check for updates</button>
+</div></div>
+</template>
+<style>
+.seg{display:flex;gap:6px}
+.seg button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.mod select{width:100%;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:9px;font-size:15px;font-family:inherit}
+.sw{display:flex;gap:10px;align-items:center;margin-top:10px;font-size:14.5px}
+.dng{margin-top:8px;color:#ff6b6b;border-color:#ff6b6b;background:transparent}
+</style>
+<script data-ao-scope="app">
+/* ===== settings, theme, files, share, stop, shortcuts ===== */
+try { Object.assign(S, JSON.parse(localStorage.getItem("alphaO_settings") || "{}")); } catch(e){}
+function saveS(){ try { localStorage.setItem("alphaO_settings", JSON.stringify(S)); } catch(e){} }
+function applyTheme(){ document.documentElement.dataset.theme = S.theme === "system" ? (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark") : S.theme; }
+
+function syncSet(){
+  document.querySelectorAll("#segT button").forEach(b => b.classList.toggle("on", b.dataset.v === S.theme));
+  $("swShort").checked = !!S.short; $("swSearch").checked = !!S.search; $("swSound").checked = !!S.sound; $("swNotify").checked = !!S.notify;
+  $("selV").innerHTML = ""; PRESETS.forEach(p => { const o = document.createElement("option"); o.value = p.id; o.textContent = p.label; o.selected = p.id === vp; $("selV").appendChild(o); });
+}
+function openSet(){ syncSet(); $("set").hidden = false; }
+function closeSet(){ $("set").hidden = true; }
+$("gear").onclick = openSet; $("priv").onclick = e => { e.preventDefault(); openSet(); }; $("setx").onclick = closeSet;
+$("set").onclick = e => { if (e.target === $("set")) closeSet(); };
+document.querySelectorAll("#segT button").forEach(b => { b.onclick = () => { S.theme = b.dataset.v; saveS(); applyTheme(); syncSet(); }; });
+$("swShort").onchange = () => { S.short = $("swShort").checked; saveS(); };
+$("swSearch").onchange = () => { S.search = $("swSearch").checked; saveS(); };
+$("selV").onchange = () => { vp = $("selV").value; try { localStorage.setItem("alphaO_voice", vp); } catch(e){} sample(); };
+$("clrAll").onclick = () => { if (confirm("Delete all chats from this browser?")){ chats = []; persist(); newChat(); closeSet(); toast("History cleared"); } };
+addEventListener("keydown", e => {
+  if (e.key === "Escape" && !$("set").hidden){ closeSet(); return; }
+  if (!(e.ctrlKey || e.metaKey)) return;
+  const k = e.key.toLowerCase();
+  if (k === "k"){ e.preventDefault(); openCmd(); }
+  else if (k === "/"){ e.preventDefault(); $("input").focus(); }
+  else if (k === "b"){ e.preventDefault(); document.body.classList.toggle("fold"); }
+  else if (k === ","){ e.preventDefault(); openSet(); }
+  else if (k === "v" && e.shiftKey){ e.preventDefault(); $("voiceBtn2").click(); }
+});
+applyTheme();
+
+/* --- reply-ready sound, tab title, notification --- */
+let actx = null;
+function unlockAudio(){ try { if (!actx){ const C = window.AudioContext || window.webkitAudioContext; if (C) actx = new C(); } if (actx && actx.state === "suspended") actx.resume(); } catch(e){} }
+["pointerdown", "keydown"].forEach(ev => addEventListener(ev, unlockAudio, {passive: true}));
+function chime(){
+  if (!actx || !S.sound) return;
+  try { const t = actx.currentTime; [[660, 0], [880, .16]].forEach(n => { const o = actx.createOscillator(), g = actx.createGain(); o.type = "sine"; o.frequency.value = n[0]; g.gain.setValueAtTime(0, t + n[1]); g.gain.linearRampToValueAtTime(.07, t + n[1] + .02); g.gain.exponentialRampToValueAtTime(.0001, t + n[1] + .35); o.connect(g); g.connect(actx.destination); o.start(t + n[1]); o.stop(t + n[1] + .4); }); } catch(e){}
+}
+const BASE_TITLE = document.title;
+function replyReady(){
+  if (!(document.hidden || !document.hasFocus())) return;
+  if (S.sound){ chime(); document.title = "\u25cf Reply ready \u00b7 Alpha-O"; }
+  if (S.notify && "Notification" in window && Notification.permission === "granted"){ try { new Notification("Alpha-O", {body: "Your reply is ready."}); } catch(e){} }
+}
+function clearTitle(){ document.title = BASE_TITLE; }
+addEventListener("focus", clearTitle); document.addEventListener("visibilitychange", () => { if (!document.hidden) clearTitle(); });
+$("swSound").onchange = () => { S.sound = $("swSound").checked; saveS(); if (S.sound){ unlockAudio(); chime(); } };
+$("swNotify").onchange = () => {
+  if (!$("swNotify").checked){ S.notify = false; saveS(); return; }
+  if (!("Notification" in window)){ toast("Notifications aren\u2019t supported here"); $("swNotify").checked = false; return; }
+  Notification.requestPermission().then(p => { S.notify = p === "granted"; $("swNotify").checked = S.notify; saveS(); if (!S.notify) toast("Notification permission was not granted"); });
+};
+</script>

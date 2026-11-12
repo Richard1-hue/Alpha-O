@@ -1,0 +1,405 @@
+<!--
+  component: Voice-X voice-mode extras (additive)
+  Captions, reveal/exit animation, language, transcript etc. Standalone IIFE wrapping send/speak/listen from voice-mode.html.
+  Fragment (not a standalone document). Loaded by index.html.
+-->
+<style data-ao-stage="late" id="ao-voice-x-css">
+/* reveal / exit (circular, from the voice button) */
+#voice.on.ao-rev{animation:ao-circ-in .55s cubic-bezier(.2,.7,.2,1) both}
+#voice.on.ao-out{animation:ao-circ-out .38s cubic-bezier(.5,0,.8,.4) both}
+@keyframes ao-circ-in{from{clip-path:circle(0 at var(--ao-x,50%) var(--ao-y,50%))}to{clip-path:circle(150% at var(--ao-x,50%) var(--ao-y,50%))}}
+@keyframes ao-circ-out{from{clip-path:circle(150% at var(--ao-x,50%) var(--ao-y,50%))}to{clip-path:circle(0 at var(--ao-x,50%) var(--ao-y,50%))}}
+#voice{--ao-cap-h:96px}
+@media(min-height:521px){
+  /* make room for captions + bars (delete this block to get the old robot size back) */
+  #voice.on{padding-bottom:calc(var(--ao-cap-h) + 58px)}
+  #voice.on.rv2 #face{width:min(780px,96vw,calc(100dvh - 350px))}
+}
+@media(max-height:520px){#voice{--ao-cap-h:64px}#aoBars{display:none}#aoCap .ai{font-size:15px}}
+/* canvases: ring around robot + bottom bars */
+#aoRing,#aoBars{position:fixed;pointer-events:none;z-index:2}
+#aoBars{left:50%;transform:translateX(-50%);bottom:calc(var(--ao-cap-h,96px) + 18px);width:min(520px,88vw);height:30px}
+/* toolbar */
+#voice #aoTools{position:fixed;top:max(10px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right));display:flex;gap:4px;z-index:4;padding:4px;border-radius:14px;background:rgba(20,20,22,.55);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(8px)}
+#aoTools .ib{color:#cfd3dc;position:relative}
+#aoTools .ib:hover{color:#fff;background:rgba(255,255,255,.12)}
+#aoTools .ib[disabled]{opacity:.35;pointer-events:none}
+#aoTools .ib.on{color:#ff8a8a;background:rgba(255,107,107,.16)}
+#aoTools .lg{font-size:12px;font-weight:700;letter-spacing:.03em;min-width:20px;text-align:center}
+#aoLangMenu{position:absolute;top:calc(100% + 8px);right:0;width:230px;max-height:min(60dvh,380px);overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+#aoLangMenu[hidden]{display:none}
+#aoLangMenu button{display:flex;justify-content:space-between;gap:8px;width:100%;text-align:left;border-radius:8px;background:none;border-color:transparent;padding:8px 12px;color:var(--text)}
+#aoLangMenu button:hover{background:rgba(255,255,255,.08)}
+#aoLangMenu button.on{background:rgba(16,163,127,.2)}
+#aoLangMenu small{color:var(--muted)}
+/* live captions */
+#voice #aoCap{position:fixed;left:50%;transform:translateX(-50%);bottom:max(12px,env(safe-area-inset-bottom));width:min(760px,94vw);height:var(--ao-cap-h,96px);z-index:3;display:flex;flex-direction:column;justify-content:flex-end;gap:6px;text-align:center;pointer-events:none;padding:8px 14px;border-radius:16px;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.38));transition:opacity .3s}
+#aoCap[hidden]{display:none}
+#aoCap .you{font-size:14.5px;line-height:1.35;color:#8b8f9a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#aoCap .ai{font-size:17px;line-height:1.4;color:#fff;max-height:2.8em;overflow:hidden;position:relative;scroll-behavior:smooth}
+#aoCap .ai .s{color:#c9ccd6;transition:color .2s,background .2s;border-radius:6px;padding:0 2px}
+#aoCap .ai .s.cur{color:#fff;background:rgba(255,200,107,.22);box-shadow:0 0 0 2px rgba(255,200,107,.22)}
+#aoCap .ai.old{opacity:.45}
+#aoCap .ai.think{color:#8b8f9a}
+#voice:not(.rv2) #aoCap .ai{color:var(--text)}#voice:not(.rv2) #aoCap .ai .s{color:var(--muted)}#voice:not(.rv2) #aoCap .ai .s.cur{color:var(--text)}
+/* transcript drawer */
+#voice #aoDrawer{position:fixed;left:50%;bottom:0;width:min(720px,100vw);height:62dvh;transform:translate(-50%,105%);transition:transform .32s cubic-bezier(.2,.7,.2,1);z-index:5;display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-bottom:0;border-radius:20px 20px 0 0;box-shadow:0 -12px 40px rgba(0,0,0,.5);color:var(--text)}
+#voice #aoDrawer.open{transform:translate(-50%,0)}
+#aoDrawer .hd{display:flex;align-items:center;gap:6px;padding:8px 10px 6px 16px;touch-action:none}
+#aoDrawer .hd b{flex:1;font-size:15px}
+#aoDrawer .grab{position:absolute;top:6px;left:50%;width:40px;height:4px;margin-left:-20px;border-radius:2px;background:var(--line)}
+#aoDrawer .hd .ib{color:var(--muted)}
+#aoDrawer .lst{flex:1;overflow:auto;padding:6px 14px 18px;display:flex;flex-direction:column;gap:10px;overscroll-behavior:contain}
+#aoDrawer .e{max-width:86%;padding:9px 13px;border-radius:14px;font-size:15px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere}
+#aoDrawer .e.you{align-self:flex-end;background:rgba(16,163,127,.2);border:1px solid rgba(16,163,127,.35)}
+#aoDrawer .e.ai{align-self:flex-start;background:rgba(255,255,255,.06);border:1px solid var(--line)}
+#aoDrawer .e time{display:block;font-size:11px;color:var(--muted);margin-top:3px}
+#aoDrawer .empty{margin:auto;color:var(--muted);font-size:14px}
+@media(prefers-reduced-motion:reduce){#voice #aoDrawer{transition:none!important}}
+</style>
+<script id="ao-voice-x-js" data-ao-scope="late">
+/* ===== Alpha-O Voice extras. Purely additive: wraps / observes the existing voice code, never edits it. ===== */
+(function(){
+  "use strict";
+  var V = document.getElementById("voice"), FACE = document.getElementById("face"), MIC = document.getElementById("mic");
+  var CLOSE = document.getElementById("closeVoice"), OPEN = document.getElementById("voiceBtn2");
+  if (!V || !FACE || !MIC || !CLOSE || !OPEN) return;
+
+  var CFG = window.AO_VOICE_CFG = Object.assign({ realMicOnTouch: false }, window.AO_VOICE_CFG || {});
+  var REDUCE = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var TOUCH = matchMedia("(pointer:coarse)").matches;
+  function $(id){ return document.getElementById(id); }
+  function lsGet(k, d){ try { return localStorage.getItem(k) || d; } catch(e){ return d; } }
+  function lsSet(k, v){ try { localStorage.setItem(k, v); } catch(e){} }
+
+  /* ---------- languages (3) ---------- */
+  var LANGS = [
+    ["en-US","English (US)","EN"],["en-GB","English (UK)","EN"],["rw-RW","Kinyarwanda","RW"],["fr-FR","Français","FR"],
+    ["sw-KE","Kiswahili","SW"],["es-ES","Español","ES"],["pt-BR","Português (BR)","PT"],["de-DE","Deutsch","DE"],
+    ["it-IT","Italiano","IT"],["ar-SA","العربية","AR"],["hi-IN","हिन्दी","HI"],["zh-CN","中文 (普通话)","ZH"],
+    ["ja-JP","日本語","JA"],["ko-KR","한국어","KO"],["ru-RU","Русский","RU"],["tr-TR","Türkçe","TR"]
+  ];
+  var lang = lsGet("alphaO_vlang", "en-US");
+  if (!LANGS.some(function(l){ return l[0] === lang; })) lang = "en-US";
+  window.AO_VOICE_LANG = lang;
+  /* the existing code does rec.lang = "en-US": intercept the setter so the picked language wins */
+  try {
+    var SRC = window.SpeechRecognition || window.webkitSpeechRecognition;
+    var d = SRC && Object.getOwnPropertyDescriptor(SRC.prototype, "lang");
+    if (d && d.set && d.get) Object.defineProperty(SRC.prototype, "lang", { configurable: true, enumerable: d.enumerable,
+      get: d.get, set: function(v){ d.set.call(this, window.AO_VOICE_LANG || v); } });
+  } catch(e){}
+
+  /* ---------- state ---------- */
+  var muted = false, transcript = [], aiSent = [], curSent = -1, uttBase = new Map(), lastReply = "";
+  var cap, capYou, capAi, tools, bars, ring, drawer, lst, btnMute, btnStop, btnLang, btnTr, langMenu;
+
+  /* ---------- build UI inside #voice ---------- */
+  var IC = {
+    mic:'<svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
+    micOff:'<svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M3 3l18 18"/></svg>',
+    stop:'<svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>',
+    list:'<svg viewBox="0 0 24 24"><path d="M5 7h14M5 12h14M5 17h9"/></svg>',
+    globe:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/></svg>',
+    x:'<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+    copy:'<svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>'
+  };
+  function mk(tag, attrs, html){ var e = document.createElement(tag); if (attrs) Object.keys(attrs).forEach(function(k){ e.setAttribute(k, attrs[k]); }); if (html != null) e.innerHTML = html; return e; }
+  function ib(id, tip, svg){ var b = mk("button", {id:id, type:"button", "class":"ib", "data-tip":tip, "aria-label":tip}, svg); return b; }
+
+  ring = mk("canvas", {id:"aoRing", "aria-hidden":"true"});
+  bars = mk("canvas", {id:"aoBars", "aria-hidden":"true"});
+  cap = mk("div", {id:"aoCap", "aria-live":"off"}, '<div class="you"></div><div class="ai think"></div>');
+  capYou = cap.firstChild; capAi = cap.lastChild;
+  tools = mk("div", {id:"aoTools"});
+  btnLang = ib("aoLang", "Recognition language", '<span class="lg">' + (LANGS.filter(function(l){return l[0]===lang;})[0] || [,,"EN"])[2] + '</span>');
+  btnTr   = ib("aoTrBtn", "Transcript (T)", IC.list);
+  btnMute = ib("aoMute", "Mute microphone", IC.mic);
+  btnStop = ib("aoStopSpeak", "Stop speaking", IC.stop);
+  langMenu = mk("div", {id:"aoLangMenu", hidden:"", role:"menu"});
+  var lw = mk("span", {style:"position:relative;display:inline-flex"}); lw.appendChild(btnLang); lw.appendChild(langMenu);
+  tools.append(lw, btnTr, btnMute, btnStop);
+  drawer = mk("div", {id:"aoDrawer", role:"dialog", "aria-label":"Voice transcript", "aria-hidden":"true"},
+    '<span class="grab"></span><div class="hd"><b>Voice transcript</b><button type="button" class="ib" id="aoTrCopy" data-tip="Copy transcript" aria-label="Copy transcript">' + IC.copy + '</button><button type="button" class="ib" id="aoTrClose" data-tip="Close" aria-label="Close transcript">' + IC.x + '</button></div><div class="lst"></div>');
+  lst = drawer.querySelector(".lst");
+  V.append(ring, bars, cap, tools, drawer);
+
+  function buildLangMenu(){
+    langMenu.innerHTML = "";
+    LANGS.forEach(function(l){
+      var b = mk("button", {type:"button", "class": l[0] === lang ? "on" : ""}, '<span>' + l[1] + '</span><small>' + l[0] + '</small>');
+      b.onclick = function(e){
+        e.stopPropagation(); lang = l[0]; window.AO_VOICE_LANG = lang; lsSet("alphaO_vlang", lang);
+        btnLang.firstChild.textContent = l[2]; langMenu.hidden = true; buildLangMenu();
+        if (typeof toast === "function") toast("Listening language: " + l[1]);
+      };
+      langMenu.appendChild(b);
+    });
+  }
+  buildLangMenu();
+  btnLang.onclick = function(e){ e.stopPropagation(); langMenu.hidden = !langMenu.hidden; };
+  V.addEventListener("click", function(e){ if (!langMenu.hidden && !langMenu.contains(e.target)) langMenu.hidden = true; });
+
+  /* ---------- captions + transcript (2, 5, 6) ---------- */
+  function sentencesOf(t){ return (t.match(/[^.!?]+[.!?]*\s*/g) || [t]).filter(function(s){ return s.trim(); }); }
+  function cleanForSpeech(t){ return String(t).replace(/```[\s\S]*?```/g, " code block. ").replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/[*#`_>~]/g, "").replace(/\s+/g, " ").trim(); }
+  function addTr(who, text){
+    text = String(text || "").trim(); if (!text) return;
+    transcript.push({who:who, text:text, t:new Date()}); renderTr(true);
+  }
+  function renderTr(scroll){
+    if (!transcript.length){ lst.innerHTML = '<div class="empty">Nothing said yet. Tap the mic and start talking.</div>'; return; }
+    var atEnd = lst.scrollHeight - lst.scrollTop - lst.clientHeight < 80;
+    lst.innerHTML = "";
+    transcript.forEach(function(m){
+      var e = mk("div", {"class":"e " + (m.who === "you" ? "you" : "ai")}); e.textContent = m.text;
+      var tm = mk("time"); tm.textContent = (m.who === "you" ? "You" : "Alpha-O") + " · " + m.t.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"}); e.appendChild(tm); lst.appendChild(e);
+    });
+    if (scroll && atEnd || !drawer.classList.contains("open")) lst.scrollTop = lst.scrollHeight;
+  }
+  renderTr();
+  function setYou(t, live){ capYou.textContent = t ? (live ? t : "You said: " + t) : ""; }
+  function showReply(text){
+    lastReply = cleanForSpeech(text); aiSent = sentencesOf(lastReply); curSent = -1;
+    capAi.className = "ai"; capAi.innerHTML = "";
+    aiSent.forEach(function(s, i){ var sp = mk("span", {"class":"s"}); sp.textContent = s; capAi.appendChild(sp); });
+    setCur(0);
+  }
+  function setCur(i){
+    if (i === curSent || i < 0 || i >= aiSent.length) return;
+    curSent = i; var spans = capAi.children;
+    for (var k = 0; k < spans.length; k++) spans[k].classList.toggle("cur", k === i);
+    var el = spans[i]; if (el) capAi.scrollTop = Math.max(0, el.offsetTop - capAi.clientHeight / 2 + el.offsetHeight / 2);
+  }
+  function clearCur(){ var spans = capAi.children; for (var k = 0; k < spans.length; k++) spans[k].classList.remove("cur"); curSent = -1; }
+
+  /* hook: what you said (wrap the global send, only for spoken turns) */
+  if (typeof send === "function"){
+    var _send = send;
+    send = function(text, spoken){
+      if (spoken && typeof voiceOn !== "undefined" && voiceOn && text && String(text).trim()){
+        setYou(String(text).trim()); addTr("you", text);
+        capAi.className = "ai think"; capAi.textContent = "…"; aiSent = [];
+      }
+      return _send.apply(this, arguments);
+    };
+  }
+  /* hook: what Alpha-O says (wrap the global speak) */
+  if (typeof speak === "function"){
+    var _speak = speak;
+    speak = function(text){
+      try { if (text) { showReply(text); addTr("ai", cleanForSpeech(text)); } } catch(e){}
+      return _speak.apply(this, arguments);
+    };
+  }
+  /* hook: per-utterance progress for the sentence highlight, and language-aware voices */
+  function looksEnglish(t){ var w = (t.match(/\b(the|and|is|you|to|of|that|it|in|for|with|are)\b/gi) || []).length; return w >= Math.max(2, t.split(/\s+/).length / 14); }
+  function voiceFor(l){
+    var p = l.split("-")[0].toLowerCase(), all = (window.speechSynthesis && speechSynthesis.getVoices()) || [];
+    return all.filter(function(v){ return (v.lang || "").toLowerCase().replace("_","-") === l.toLowerCase(); })[0] ||
+           all.filter(function(v){ return (v.lang || "").toLowerCase().split(/[-_]/)[0] === p; })[0] || null;
+  }
+  if (window.speechSynthesis && speechSynthesis.speak){
+    var _spk = speechSynthesis.speak.bind(speechSynthesis);
+    speechSynthesis.speak = function(u){
+      try {
+        if (window._utts && window._utts.indexOf(u) > -1){
+          var base = 0; window._utts.slice(0, window._utts.indexOf(u)).forEach(function(x){ base += sentencesOf(x.text).length; });
+          var sents = sentencesOf(u.text), starts = [], pos = 0;
+          sents.forEach(function(s){ starts.push(pos); pos += s.length; });
+          u.addEventListener("start", function(){ capAi.classList.remove("old"); setCur(base); });
+          u.addEventListener("boundary", function(e){
+            var i = 0; for (var k = 0; k < starts.length; k++) if (e.charIndex >= starts[k]) i = k; setCur(base + i);
+          });
+          u.addEventListener("end", function(){ if (u === window._utts[window._utts.length - 1]) clearCur(); });
+          if (!/^en/i.test(lang) && !looksEnglish(u.text)){ var lv = voiceFor(lang); u.lang = lang; u.voice = lv || null; }
+        }
+      } catch(e){}
+      return _spk(u);
+    };
+  }
+
+  /* ---------- mute (7) : microphone mute, via wrapping listen() ---------- */
+  if (typeof listen === "function"){
+    var _listen = listen;
+    listen = function(){
+      if (muted){ if (typeof setFace === "function") setFace("", "Microphone is muted. Tap the mute button to talk."); return; }
+      return _listen.apply(this, arguments);
+    };
+  }
+  function setMuted(m){
+    muted = m; btnMute.classList.toggle("on", m); btnMute.innerHTML = m ? IC.micOff : IC.mic;
+    btnMute.dataset.tip = m ? "Unmute microphone" : "Mute microphone"; btnMute.setAttribute("aria-label", btnMute.dataset.tip);
+    if (m){ try { if (listening && rec) rec.abort(); } catch(e){} if (typeof setFace === "function" && !FACE.classList.contains("speaking")) setFace("", "Microphone is muted."); }
+    else if (!FACE.classList.contains("speaking") && typeof setFace === "function") setFace("", "Tap the mic and speak");
+  }
+  btnMute.onclick = function(){ setMuted(!muted); };
+
+  /* ---------- stop speaking (7) ---------- */
+  function stopSpeaking(){
+    if (!window.speechSynthesis) return;
+    spk++; speechSynthesis.cancel(); clearCur(); capAi.classList.add("old");
+    if (typeof setFace === "function") setFace("", "Stopped. Tap the mic to reply");
+  }
+  btnStop.onclick = stopSpeaking;
+
+  /* ---------- barge-in (9): Space = same as tapping the mic while it talks ---------- */
+  addEventListener("keydown", function(e){
+    if (!V.classList.contains("on") || e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return;
+    var t = e.target, tag = t && t.tagName;
+    var typing = t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(tag));
+    if (e.key === "Escape" && drawer.classList.contains("open")){ e.preventDefault(); e.stopImmediatePropagation(); setDrawer(false); return; }
+    if (e.key === "Escape" && !langMenu.hidden){ e.preventDefault(); e.stopImmediatePropagation(); langMenu.hidden = true; return; }
+    if (typing) return;
+    if (e.key === " " || e.code === "Space"){
+      if (tag === "BUTTON" || tag === "A") return;       /* a focused button handles Space itself */
+      e.preventDefault(); if (!e.repeat) MIC.click();
+    } else if ((e.key === "t" || e.key === "T") && !e.shiftKey){
+      e.preventDefault(); setDrawer(!drawer.classList.contains("open"));
+    }
+  }, true);
+  /* tapping the mic while it speaks also dims the old caption */
+  MIC.addEventListener("click", function(){ if (FACE.classList.contains("speaking")){ clearCur(); capAi.classList.add("old"); } }, true);
+
+  /* ---------- transcript drawer (6) ---------- */
+  function setDrawer(on){
+    drawer.classList.toggle("open", on); drawer.setAttribute("aria-hidden", on ? "false" : "true");
+    if (on){ renderTr(); lst.scrollTop = lst.scrollHeight; }
+  }
+  btnTr.onclick = function(){ setDrawer(!drawer.classList.contains("open")); };
+  $("aoTrClose").onclick = function(){ setDrawer(false); };
+  $("aoTrCopy").onclick = function(){
+    var txt = transcript.map(function(m){ return (m.who === "you" ? "You: " : "Alpha-O: ") + m.text; }).join("\n\n");
+    try { navigator.clipboard.writeText(txt).then(function(){ if (typeof toast === "function") toast("Transcript copied"); }); } catch(e){}
+  };
+  var ty0 = null, tz = null;
+  V.addEventListener("touchstart", function(e){
+    var t = e.touches[0]; ty0 = t.clientY; tz = drawer.classList.contains("open") ? (drawer.contains(e.target) ? "in" : "out") : (t.clientY > innerHeight * .62 ? "low" : null);
+  }, {passive:true});
+  V.addEventListener("touchend", function(e){
+    if (ty0 == null) return; var dy = e.changedTouches[0].clientY - ty0, z = tz; ty0 = tz = null;
+    if (z === "low" && dy < -70) setDrawer(true);
+    else if (z === "in" && dy > 70 && lst.scrollTop <= 2) setDrawer(false);
+    else if (z === "out" && dy > 40) setDrawer(false);
+  }, {passive:true});
+
+  /* ---------- live mic level (1, 10) ---------- */
+  var AC = null, an = null, stream = null, td = null, fd = null, micOK = false, lvl = 0, raf = 0, simPhase = 0;
+  function wantRealMic(){ return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && (!TOUCH || CFG.realMicOnTouch)); }
+  function startMeter(){
+    if (stream || !wantRealMic()) return;
+    var Ctx = window.AudioContext || window.webkitAudioContext; if (!Ctx) return;
+    navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true, noiseSuppression:true}}).then(function(s){
+      if (!V.classList.contains("on")){ s.getTracks().forEach(function(t){ t.stop(); }); return; }
+      stream = s; AC = new Ctx(); if (AC.state === "suspended") AC.resume().catch(function(){});
+      an = AC.createAnalyser(); an.fftSize = 256; an.smoothingTimeConstant = .6;
+      AC.createMediaStreamSource(s).connect(an); td = new Uint8Array(an.fftSize); fd = new Uint8Array(an.frequencyBinCount); micOK = true;
+    }).catch(function(){ micOK = false; });
+  }
+  function stopMeter(){
+    micOK = false; if (stream){ stream.getTracks().forEach(function(t){ t.stop(); }); stream = null; }
+    if (AC){ try { AC.close(); } catch(e){} AC = null; } an = null;
+    try { delete window.ROBOT_AUDIO_LEVEL; } catch(e){ window.ROBOT_AUDIO_LEVEL = undefined; }
+  }
+
+  /* ---------- wake lock (8) ---------- */
+  var wl = null;
+  function lockOn(){ try { if (navigator.wakeLock && !wl) navigator.wakeLock.request("screen").then(function(l){ wl = l; l.addEventListener("release", function(){ if (wl === l) wl = null; }); }).catch(function(){}); } catch(e){} }
+  function lockOff(){ try { if (wl){ var l = wl; wl = null; l.release().catch(function(){}); } } catch(e){} }
+  document.addEventListener("visibilitychange", function(){ if (document.visibilityState === "visible" && V.classList.contains("on")) lockOn(); });
+
+  /* ---------- drawing loop ---------- */
+  var NB = 36;
+  function fit(c, w, h){
+    var dpr = Math.min(devicePixelRatio || 1, 2); w = Math.max(1, Math.round(w)); h = Math.max(1, Math.round(h));
+    if (c.width !== w * dpr || c.height !== h * dpr){ c.width = w * dpr; c.height = h * dpr; }
+    var x = c.getContext("2d"); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, w, h); return x;
+  }
+  var tickN = 0;
+  function frame(){
+    raf = requestAnimationFrame(frame);
+    if (!V.classList.contains("on")) return;
+    var cl = FACE.classList, isSp = cl.contains("speaking"), isLi = !!listening || cl.contains("listening"), isTh = cl.contains("thinking");
+    var now = performance.now() / 1000, real = isLi && micOK && an && !muted;
+    var level = 0, spec = null;
+    if (real){
+      an.getByteTimeDomainData(td); var s = 0; for (var i = 0; i < td.length; i++){ var v = (td[i] - 128) / 128; s += v * v; }
+      level = Math.min(1, Math.sqrt(s / td.length) * 4.2);
+      an.getByteFrequencyData(fd); spec = fd;
+    } else if (isLi && !muted) level = .12 + .1 * Math.abs(Math.sin(now * 2.3));
+    else if (typeof robotLevel === "function") { var saved = window.ROBOT_AUDIO_LEVEL; try { delete window.ROBOT_AUDIO_LEVEL; } catch(e){} level = robotLevel(); if (saved !== undefined) window.ROBOT_AUDIO_LEVEL = saved; }
+    lvl += (level - lvl) * (level > lvl ? .45 : .14);
+    /* feed the existing robot audio hook: only while the real mic is being heard, so every other mood keeps its own behaviour */
+    if (real) window.ROBOT_AUDIO_LEVEL = Math.max(.08, Math.min(1, lvl));
+    else if (typeof window.ROBOT_AUDIO_LEVEL === "number") { try { delete window.ROBOT_AUDIO_LEVEL; } catch(e){} }
+
+    var col = isLi ? "16,214,160" : isSp ? "255,200,107" : isTh ? "143,180,255" : "185,188,198";
+    /* bars */
+    var bw = bars.clientWidth, bh = bars.clientHeight, bx = fit(bars, bw, bh), gap = 3, w = Math.max(2, (bw - gap * (NB - 1)) / NB);
+    for (var b = 0; b < NB; b++){
+      var f = b / (NB - 1), c = 1 - Math.abs(f - .5) * 2, a;
+      if (spec){ a = spec[Math.min(spec.length - 1, 2 + Math.floor(Math.pow(f < .5 ? 1 - f * 2 : f * 2 - 1, 1.2) * 40))] / 255; a = a * .8 + lvl * .3; }
+      else a = lvl * (.35 + .65 * Math.abs(Math.sin(now * 5 + b * .55) * Math.sin(now * 2.1 + b * .21))) * (.4 + .6 * c);
+      var h = Math.max(3, a * bh), x = b * (w + gap);
+      bx.fillStyle = "rgba(" + col + "," + (.35 + .6 * Math.min(1, a * 1.4)) + ")";
+      bx.beginPath(); if (bx.roundRect) bx.roundRect(x, (bh - h) / 2, w, h, w / 2); else bx.rect(x, (bh - h) / 2, w, h); bx.fill();
+    }
+    /* ring around the robot */
+    var fr = FACE.getBoundingClientRect(), size = Math.min(fr.width, fr.height), pad = size * .16, rs = size + pad * 2;
+    ring.style.left = (fr.left + fr.width / 2 - rs / 2) + "px"; ring.style.top = (fr.top + fr.height / 2 - rs / 2) + "px"; ring.style.width = rs + "px"; ring.style.height = rs + "px";
+    var rx = fit(ring, rs, rs), cx = rs / 2, cy = rs / 2, r0 = size * .47, N = 72;
+    rx.lineCap = "round"; rx.lineWidth = Math.max(2, size * .007);
+    for (var n = 0; n < N; n++){
+      var ang = n / N * Math.PI * 2 - Math.PI / 2, g;
+      if (spec) g = spec[2 + (Math.abs(n - N / 2) % (N / 2)) % 40] / 255 * .8 + lvl * .2;
+      else g = lvl * (.3 + .7 * Math.abs(Math.sin(now * 4 + n * .45) * Math.sin(now * 1.7 + n * .13)));
+      var len = size * (.008 + g * .085), c1 = Math.cos(ang), s1 = Math.sin(ang);
+      rx.strokeStyle = "rgba(" + col + "," + (.18 + Math.min(.75, g * 1.2)) + ")";
+      rx.beginPath(); rx.moveTo(cx + c1 * r0, cy + s1 * r0); rx.lineTo(cx + c1 * (r0 + len), cy + s1 * (r0 + len)); rx.stroke();
+    }
+    /* small housekeeping a few times a second */
+    if ((tickN++ & 7) === 0){
+      var sp = !!(window.speechSynthesis && speechSynthesis.speaking); btnStop.disabled = !sp; btnStop.toggleAttribute("disabled", !sp);
+      if (isLi) capAi.classList.add("old");
+      if (isLi && !capYou.dataset.live){ capYou.dataset.live = "1"; setYou("Listening…", true); }
+      if (!isLi && capYou.dataset.live){ delete capYou.dataset.live; if (capYou.textContent === "Listening…") capYou.textContent = ""; }
+    }
+  }
+
+  /* ---------- open / close: reveal from the button (4), wake lock, meter ---------- */
+  var origin = null;
+  OPEN.addEventListener("pointerdown", function(e){ origin = {x:e.clientX, y:e.clientY}; }, true);
+  function setOrigin(){
+    var x = innerWidth / 2, y = innerHeight / 2;
+    if (origin && origin.x > 0 && origin.y > 0){ x = origin.x; y = origin.y; }
+    else { var r = OPEN.getBoundingClientRect(); if (r.width) { x = r.left + r.width / 2; y = r.top + r.height / 2; } }
+    V.style.setProperty("--ao-x", x + "px"); V.style.setProperty("--ao-y", y + "px"); origin = null;
+  }
+  var wasOn = false;
+  new MutationObserver(function(){
+    var on = V.classList.contains("on");
+    if (on === wasOn) return; wasOn = on;
+    if (on){
+      V.classList.remove("ao-out");
+      if (!REDUCE){ setOrigin(); V.classList.add("ao-rev"); setTimeout(function(){ V.classList.remove("ao-rev"); }, 620); }
+      muted = false; setMuted(false); setYou(""); capAi.className = "ai think"; capAi.textContent = ""; aiSent = [];
+      lockOn(); startMeter(); if (!raf) frame();
+    } else {
+      lockOff(); stopMeter(); setDrawer(false); langMenu.hidden = true; V.classList.remove("ao-rev", "ao-out");
+      if (raf){ cancelAnimationFrame(raf); raf = 0; }
+    }
+  }).observe(V, {attributes:true, attributeFilter:["class"]});
+
+  /* smooth exit: hold the real Close handler until the circle has shrunk back to the button */
+  var closing = false;
+  document.addEventListener("click", function(e){
+    if (closing || !e.target || !e.target.closest || !e.target.closest("#closeVoice")) return;
+    if (REDUCE || !V.classList.contains("on")) return;
+    e.stopImmediatePropagation(); e.preventDefault(); closing = true;
+    try { spk++; if (window.speechSynthesis) speechSynthesis.cancel(); if (rec) rec.abort(); } catch(x){}
+    setDrawer(false); langMenu.hidden = true; setOrigin();
+    V.classList.remove("ao-rev"); V.classList.add("ao-out");
+    setTimeout(function(){ closing = false; V.classList.remove("ao-out"); try { CLOSE.onclick && CLOSE.onclick.call(CLOSE, new Event("click")); } catch(x){ V.classList.remove("on"); } }, 380);
+  }, true);
+})();
+</script>

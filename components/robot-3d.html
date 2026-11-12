@@ -1,0 +1,229 @@
+<!--
+  component: Voice-mode 3D robot (three.js): robotV2 and the robotLegacy fallback
+  Distinct from the startup splash logo (startup.html) and from read-aloud. Renders into #face (markup in voice-mode.html).
+  Fragment (not a standalone document). Loaded by index.html.
+-->
+<style>
+/* --- robot v2 / voice background --- */
+.rv2c{position:absolute;inset:0;width:100%;height:100%;z-index:1}
+#voice.rv2{background:linear-gradient(180deg,#0c0c0b,#1d1c1a)}
+#voice.rv2>*:not(canvas){position:relative;z-index:2}
+#voice.rv2 #status{color:#b9bcc6}
+#voice.rv2 #face{animation:none;width:min(780px,96vw,calc(100vh - 200px))}
+#voice.rv2 #face{width:min(780px,96vw,calc(100dvh - 220px))}
+</style>
+<script data-ao-scope="app">
+function robotLegacy(){
+  const box = $("face");
+  if (!window.THREE){ box.textContent = "3D robot unavailable. Check your internet connection."; return; }
+  let renderer;
+  try { renderer = new THREE.WebGLRenderer({antialias:true, alpha:true}); } catch(e){ box.textContent = "3D is not supported on this device."; return; }
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  box.appendChild(renderer.domElement);
+  const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(35, 1, 0.1, 50);
+  cam.position.set(0, -.4, 12.5); cam.lookAt(0, -.4, 0);
+  scene.add(new THREE.AmbientLight(0x8c94b5, 0.9));
+  const key = new THREE.DirectionalLight(0xffffff, 1.1); key.position.set(3, 4, 6); scene.add(key);
+  const glow = new THREE.PointLight(0xffc86b, 1.2, 14); glow.position.set(0, 0, 4); scene.add(glow);
+  const M = (c, o) => new THREE.MeshStandardMaterial(Object.assign({color:c, roughness:.35, metalness:.55}, o || {}));
+  const shell = M(0xd4d7dd, {roughness:.3, metalness:.35}), dark = M(0x0b0e1c, {roughness:.2, metalness:.3}), grey = M(0x8c94b5);
+  const amber = M(0xffc86b, {emissive:0xffc86b, emissiveIntensity:1, roughness:.4, metalness:0});
+  const S = (r, mat, sx, sy, sz) => { const m = new THREE.Mesh(new THREE.SphereGeometry(r, 40, 28), mat); m.scale.set(sx, sy, sz); return m; };
+  const rob = new THREE.Group(), hd = new THREE.Group(); scene.add(rob); rob.add(hd);
+  hd.add(S(1.5, shell, 1.2, 1, .95));
+  const plate = S(1, dark, 1.5, 1, .55); plate.position.z = .95; hd.add(plate);
+  const eyes = [-.62, .62].map(x => { const e = S(.28, amber, 1, 1.3, .45); e.position.set(x, .22, 1.45); hd.add(e); return e; });
+  const brow = x => { const b = new THREE.Mesh(new THREE.BoxGeometry(.55, .07, .07), grey); b.position.set(x, .72, 1.36); hd.add(b); return b; };
+  const bl = brow(-.62), br = brow(.62);
+  const mg = new THREE.Group(); mg.position.set(0, -.45, 1.48); hd.add(mg);
+  const line = new THREE.Mesh(new THREE.BoxGeometry(.6, .07, .07), amber);
+  const arc = new THREE.Mesh(new THREE.TorusGeometry(.38, .05, 12, 32, Math.PI), amber);
+  const talk = S(.3, amber, 1, 1, .3);
+  mg.add(line, arc, talk);
+  [-1, 1].forEach(x => { const ear = new THREE.Mesh(new THREE.CylinderGeometry(.3, .3, .3, 24), amber); ear.rotation.z = Math.PI / 2; ear.position.set(x * 1.85, 0, 0); hd.add(ear); });
+  const ant = new THREE.Mesh(new THREE.CylinderGeometry(.04, .04, .5, 12), grey); ant.position.y = 1.7; hd.add(ant);
+  const tip = S(.13, amber, 1, 1, 1); tip.position.y = 2; hd.add(tip);
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(.5, .6, .4, 24), dark); neck.position.y = -1.6; rob.add(neck);
+  const body = S(1.2, shell, 1.35, .55, .8); body.position.y = -2.3; rob.add(body);
+  const cap = (r1, r2, len, mat) => {
+    const g = new THREE.Group();
+    const c = new THREE.Mesh(new THREE.CylinderGeometry(r1, r2, len, 18), mat); c.position.y = -len / 2; g.add(c);
+    const a = new THREE.Mesh(new THREE.SphereGeometry(r1, 16, 12), mat); g.add(a);
+    const b = new THREE.Mesh(new THREE.SphereGeometry(r2, 16, 12), mat); b.position.y = -len; g.add(b);
+    return g;
+  };
+  const makeHand = s => {
+    const h = new THREE.Group();
+    const palm = S(.17, shell, 1.15, 1.1, .55); palm.position.y = -.17; h.add(palm);
+    const fingers = [-.105, -.035, .035, .105].map((x, i) => {
+      const len = i === 1 || i === 2 ? .15 : .12;
+      const f1 = cap(.032, .028, len, grey); f1.position.set(x, -.3, .02);
+      const f2 = cap(.028, .022, .1, grey); f2.position.y = -len; f1.add(f2); h.add(f1);
+      return [f1, f2];
+    });
+    const t1 = cap(.036, .03, .1, grey); t1.position.set(-s * .17, -.12, .03); t1.rotation.z = -s * .7;
+    const t2 = cap(.03, .025, .08, grey); t2.position.y = -.1; t1.add(t2); h.add(t1);
+    return {g: h, fingers: fingers, th: [t1, t2]};
+  };
+  const arms = [-1, 1].map(s => {
+    const sh = new THREE.Group(); sh.position.set(s * 1.7, -1.9, 0); rob.add(sh);
+    sh.add(S(.3, shell, 1, 1, 1));
+    sh.add(cap(.17, .14, .85, shell));
+    const el = new THREE.Group(); el.position.y = -.85; sh.add(el);
+    el.add(S(.15, grey, 1, 1, 1)); el.add(cap(.14, .1, .8, shell));
+    const wr = new THREE.Group(); wr.position.y = -.82; el.add(wr);
+    const ring = new THREE.Mesh(new THREE.CylinderGeometry(.115, .115, .05, 20), amber); ring.position.y = -.02; wr.add(ring);
+    const hand = makeHand(s); hand.g.position.y = -.05; wr.add(hand.g);
+    return {sh: sh, el: el, wr: wr, h: hand, s: s, a: .18, f: -.05, e: -.25, w: 0, c: .35};
+  });
+  const L = (a, b, k) => a + (b - a) * k;
+  const clock = new THREE.Clock();
+  let tx = 0, ty = 0, blink = 0, nextBlink = 2, greetEnd = -1;
+  addEventListener("pointermove", e => { tx = (e.clientX / innerWidth - .5) * .9; ty = (e.clientY / innerHeight - .5) * .5; });
+  function resize(){ const s = Math.min(560, innerWidth * .92, innerHeight * .6); renderer.setSize(s, s); }
+  resize(); addEventListener("resize", resize);
+  (function frame(){
+    requestAnimationFrame(frame);
+    if (!$("voice").classList.contains("on")) return;
+    const t = clock.getElapsedTime(), cl = box.classList;
+    const speaking = cl.contains("speaking"), thinking = cl.contains("thinking"), listening = cl.contains("listening");
+    rob.position.y = .2 + Math.sin(t * 1.4) * .18;
+    hd.rotation.y = L(hd.rotation.y, thinking ? -.5 : tx, .08);
+    hd.rotation.x = L(hd.rotation.x, thinking ? -.2 : ty, .08);
+    hd.rotation.z = L(hd.rotation.z, mood === "curious" ? .12 : mood === "sad" ? -.05 : 0, .1);
+    if (t > nextBlink){ blink = 1; nextBlink = t + 2 + Math.random() * 3; }
+    blink = Math.max(0, blink - .12);
+    const lid = 1 - .9 * Math.sin(blink * Math.PI);
+    const ey = (mood === "happy" ? .6 : mood === "sad" ? .95 : 1.3) * lid * (thinking ? .7 : 1), ex = listening ? 1.15 : 1;
+    eyes.forEach(e => e.scale.set(ex, ey * ex, .45));
+    bl.rotation.z = L(bl.rotation.z, mood === "sad" ? .35 : 0, .15);
+    br.rotation.z = L(br.rotation.z, mood === "sad" ? -.35 : mood === "curious" ? .15 : 0, .15);
+    br.position.y = L(br.position.y, mood === "curious" ? .87 : .72, .15);
+    const smile = mood === "happy" && !speaking, frown = mood === "sad" && !speaking;
+    talk.visible = speaking; arc.visible = smile || frown; line.visible = !speaking && !smile && !frown;
+    talk.scale.y = .3 + .7 * Math.abs(Math.sin(t * 13));
+    arc.rotation.z = smile ? Math.PI : 0; arc.position.y = smile ? .15 : -.3;
+    amber.emissiveIntensity = .9 + .35 * Math.sin(t * 2.2) + (speaking ? .4 : 0);
+    if (greet){ greetEnd = t + 2.6; greet = 0; }
+    const w = Math.sin(t * 3.1), w2 = Math.sin(t * 2.3 + 1.6), w3 = Math.sin(t * 4.2), sw = Math.sin(t * 1.4);
+    body.scale.y = .55 * (1 + .015 * Math.sin(t * 1.8));
+    const idle = k => [.18 + .02 * sw * k, -.05, -.25, 0, .35];
+    let tgt = [idle(1), idle(-1)];
+    if (t < greetEnd) tgt[1] = [2.1, -.1, -.6 + .5 * Math.sin(t * 9), .3 * Math.sin(t * 9), 0];
+    else if (thinking) tgt[1] = [-.1, -.8, -2, .1, .5];
+    else if (listening) tgt = [[.35, -.25, -1, 0, 0], [.35, -.25, -1, 0, 0]];
+    else if (speaking){
+      if (mood === "happy") tgt = [[2 + .15 * w3, -.1, -.5 + .3 * Math.sin(t * 6), .25 * w3, 0], [2 + .15 * Math.sin(t * 4.2 + 1), -.1, -.5 + .3 * Math.sin(t * 6 + 1.5), .25 * w, 0]];
+      else if (mood === "sad") tgt = [[.1, 0, -.15, 0, .6], [.1, 0, -.15, 0, .6]];
+      else if (mood === "curious") tgt[1] = [.7 + .1 * w, -.5, -1.7 + .2 * w3, .2 * w2, 0];
+      else tgt = [[.45 + .2 * w, -.35 + .15 * w2, -1.1 + .35 * w2, .3 * w3, .1 + .1 * w], [.45 + .2 * w2, -.35 + .15 * w, -1.1 + .35 * w, .3 * w, .1 + .1 * w2]];
+    }
+    arms.forEach((A, i) => {
+      const T = tgt[i];
+      A.a = L(A.a, T[0], .08); A.f = L(A.f, T[1], .08); A.e = L(A.e, T[2], .08); A.w = L(A.w, T[3], .06); A.c = L(A.c, T[4], .06);
+      A.sh.rotation.z = A.s * A.a; A.sh.rotation.x = A.f; A.el.rotation.x = A.e;
+      A.wr.rotation.z = A.s * A.w; A.wr.rotation.x = -.15 * A.c;
+      A.h.fingers.forEach((F, k) => { F[0].rotation.x = -A.c * (1 + k * .05); F[1].rotation.x = -A.c * 1.1; });
+      A.h.th[0].rotation.x = -A.c * .5; A.h.th[1].rotation.x = -A.c * .6;
+    });
+    renderer.render(scene, cam);
+  })();
+}
+
+/* ===== ROBOT V2: head-only 3D robot + sound-wave background (voice mode only) ===== */
+var RB = null, robotFailed = false;
+function robotLevel(){
+  if (typeof window.ROBOT_AUDIO_LEVEL === "number") return window.ROBOT_AUDIO_LEVEL;
+  const t = performance.now() / 1000, cl = $("face").classList;
+  if (cl.contains("speaking")) return .55 * (.65 + .35 * Math.abs(Math.sin(t * 7.3) * Math.sin(t * 3.1 + 1)));
+  return (cl.contains("listening") ? .38 : cl.contains("thinking") ? .22 : .06) * (.85 + .15 * Math.sin(t * 2));
+}
+function robotStart(){
+  if (RB || robotFailed) return;
+  try {
+    if (!window.THREE) throw new Error("three.js missing");
+    const renderer = new THREE.WebGLRenderer({antialias: true, alpha: true}), cv = renderer.domElement;
+    cv.className = "rv2c"; $("voice").insertBefore(cv, $("voice").firstChild); $("voice").classList.add("rv2");
+    const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(40, 1, .1, 60); cam.position.set(0, 0, 10);
+    RB = {renderer: renderer, cv: cv, scene: scene, cam: cam, raf: 0, lvl: 0, bl: 0, nb: 2, nm: 0, ox: 0, oy: 0, tx: 0, ty: 0, px: 0, py: 0, gx: 0, gy: 0, pm: 0};
+    buildRobotHead(RB);
+    RB.onPointerMove = e => {
+      const vr = $("voice").getBoundingClientRect();
+      RB.pm = performance.now();
+      RB.px = ((e.clientX - vr.left) / Math.max(1, vr.width) - .5) * 1.1;
+      RB.py = ((e.clientY - vr.top) / Math.max(1, vr.height) - .5) * .7;
+    };
+    $("voice").addEventListener("pointermove", RB.onPointerMove);
+    RB.onResize = robotResize; addEventListener("resize", RB.onResize); RB.clock = new THREE.Clock(); robotResize();
+    const loop = () => { if (!RB) return; RB.raf = requestAnimationFrame(loop); robotFrame(); }; loop();
+  } catch(e){
+    robotFailed = true; robotStop(); $("voice").classList.remove("rv2");
+    try { robotLegacy(); } catch(e2){}
+  }
+}
+function robotStop(){
+  const R = RB; if (!R) return; RB = null;
+  cancelAnimationFrame(R.raf); removeEventListener("resize", R.onResize);
+  if (R.onPointerMove) $("voice").removeEventListener("pointermove", R.onPointerMove);
+  try { R.scene.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { if (m.map) m.map.dispose(); m.dispose(); }); }); } catch(e){}
+  try { R.renderer.dispose(); if (R.renderer.forceContextLoss) R.renderer.forceContextLoss(); } catch(e){}
+  if (R.cv && R.cv.parentNode) R.cv.parentNode.removeChild(R.cv);
+  $("voice").classList.remove("rv2");
+}
+function buildRobotHead(R){
+  const M = (c, o) => new THREE.MeshStandardMaterial(Object.assign({color: c, roughness: .35, metalness: .55}, o || {}));
+  const shell = M(0xd4d9e6, {emissive: 0x9fdcff, emissiveIntensity: .3}), dark = M(0x070b18, {roughness: .15, metalness: .4}), cyan = M(0xcffaff, {emissive: 0x7fe8ff, emissiveIntensity: 1.2, roughness: .3, metalness: 0});
+  const S3 = (r, m, x, y, z) => { const o = new THREE.Mesh(new THREE.SphereGeometry(r, 36, 26), m); o.scale.set(x, y, z); return o; };
+  const rob = new THREE.Group(), hd = new THREE.Group(); rob.add(hd); R.scene.add(rob); R.rob = rob; R.hd = hd; R.cyan = cyan; R.shell = shell;
+  hd.add(S3(1.5, shell, 1.2, 1, .95));
+  const vis = S3(1, dark, 1.5, 1, .55); vis.position.z = .95; hd.add(vis);
+  R.eyes = [-.62, .62].map(x => { const e = S3(.28, cyan, 1, 1.3, .45); e.position.set(x, .22, 1.45); e.userData.x = x; hd.add(e); return e; });
+  const nose = S3(.09, shell, 1, 1.2, .8); nose.position.set(0, -.12, 1.55); hd.add(nose);
+  const mg = new THREE.Group(); mg.position.set(0, -.55, 1.45); hd.add(mg);
+  R.line = new THREE.Mesh(new THREE.BoxGeometry(.6, .07, .07), cyan);
+  R.arc = new THREE.Mesh(new THREE.TorusGeometry(.38, .05, 12, 32, Math.PI), cyan);
+  R.talk = S3(.3, cyan, 1, 1, .3); mg.add(R.line, R.arc, R.talk);
+  [-1, 1].forEach(s => { const p = new THREE.Mesh(new THREE.CylinderGeometry(.3, .3, .3, 24), cyan); p.rotation.z = Math.PI / 2; p.position.set(s * 1.85, 0, 0); hd.add(p); });
+  const ant = new THREE.Mesh(new THREE.CylinderGeometry(.04, .04, .5, 12), M(0x8c94b5)); ant.position.y = 1.7; hd.add(ant);
+  const tip = S3(.13, cyan, 1, 1, 1); tip.position.y = 2; hd.add(tip);
+
+  R.scene.add(new THREE.AmbientLight(0x8fa3d9, .8));
+  const key = new THREE.DirectionalLight(0xffffff, .9); key.position.set(3, 4, 6); R.scene.add(key);
+  const rim = new THREE.DirectionalLight(0x3a7bff, 1.7); rim.position.set(-4, 2, -5); R.scene.add(rim);
+  const rim2 = new THREE.PointLight(0x2f8bff, 1.2, 20); rim2.position.set(4, 1, -2); R.scene.add(rim2);
+}
+function robotResize(){
+  const R = RB; if (!R) return;
+  const vr = $("voice").getBoundingClientRect(), fr = $("face").getBoundingClientRect(), w = Math.max(1, vr.width), h = Math.max(1, vr.height);
+  R.renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5)); R.renderer.setSize(w, h, false);
+  R.cam.aspect = w / h; R.cam.updateProjectionMatrix();
+  const halfH = Math.tan(R.cam.fov * Math.PI / 360) * 10, wpp = 2 * halfH / h;
+  R.halfH = halfH;
+  R.rob.scale.setScalar(Math.max(.2, fr.height * wpp * .82 / 3.8));
+  R.baseY = (1 - 2 * ((fr.top + fr.height / 2 - vr.top) / h)) * halfH;
+}
+function robotFrame(){
+  const R = RB; if (!R || !$("voice").classList.contains("on")) return;
+  const L = (a, b, k) => a + (b - a) * k, t = R.clock.getElapsedTime(), cl = $("face").classList;
+  const sp = cl.contains("speaking"), th = cl.contains("thinking"), li = cl.contains("listening");
+  R.lvl += (robotLevel() - R.lvl) * .12;
+  const moving = performance.now() - R.pm < 450;
+  R.gx = L(R.gx, moving ? R.px : 0, .1); R.gy = L(R.gy, moving ? R.py : 0, .1);
+  R.rob.position.y = R.baseY + Math.sin(t * 1.4) * R.halfH * .02;
+  R.hd.rotation.y = L(R.hd.rotation.y, R.gx + Math.sin(t * .5) * .04 + (th ? -.18 : 0), .08);
+  R.hd.rotation.x = L(R.hd.rotation.x, R.gy + (sp ? Math.sin(t * 3) * .025 : 0) + (li ? .04 : 0), .08);
+  R.hd.rotation.z = L(R.hd.rotation.z, li ? .12 : mood === "curious" ? .1 : 0, .06);
+  if (t > R.nb){ R.bl = 1; R.nb = t + 2 + Math.random() * 3; }
+  if (t > R.nm){ R.tx = (Math.random() - .5) * .14; R.ty = (Math.random() - .5) * .08; R.nm = t + 1.2 + Math.random() * 2; }
+  R.bl = Math.max(0, R.bl - .12);
+  R.ox = L(R.ox, R.tx, .1); R.oy = L(R.oy, th ? .2 : R.ty, .08);
+  const lid = 1 - .9 * Math.sin(R.bl * Math.PI), ey = (mood === "happy" ? .6 : mood === "sad" ? .95 : 1.3) * lid * (th ? .8 : li ? 1.12 : 1);
+  R.eyes.forEach(e => { e.scale.set(1, ey, .45); e.position.x = e.userData.x + R.ox + R.gx * .2; e.position.y = .22 + R.oy - R.gy * .2; });
+  const smile = mood === "happy" && !sp, frown = mood === "sad" && !sp;
+  R.talk.visible = sp; R.arc.visible = smile || frown; R.line.visible = !sp && !smile && !frown;
+  R.talk.scale.y = .3 + .7 * Math.abs(Math.sin(t * 13)); R.arc.rotation.z = smile ? Math.PI : 0; R.arc.position.y = smile ? .15 : -.3;
+  R.shell.emissiveIntensity = .3 + .1 * Math.sin(t * 2) + R.lvl * .35;
+  R.cyan.emissiveIntensity = 1 + .3 * Math.sin(t * 2.2) + R.lvl * .8;
+  R.renderer.render(R.scene, R.cam);
+}
+</script>

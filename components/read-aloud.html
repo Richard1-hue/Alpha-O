@@ -1,0 +1,17 @@
+<!--
+  component: Read-aloud (speaks an answer)
+  Small by design in the original: the speaker button is created by chat.html (add()); the optional floating robot head while reading lives inside Voice-Plus (voice-plus.html).
+  Fragment (not a standalone document). Loaded by index.html.
+-->
+<script data-ao-scope="app">
+let reading = null;
+function readAloud(m, b){
+  if (!window.speechSynthesis) return;
+  if (reading === m){ spk++; speechSynthesis.cancel(); reading = null; b.dataset.tip = "Read aloud"; return; }
+  reading = m; b.dataset.tip = "Stop reading"; showTip(b);
+  speak(m.innerText);
+  const iv = setInterval(() => {
+    if (!speechSynthesis.speaking && !speechSynthesis.pending){ clearInterval(iv); if (reading === m){ reading = null; b.dataset.tip = "Read aloud"; } }
+  }, 500);
+}
+</script>

@@ -1,0 +1,80 @@
+<!--
+  component: Update banner, install-as-app, service worker registration and update checks
+
+  Fragment (not a standalone document). Loaded by index.html.
+-->
+<template data-ao-slot="app-updates">
+<div id="upd" role="status" aria-live="polite"><i aria-hidden="true"></i><span><b>A new version is available</b><small>Your chat and draft will be kept.</small></span><button type="button" class="cab" id="updLater">Later</button><button type="button" class="cab pri" id="updGo">Update</button></div>
+</template>
+<style>
+/* ===== Revision 9: update notice ===== */
+#upd{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 64px);z-index:60;display:flex;align-items:center;gap:12px;width:max-content;max-width:min(540px,calc(100vw - 24px));padding:12px 14px;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.45);opacity:0;pointer-events:none;transform:translate(-50%,-14px);transition:opacity .22s ease,transform .22s ease}
+#upd.on{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
+#upd span{display:flex;flex-direction:column;gap:2px;font-size:14px;min-width:0}
+#upd small{color:var(--muted);font-size:12.5px}
+#upd i{width:9px;height:9px;border-radius:50%;background:var(--accent);flex:none;animation:vp 1.4s infinite}
+@media(max-width:480px){
+  #upd{flex-wrap:wrap;justify-content:flex-end}
+  #upd span{flex:1 1 100%}
+}
+</style>
+<script data-ao-scope="app">
+/* install as an app */
+let dip = null;
+function isStandalone(){ return matchMedia("(display-mode: standalone)").matches || navigator.standalone === true; }
+function syncInstall(){
+  const b = $("installBtn"), n = $("installNote");
+  if (isStandalone()){ b.hidden = true; n.textContent = "Alpha-O is running as an installed app."; return; }
+  b.hidden = false;
+  n.textContent = dip ? "Install Alpha-O to open it in its own window or from your home screen." : IOS ? "On iPhone or iPad: tap Share, then Add to Home Screen." : "Use your browser menu and choose Install app or Add to Home Screen.";
+}
+async function installApp(){
+  if (dip){ dip.prompt(); try { await dip.userChoice; } catch(e){} dip = null; syncInstall(); }
+  else if (isStandalone()) toast("Alpha-O is already installed");
+  else toast(IOS ? "Tap Share, then Add to Home Screen" : "Open your browser menu and choose Install app");
+}
+addEventListener("beforeinstallprompt", e => { e.preventDefault(); dip = e; syncInstall(); });
+addEventListener("appinstalled", () => { dip = null; syncInstall(); toast("Alpha-O installed"); });
+$("installBtn").onclick = installApp; syncInstall();
+/* new-version notice: detects a changed service worker or a changed page, then lets the person switch */
+let swReg = null, baseSig = null, snooze = 0, lastCheck = 0;
+function hashStr(t){ let h = 5381; for (let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0; return t.length + ":" + h; }
+async function pageSig(){ const r = await fetch(location.pathname + "?_chk=" + Date.now(), {cache: "no-store"}); if (!r.ok) throw new Error("x"); return hashStr(await r.text()); }
+function offerUpdate(force){ if (!force && Date.now() < snooze) return; $("upd").classList.add("on"); }
+async function checkUpdate(manual){
+  if (!navigator.onLine){ if (manual) toast("You\u2019re offline"); return; }
+  lastCheck = Date.now();
+  try { if (swReg) await swReg.update(); } catch(e){}
+  if (swReg && swReg.waiting && navigator.serviceWorker.controller){ offerUpdate(manual); return; }
+  try {
+    const sg = await pageSig();
+    if (baseSig === null){ baseSig = sg; if (manual) toast("You\u2019re on the latest version"); }
+    else if (sg !== baseSig) offerUpdate(manual);
+    else if (manual) toast("You\u2019re on the latest version");
+  } catch(e){ if (manual) toast("Couldn\u2019t check right now"); }
+}
+function doUpdate(){
+  const w = swReg && swReg.waiting;
+  if (w && navigator.serviceWorker.controller){ let done = false; navigator.serviceWorker.addEventListener("controllerchange", () => { if (!done){ done = true; location.reload(); } }); w.postMessage("SKIP_WAITING"); setTimeout(() => location.reload(), 2500); }
+  else location.reload();
+}
+function applyUpdate(){
+  $("upd").classList.remove("on");
+  if (busy){ toast("Updating as soon as this reply finishes\u2026"); const t = setInterval(() => { if (!busy){ clearInterval(t); doUpdate(); } }, 600); }
+  else doUpdate();
+}
+$("updGo").onclick = applyUpdate; $("updLater").onclick = () => { $("upd").classList.remove("on"); snooze = Date.now() + 2 * 3600 * 1000; };
+$("checkUpd").onclick = () => checkUpdate(true);
+$("verNote").textContent = "You\u2019re running " + ((document.querySelector(".brand .ver") || {}).textContent || "the current version") + ". New versions show a notice here automatically.";
+if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")){
+  addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").then(reg => {
+      swReg = reg;
+      reg.addEventListener("updatefound", () => { const nw = reg.installing; if (nw) nw.addEventListener("statechange", () => { if (nw.state === "installed" && navigator.serviceWorker.controller) offerUpdate(); }); });
+      if (reg.waiting && navigator.serviceWorker.controller) offerUpdate();
+    }).catch(() => {});
+    setTimeout(() => checkUpdate(false), 4000); setInterval(() => checkUpdate(false), 30 * 60 * 1000);
+  });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden && Date.now() - lastCheck > 10 * 60 * 1000) checkUpdate(false); });
+}
+</script>

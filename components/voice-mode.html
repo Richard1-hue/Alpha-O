@@ -1,0 +1,157 @@
+<!--
+  component: Voice mode: #voice overlay, speech recognition/synthesis, voice presets, state indicator
+  The 3D robot drawn inside #face lives in robot-3d.html. Voice-X and Voice-Plus layers (voice-extras/voice-plus) wrap functions defined here.
+  Fragment (not a standalone document). Loaded by index.html.
+-->
+<template data-ao-slot="voice-mode">
+<div id="voice">
+  <div id="face" role="img" aria-label="3D robot face"></div>
+  <div class="vstate" id="vstate" data-s="ready"><i></i><span>Ready</span></div>
+  <div id="status" role="status" aria-live="polite">Tap the mic and speak</div>
+  <div class="bar"><span class="vw"><button class="ib" id="vpick" data-ic="person" data-tip="Choose voice" aria-label="Choose voice"></button><div id="vmenu" hidden></div></span><button id="mic" data-tip="Speak to Alpha-O">Start talking</button><button id="closeVoice" data-tip="Close voice mode">Close</button></div>
+</div>
+</template>
+<style>
+#voice{display:none;position:fixed;inset:0;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:6}
+#voice.on{display:flex}
+#face{width:min(560px,92vw,60vh);aspect-ratio:1;display:grid;place-items:center;color:var(--muted);text-align:center;animation:aura 3s ease-in-out infinite}
+#face canvas{display:block;max-width:100%}
+#status{color:var(--muted);font-size:17px;min-height:26px;text-align:center;padding:0 20px}
+#mic.live{background:var(--accent);color:#fff}
+.vw{position:relative}
+#vmenu{position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:6px;min-width:190px;z-index:8;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.vopt{display:block;width:100%;text-align:left;border-radius:8px;background:none;border-color:transparent;padding:8px 12px}
+.vopt.on{background:rgba(16,163,127,.2)}
+#voice{height:100vh;height:100dvh;padding:12px;overflow:auto}
+#voice .bar{flex-wrap:wrap;justify-content:center}
+.vstate{display:inline-flex;align-items:center;gap:8px;padding:5px 14px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);font-size:14px;font-weight:600}
+.vstate i{width:10px;height:10px;border-radius:50%;background:var(--muted)}
+.vstate[data-s="listening"]{border-color:#10a37f}
+.vstate[data-s="listening"] i{background:#10a37f;animation:vp 1.2s infinite}
+.vstate[data-s="thinking"]{border-color:#8fb4ff}
+.vstate[data-s="thinking"] i{border-radius:2px;background:#8fb4ff;animation:vs 1.4s linear infinite}
+.vstate[data-s="speaking"]{border-color:#ffc86b}
+.vstate[data-s="speaking"] i{border-radius:2px;width:14px;background:#ffc86b;animation:vp .7s infinite}
+.vstate[data-s="problem"]{border-color:#ff6b6b;color:#ffb3b3}
+.vstate[data-s="problem"] i{background:#ff6b6b;clip-path:polygon(50% 0,100% 100%,0 100%);border-radius:0}
+@keyframes vs{to{transform:rotate(360deg)}}
+#mic.live{animation:micp 1.4s infinite}
+@keyframes micp{0%,100%{box-shadow:0 0 0 0 rgba(16,163,127,.5)}50%{box-shadow:0 0 0 10px rgba(16,163,127,0)}}
+#vmenu:not([hidden]){animation:ao-vm .16s ease-out both}
+@keyframes ao-vm{from{opacity:0;transform:translate(-50%,6px)}to{opacity:1;transform:translateX(-50%)}}
+#voice.on{animation:ao-in .25s ease-out both}
+</style>
+<script data-ao-scope="app">
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+function setFace(cls, msg){ $("face").setAttribute("class", cls); if (msg !== undefined) $("status").textContent = msg; }
+function emotion(t){
+  if (/sorry|unfortunately|cannot|can't|error/i.test(t)) return "sad";
+  if (/!|great|glad|happy|congrat|welcome/i.test(t)) return "happy";
+  if (/\?/.test(t)) return "curious";
+  return "";
+}
+var mood = "", greet = 0;
+function mouthFor(c){ mood = c; }
+function listen(){
+  if (!voiceOn || busy || listening) return;
+  if (!SR){ setFace("", "Voice input needs Chrome or Edge. You can still hear replies."); return; }
+  try { rec && rec.abort(); } catch(e){}
+  rec = new SR(); rec.lang = "en-US"; rec.interimResults = false; rec.maxAlternatives = 1;
+  let got = false;
+  rec.onstart = () => { listening = true; $("mic").classList.add("live"); $("mic").textContent = "Listening..."; setFace("listening", "Listening..."); mouthFor(""); };
+  rec.onresult = e => { got = true; const t = e.results[0][0].transcript; setFace("thinking", "You said: " + t); send(t, true); };
+  rec.onerror = e => {
+    const m = (e.error === "not-allowed" || e.error === "service-not-allowed") ? "Microphone blocked. Allow it in your browser, then tap the mic."
+      : e.error === "network" ? "Speech recognition needs an internet connection."
+      : e.error === "no-speech" ? "I did not hear anything. Tap the mic to try again." : "Voice error (" + e.error + "). Tap the mic to retry.";
+    got = true; setFace("", m);
+  };
+  rec.onend = () => {
+    listening = false; $("mic").classList.remove("live"); $("mic").textContent = "Start talking";
+    if (!got) setFace("", "I did not hear anything. Tap the mic to try again.");
+  };
+  try { rec.start(); } catch(e){ listening = false; }
+}
+function speak(text){
+  const tok = ++spk, emo = emotion(text); mouthFor(emo);
+  if (!window.speechSynthesis){ setFace(emo, "Voice output is not supported in this browser."); return; }
+  const clean = text.replace(/```[\s\S]*?```/g, " code block. ").replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/[*#`_>~]/g, "").replace(/\s+/g, " ").trim();
+  const spoken = curPreset().stacc ? clean.split(" ").reduce((a, w, i) => a + w + (i % 2 && !/[.!?,;:]$/.test(w) ? ", " : " "), "").trim() : clean, parts = spoken.match(/[^.!?]+[.!?]*\s*/g) || [spoken], chunks = []; let cur = "";
+  parts.forEach(p => { if (cur && (cur + p).length > 200){ chunks.push(cur); cur = p; } else cur += p; });
+  if (cur) chunks.push(cur);
+  speechSynthesis.cancel(); speechSynthesis.resume(); window._utts = [];
+  setTimeout(() => {
+    if (tok !== spk) return;
+    const P = curPreset(), v = pickVoice(P);
+    chunks.forEach((c, i) => {
+      const u = new SpeechSynthesisUtterance(c); u.lang = "en-US"; if (v) u.voice = v; u.pitch = pitchFor(P, v); u.rate = P.rate;
+      u.onstart = () => { if (tok === spk){ $("face").setAttribute("class", "speaking " + emo); $("status").textContent = "Speaking..."; } };
+      if (i === chunks.length - 1) u.onend = u.onerror = () => { if (tok !== spk) return; setFace(emo, "Tap the mic to reply"); if (voiceOn) setTimeout(listen, 500); };
+      u.addEventListener("error", e => { if (tok === spk && e.error && e.error !== "interrupted" && e.error !== "canceled") $("status").textContent = "Sound problem (" + e.error + "). Tap the mic to continue."; });
+      window._utts.push(u); speechSynthesis.speak(u);
+    });
+  }, 120);
+}
+function unlockSound(){ if (window.speechSynthesis){ const u = new SpeechSynthesisUtterance(" "); u.volume = 0; speechSynthesis.speak(u); } }
+$("voiceBtn2").onclick = () => { voiceOn = true; greet = 1; unlockSound(); $("voice").classList.add("on"); setFace("", "Tap the mic and speak"); mouthFor(""); robotStart(); };
+$("mic").onclick = () => { spk++; if (window.speechSynthesis) speechSynthesis.cancel(); unlockSound(); if (listening){ rec.stop(); } else { setFace("", "Tap the mic and speak"); listen(); } };
+$("closeVoice").onclick = () => { voiceOn = false; spk++; $("voice").classList.remove("on"); if (window.speechSynthesis) speechSynthesis.cancel(); try { rec && rec.abort(); } catch(e){} robotStop(); };
+
+const PRESETS = [
+  {id:"female", label:"Female", g:"f", slot:0, pitch:1, rate:1},
+  {id:"male", label:"Male", g:"m", slot:0, pitch:1, rate:1},
+  {id:"girl", label:"Girl (kid)", g:"f", slot:1, pitch:1.7, rate:1.1},
+  {id:"boy", label:"Boy (kid)", g:"m", slot:1, pitch:1.45, rate:1.08},
+  {id:"deep", label:"Deep bass voice", g:"m", slot:2, pitch:.35, rate:.85},
+  {id:"calm", label:"Calm and slow", g:"f", slot:2, pitch:.92, rate:.78},
+  {id:"robot", label:"Robot", g:"m", slot:3, pitch:.45, rate:1.25, stacc:true}
+];
+let vp = "female"; try { vp = localStorage.getItem("alphaO_voice") || "female"; } catch(e){}
+const FEM = /(^|[^a-z])(female|woman|girl|zira|aria|jenny|michelle|ana|sonia|libby|maisie|clara|natasha|neerja|emma|ava|ashley|jane|nancy|sara|amber|elizabeth|monica|ayanna|cora|jacqueline|karen|samantha|moira|tessa|victoria|susan|kate|serena|zoe|fiona|allison|nicky|ellen|joanna|salli|kimberly|ivy|kendra|amy|hazel|catherine|heather|linda|eva|vicki|joelle|shelley|sandy|flo|google us english)([^a-z]|$)/i;
+const MAL = /(^|[^a-z])(male|man|boy|david|mark|guy|davis|tony|jason|ryan|thomas|mitchell|ronan|liam|connor|brandon|christopher|eric|roger|steffan|william|alfie|elliot|james|george|richard|sean|rishi|daniel|alex|fred|tom|aaron|oliver|arthur|gordon|lee|evan|nathan|reed|rocko|eddy|matthew|joey|justin|kevin|ralph|bruce|junior|albert)([^a-z]|$)/i;
+function vgender(v){ const t = v.name + " " + (v.voiceURI || ""); return FEM.test(t) ? "f" : MAL.test(t) ? "m" : null; }
+function pitchFor(P, v){ const g = v && vgender(v); let p = P.pitch; if (g && g !== P.g) p = P.g === "f" ? Math.min(2, p * 1.45) : Math.max(.2, Math.min(p, 1) * .6); return p; }
+function curPreset(){ return PRESETS.find(x => x.id === vp) || PRESETS[0]; }
+function pickVoice(P){
+  if (!window.speechSynthesis) return null;
+  const all = speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang)).sort((x, y) => (y.localService - x.localService) || x.name.localeCompare(y.name));
+  if (!all.length) return null;
+  let pool = all.filter(v => vgender(v) === P.g);
+  if (P.id === "girl"){ const kid = pool.filter(v => /(^|[^a-z])ana([^a-z]|$)/i.test(v.name)); if (kid.length) pool = kid; }
+  if (!pool.length) pool = all.filter(v => vgender(v));
+  if (!pool.length) pool = all;
+  return pool[P.slot % pool.length];
+}
+function sample(){
+  if (!window.speechSynthesis) return;
+  spk++; speechSynthesis.cancel();
+  const P = curPreset(), v = pickVoice(P), u = new SpeechSynthesisUtterance("Hello! I am Alpha-O.");
+  u.lang = "en-US"; if (v) u.voice = v; u.pitch = pitchFor(P, v); u.rate = P.rate;
+  toast(P.label + (v ? " \u00b7 " + v.name + (vgender(v) && vgender(v) !== P.g ? " (pitch-adjusted)" : "") : " \u00b7 browser default voice"));
+  setTimeout(() => speechSynthesis.speak(u), 100);
+}
+function renderVMenu(){
+  $("vmenu").innerHTML = "";
+  PRESETS.forEach(p => {
+    const b = document.createElement("button"); b.className = "vopt" + (p.id === vp ? " on" : ""); b.textContent = (p.id === vp ? "\u2713 " : "") + p.label;
+    b.onclick = () => { vp = p.id; try { localStorage.setItem("alphaO_voice", vp); } catch(e){} $("vmenu").hidden = true; sample(); };
+    $("vmenu").appendChild(b);
+  });
+}
+$("vpick").onclick = e => { e.stopPropagation(); $("vmenu").hidden = !$("vmenu").hidden; if (!$("vmenu").hidden) renderVMenu(); };
+document.addEventListener("click", () => { $("vmenu").hidden = true; });
+addEventListener("keydown", e => { if (e.key === "Escape"){ if (!$("vmenu").hidden) $("vmenu").hidden = true; else if (voiceOn) $("closeVoice").click(); } });
+
+/* ===== Stage 3: voice state indicator ===== */
+function syncVoiceState(){
+  const cl = $("face").classList, st = $("status").textContent, v = $("vstate"); let s = "ready", l = "Ready";
+  if (cl.contains("speaking")){ s = "speaking"; l = "Speaking"; }
+  else if (cl.contains("listening")){ s = "listening"; l = "Listening"; }
+  else if (cl.contains("thinking")){ s = "thinking"; l = "Processing"; }
+  else if (/blocked|needs chrome|not supported|error|problem|connection|did not hear/i.test(st)){ s = "problem"; l = "Needs attention"; }
+  v.dataset.s = s; v.lastElementChild.textContent = l;
+}
+new MutationObserver(syncVoiceState).observe($("face"), {attributes: true, attributeFilter: ["class"]});
+new MutationObserver(syncVoiceState).observe($("status"), {childList: true, characterData: true, subtree: true});
+$("voiceBtn2").addEventListener("click", () => { if (!SR) setFace("", "Voice input needs Chrome or Edge. Replies can still be read aloud."); syncVoiceState(); });
+</script>
