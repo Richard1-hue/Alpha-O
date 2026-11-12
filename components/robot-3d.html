@@ -191,6 +191,84 @@ function buildRobotHead(R){
   const key = new THREE.DirectionalLight(0xffffff, .9); key.position.set(3, 4, 6); R.scene.add(key);
   const rim = new THREE.DirectionalLight(0x3a7bff, 1.7); rim.position.set(-4, 2, -5); R.scene.add(rim);
   const rim2 = new THREE.PointLight(0x2f8bff, 1.2, 20); rim2.position.set(4, 1, -2); R.scene.add(rim2);
+  buildRobotBody(R, M, shell, dark, cyan);
+}
+/* --- V2 body: rounded torso, short legs, articulated arms/hands (added; head block above is untouched) --- */
+function buildRobotBody(R, M, shell, dark, cyan){
+  const accent = M(0x3f8cff, {emissive: 0x2a6bff, emissiveIntensity: .35, roughness: .4, metalness: .3});
+  const geo = new THREE.SphereGeometry(1, 28, 20);
+  const E = (m, rx, ry, rz, x, y, z) => { const o = new THREE.Mesh(geo, m); o.scale.set(rx, ry, rz); o.position.set(x || 0, y || 0, z || 0); return o; };
+  const bd = new THREE.Group(); R.rob.add(bd); R.bd = bd;
+  /* neck + torso (torso group pivots for sway/lean; breathing scales only the torso mesh) */
+  bd.add(E(dark, .5, .22, .45, 0, -1.6, 0));
+  const tg = new THREE.Group(); tg.position.set(0, -3, 0); bd.add(tg); R.tg = tg;
+  R.torso = E(shell, 1.2, 1.4, .95); tg.add(R.torso);
+  tg.add(E(dark, .62, .52, .3, 0, .25, .72));
+  R.chest = E(cyan, .17, .17, .1, 0, .25, 1.0); tg.add(R.chest);
+  tg.add(E(accent, 1.0, .1, .8, 0, -.95, .1));
+  /* arms: shoulder -> elbow -> wrist, with 3 fingers + thumb on a simple mitten hand */
+  R.arms = [-1, 1].map(s => {
+    const sh = new THREE.Group(); sh.position.set(s * 1.32, .65, 0); tg.add(sh);
+    sh.add(E(shell, .32, .32, .32), E(shell, .24, .5, .24, 0, -.42, 0));
+    const el = new THREE.Group(); el.position.y = -.82; sh.add(el);
+    el.add(E(accent, .2, .2, .2), E(shell, .22, .44, .22, 0, -.38, 0));
+    const wr = new THREE.Group(); wr.position.y = -.78; el.add(wr);
+    wr.add(E(accent, .21, .1, .21, 0, -.02, 0), E(shell, .27, .22, .19, 0, -.22, .02));
+    const fingers = [-.13, 0, .13].map(x => {
+      const p = new THREE.Group(); p.position.set(x, -.38, .04); wr.add(p);
+      p.add(E(shell, .075, .17, .075, 0, -.12, 0)); return p;
+    });
+    const th = new THREE.Group(); th.position.set(-s * .25, -.24, .05); th.rotation.z = -s * .5; wr.add(th);
+    th.add(E(shell, .075, .14, .075, 0, -.1, 0));
+    return {s: s, sh: sh, el: el, wr: wr, fingers: fingers, th: th, a: .2, f: 0, e: .25, w: 0, c: .35};
+  });
+  /* short legs + rounded feet */
+  R.legs = [-1, 1].map(s => {
+    const lg = new THREE.Group(); lg.position.set(s * .55, -4.2, 0); bd.add(lg);
+    lg.add(E(shell, .34, .42, .34, 0, -.3, 0), E(accent, .5, .27, .7, 0, -.82, .16));
+    return {s: s, lg: lg};
+  });
+  /* soft contact shadow: radial-gradient blob facing the camera at foot level */
+  try {
+    const c = document.createElement("canvas"); c.width = c.height = 64;
+    const g = c.getContext("2d"), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gr.addColorStop(0, "rgba(0,0,0,.6)"); gr.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+    const sm = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false}));
+    sm.scale.set(3.4, .8, 1); sm.position.set(0, -5.3, -.3); bd.add(sm);
+  } catch(e){}
+  /* extra gentle lighting for the body */
+  R.scene.add(new THREE.HemisphereLight(0xbfd8ff, 0x1a1c24, .45));
+  const fill = new THREE.DirectionalLight(0xcfe6ff, .5); fill.position.set(-2, -3, 6); R.scene.add(fill);
+  try { R.rm = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches); } catch(e){ R.rm = false; }
+}
+function robotBodyFrame(R, t, sp, th, li){
+  if (!R.arms) return;
+  const L = (a, b, k) => a + (b - a) * k, A = R.rm ? 0 : 1, lv = R.lvl;
+  const w = Math.sin(t * 3.1) * A, w2 = Math.sin(t * 2.3 + 1.6) * A, w3 = Math.sin(t * 4.2) * A, sw = Math.sin(t * 1.4) * A;
+  R.torso.scale.y = 1.4 * (1 + .012 * Math.sin(t * 1.8) * A);
+  R.tg.rotation.y = L(R.tg.rotation.y, R.hd.rotation.y * .35, .08);
+  R.tg.rotation.x = L(R.tg.rotation.x, li ? .05 : th ? -.02 : 0, .06);
+  R.tg.rotation.z = L(R.tg.rotation.z, .015 * Math.sin(t * .7) * A + (sp ? .02 * w2 : 0), .06);
+  R.chest.scale.setScalar(1 + lv * .5);
+  const idle = k => [.2 + .02 * sw * k, .04, .25, 0, .35];
+  let tgt = [idle(1), idle(-1)];
+  if (th) tgt = [[.2, .1, .5, 0, .3], [.05, .75, 2.1, .1, .5]];
+  else if (li) tgt = [[.28, .22, .55, 0, .2], [.28, .22, .55, 0, .2]];
+  else if (sp){
+    const g = .5 + lv;
+    if (mood === "happy") tgt = [[.6 + .1 * w3, .3, 1.0 + .25 * w * g, .2 * w3, .1], [.6 + .1 * w, .3, 1.0 + .25 * w2 * g, .2 * w, .1]];
+    else if (mood === "sad") tgt = [[.12, 0, .2, 0, .5], [.12, 0, .2, 0, .5]];
+    else if (mood === "curious") tgt = [[.25, .2, .6 + .1 * w, 0, .25], [.2, .6, 1.5 + .15 * w3, .15 * w2, .2]];
+    else tgt = [[.3 + .08 * w, .35 + .12 * w2, .8 + .25 * w * g, .15 * w3, .15], [.3 + .08 * w2, .35 + .12 * w, .8 + .25 * w2 * g, .15 * w, .15]];
+  }
+  R.arms.forEach((a, i) => {
+    const T = tgt[i];
+    a.a = L(a.a, T[0], .07); a.f = L(a.f, T[1], .07); a.e = L(a.e, T[2], .07); a.w = L(a.w, T[3], .06); a.c = L(a.c, T[4], .06);
+    a.sh.rotation.z = a.s * a.a; a.sh.rotation.x = -a.f; a.el.rotation.x = -a.e; a.wr.rotation.z = a.s * a.w;
+    a.fingers.forEach((F, k) => { F.rotation.x = -a.c * (1 + k * .05); });
+    a.th.rotation.x = -a.c * .5;
+  });
+  R.legs.forEach(l => { l.lg.rotation.z = l.s * (.02 + .012 * sw); l.lg.rotation.x = sp ? .015 * Math.sin(t * 2.6 + l.s) * A : 0; });
 }
 function robotResize(){
   const R = RB; if (!R) return;
@@ -199,8 +277,10 @@ function robotResize(){
   R.cam.aspect = w / h; R.cam.updateProjectionMatrix();
   const halfH = Math.tan(R.cam.fov * Math.PI / 360) * 10, wpp = 2 * halfH / h;
   R.halfH = halfH;
-  R.rob.scale.setScalar(Math.max(.2, fr.height * wpp * .82 / 3.8));
-  R.baseY = (1 - 2 * ((fr.top + fr.height / 2 - vr.top) / h)) * halfH;
+  /* full figure spans y -5.3..2.15 (centre -1.58 below the head origin): fit it inside the face box */
+  const sc = Math.max(.2, fr.height * wpp * .92 / 7.5);
+  R.rob.scale.setScalar(sc);
+  R.baseY = (1 - 2 * ((fr.top + fr.height / 2 - vr.top) / h)) * halfH + 1.58 * sc;
 }
 function robotFrame(){
   const R = RB; if (!R || !$("voice").classList.contains("on")) return;
@@ -224,6 +304,7 @@ function robotFrame(){
   R.talk.scale.y = .3 + .7 * Math.abs(Math.sin(t * 13)); R.arc.rotation.z = smile ? Math.PI : 0; R.arc.position.y = smile ? .15 : -.3;
   R.shell.emissiveIntensity = .3 + .1 * Math.sin(t * 2) + R.lvl * .35;
   R.cyan.emissiveIntensity = 1 + .3 * Math.sin(t * 2.2) + R.lvl * .8;
+  robotBodyFrame(R, t, sp, th, li);
   R.renderer.render(R.scene, R.cam);
 }
 </script>
