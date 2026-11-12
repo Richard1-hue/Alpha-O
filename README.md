@@ -1,66 +1,66 @@
 # Alpha-O
 
-Alpha-O is a browser-based AI assistant and workflow-planning workspace, with GitHub Actions automation for answering newly opened repository issues. The web app provides chat, voice, file attachment, and workflow-building interfaces; workflow execution in Automate is currently simulation-only.
+Alpha-O is a browser-based AI chat app and workflow-planning workspace. The repository also contains GitHub Actions workflows, including an AI-assisted reply to newly opened issues. The browser app is static HTML, CSS, and JavaScript; its chat and some Automate features use an external Cloudflare Worker.
 
 ## Project features
 
 ### Alpha-O chat app
 
-The main app is `index.html`. Its interface includes:
+The main app is `index.html`. It loads its interface and scripts from the HTML fragments in `components/` at runtime. Serve the repository over HTTP or HTTPS; opening `index.html` directly with a `file://` URL will not work because the component loader uses `fetch()`.
 
-- Chat conversations with browser-local history, chat search, editing, regenerating, and saving answers
-- Assistant modes, suggested prompts, and a command palette
-- Streaming AI responses, with connection status and retry handling
-- Markdown-formatted answers, code highlighting, and code preview/run controls
-- File attachments for images and selected text/code formats, with a 4 MB size limit
-- Voice input and spoken responses, with an animated 3D robot interface
-- Dark, light, and system themes; configurable voice and notification preferences
-- Responsive layouts, keyboard shortcuts, reduced-motion support, and accessibility features
-- Service-worker support for caching the app shell and loading the page offline; chat/API requests are not cached
+The app includes chat conversations and browser-local history, chat search and editing, assistant modes, streaming responses, Markdown and code display, file attachments, voice input and speech, and a 3D voice interface. It also provides theme and voice settings, keyboard shortcuts, responsive layouts, and reduced-motion support. Exact features depend on browser support and on the external service being available.
 
-The frontend sends chat requests to a Cloudflare Worker. The settings describe responses as being routed through that Worker to Google Gemini, Groq, or Cloudflare Workers AI. The backend implementation is not included in this repository.
+Chat and visit-analytics requests are sent to the Cloudflare Worker configured in the app. The Worker/backend is not included in this repository. The service worker caches parts of the app shell and selected static resources; it does not cache chat/API requests. `index.html` and `sw.js` reference `manifest.webmanifest`, but that file is not present in the repository, so the app's manifest/PWA setup is incomplete.
 
 ### Automate workspace
 
-Open `automate/automate.html` to use the workflow workspace. It includes:
+Open `automate/automate.html` to use the workflow workspace. It includes a dashboard, workflow builder, templates, search and filters, simulated test runs and reports, and preview screens for workspaces/clients, integrations, and roles/access.
 
-- A dashboard with workflow and simulated-run summaries
-- Workflow creation, editing, duplication, deletion, search, filters, and sorting
-- A template library and starter templates
-- An Automate AI interface that proposes workflows using local keyword rules; it is not connected to an AI model
-- A workflow test engine that simulates triggers, evaluates conditions, and previews actions
-- Run reports, logs, and browser-local run history
-- Workspace/client, integration, and role/access previews
+Workflow drafts are stored in browser local storage by default. The dashboard can connect to an external Cloudflare database using an admin token; when connected, workflow listing, creation, editing, and deletion use the external Worker API. The Automate AI proposal feature uses local keyword rules when disconnected, and can request an AI proposal through that API when connected. The backend and its provider configuration are external to this repository.
 
-**Automate does not run real automations.** Its triggers and actions are simulated in the browser. It does not send emails or notifications, modify external services, run schedules, or continue running after the page is closed. Workflows are saved in browser storage by default; the UI also provides an optional Cloudflare workflow-storage connection.
+**Automate does not execute real automations.** The test engine simulates triggers, evaluates supported conditions against supplied test data, and previews actions. It does not send emails or notifications, change external services, run schedules, or operate in the background. Workspace/client examples and integration and role/access screens are previews; they do not represent connected integrations or enforce permissions.
 
 ### GitHub issue replies
 
-`.github/workflows/reply.yml` runs when an issue is opened. It sends the issue title and body to Gemini and posts the answer as a comment. The response is intended to be a brief, beginner-friendly technical explanation.
+`.github/workflows/reply.yml` runs when an issue is opened. It sends the issue title and body to the Gemini API using the `GEMINI_API_KEY` Actions secret, then posts the generated response as an issue comment. If the API does not return an answer, the workflow posts a fallback message. The workflow requests `issues: write` permission and uses the built-in GitHub token to post comments.
 
 ## Repository layout
 
 ```text
 .
-├── index.html                         Main chat app
+├── index.html                         Main chat app and component loader
 ├── admin.html                         Additional HTML page
-├── sw.js                              Service worker for app-shell caching
+├── sw.js                              Service worker for app-shell/resource caching
+├── favicon.png, logo.png              Image assets
+├── apple-touch-icon.png               Apple touch icon
+├── icon-192.png, icon-512.png         App icons
+├── components/                        Runtime-loaded chat app fragments
+│   ├── app-updates.html
+│   ├── automate.html
+│   ├── chat-extras.html
+│   ├── chat.html
+│   ├── dialogs.html
+│   ├── read-aloud.html
+│   ├── robot-3d.html
+│   ├── settings.html
+│   ├── sidebar.html
+│   ├── startup.html
+│   ├── voice-extras.html
+│   ├── voice-mode.html
+│   └── voice-plus.html
 ├── automate/
 │   ├── automate.html                  Automate workspace UI
 │   ├── automate.css                   Workspace styles
-│   ├── automate.js                    Workflow builder and workspace UI logic
-│   ├── engine.js                      Simulation-only workflow engine
+│   ├── automate.js                    Workspace and workflow logic
+│   ├── engine.js                      Simulation-only test engine
 │   └── alpha-o-logo.png               Automate logo
 └── .github/
-    ├── ISSUE_TEMPLATE/                Code review, discussion, urgent-risk,
-    │                                  and approval issue forms
+    ├── ISSUE_TEMPLATE/                Issue forms
     └── workflows/
         ├── ci.yml                     Repository validation
         ├── hello.yml                  Push smoke test
         └── reply.yml                  AI response to newly opened issues
 ```
-
-The repository also includes icons and logo assets. The main app references `manifest.webmanifest`, but that file is not present in the current repository tree.
 
 ## Running locally
 
@@ -75,37 +75,28 @@ Then open:
 - Chat app: <http://localhost:8000/>
 - Automate workspace: <http://localhost:8000/automate/automate.html>
 
-The service worker registers on HTTPS or `localhost`. Real chat responses depend on the configured Cloudflare Worker being available. The Worker/backend is external to this repository.
+The service worker registers on HTTPS or `localhost`. Chat needs the external Cloudflare Worker. Automate can be used with browser-local workflow storage and simulated tests; online workflow storage and AI proposals require the external Worker and a valid admin token.
 
 ## GitHub Actions setup
 
-To enable issue replies, add a repository Actions secret named `GEMINI_API_KEY`. The workflow uses the built-in `github.token` to post comments and requests `issues: write` permission.
-
-The reply workflow triggers only for newly opened issues. The issue templates in `.github/ISSUE_TEMPLATE/` provide forms for code discussion, code review requests, urgent security/production risks, and approval-before-merge requests.
+To enable issue replies, add a repository Actions secret named `GEMINI_API_KEY`. The workflow runs only for newly opened issues and needs permission to write issue comments. Issue form templates are provided under `.github/ISSUE_TEMPLATE/`.
 
 ## CI and validation
 
-`.github/workflows/ci.yml` runs on pushes and pull requests targeting `main`. It:
-
-- Requires `index.html` and the three main Automate files
-- Uses Node.js 20 to syntax-check inline JavaScript in `index.html`
-- Runs `htmlhint` on `index.html` and `automate/automate.html`
-
-`hello.yml` is a separate push smoke test that prints a greeting and lists repository files.
+`.github/workflows/ci.yml` runs on pushes and pull requests targeting `main`. It checks that `index.html` and the three main Automate files exist, uses Node.js 20 to syntax-check inline JavaScript in `index.html`, and runs `htmlhint` on `index.html` and `automate/automate.html`. `hello.yml` is a separate push smoke test.
 
 ## Technology
 
 - HTML, CSS, and vanilla JavaScript
 - GitHub Actions and GitHub Issues
 - Gemini API for the issue-reply workflow
-- Cloudflare Worker endpoint for the browser chat and optional Automate storage connection
-- Browser APIs including local storage, service workers, speech recognition, and speech synthesis
+- External Cloudflare Worker for chat, visit analytics, and optional Automate cloud storage/AI proposals
+- Browser APIs including local storage, session storage, service workers, speech recognition, and speech synthesis
 - Three.js, loaded from a CDN, for the voice-mode robot
 
 ## Current limitations
 
-- The web app’s AI backend is hosted separately and is not included here.
-- Automate’s workflow engine is a local simulation, not a production automation service.
-- Automate AI proposals use local rules, not a connected language model.
-- Workspace, integration, and role/access screens are previews; they do not enforce permissions or connect integrations.
-- The app references `manifest.webmanifest`, but it is absent from the current repository tree.
+- The chat/analytics backend and Automate's cloud API are hosted separately and are not included here.
+- Automate's workflow test engine is simulation-only; it is not a production automation service.
+- Real integrations, scheduled/background triggers, and permission enforcement are not implemented in the browser app.
+- `manifest.webmanifest` is referenced but absent from the repository.
