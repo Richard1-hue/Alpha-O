@@ -52,10 +52,44 @@ function emotion(t){
 }
 var mood = "", greet = 0;
 function mouthFor(c){ mood = c; }
+
+var thinkingCue = null;
+function playThinkingTone(){
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    const ctx = new Ctx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = 420;
+    gain.gain.value = 0.015;
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    const t0 = ctx.currentTime;
+    osc.start(t0);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.18);
+    osc.stop(t0 + 0.18);
+    setTimeout(() => { try { ctx.close(); } catch(e){} }, 220);
+  } catch (e) {}
+}
+function queueThinkingCue(){
+  if (!voiceOn || listening || busy) return;
+  if (window.speechSynthesis && speechSynthesis.speaking) return;
+  clearTimeout(thinkingCue);
+  thinkingCue = setTimeout(() => {
+    if (busy || listening || (window.speechSynthesis && speechSynthesis.speaking)) return;
+    setFace("thinking", "Hmm, one moment...");
+    playThinkingTone();
+  }, 3000);
+}
+function cancelThinkingCue(){ clearTimeout(thinkingCue); thinkingCue = null; }
+
 function listen(){
   if (!voiceOn || busy || listening) return;
   if (!SR){ setFace("", "Voice input needs Chrome or Edge. You can still hear replies."); return; }
   try { rec && rec.abort(); } catch(e){}
+  cancelThinkingCue();
   rec = new SR(); rec.lang = "en-US"; rec.interimResults = false; rec.maxAlternatives = 1;
   let got = false;
   rec.onstart = () => { listening = true; $("mic").classList.add("live"); $("mic").textContent = "Listening..."; setFace("listening", "Listening..."); mouthFor(""); };
@@ -73,6 +107,7 @@ function listen(){
   try { rec.start(); } catch(e){ listening = false; }
 }
 function speak(text){
+  cancelThinkingCue();
   const tok = ++spk, emo = emotion(text); mouthFor(emo);
   if (!window.speechSynthesis){ setFace(emo, "Voice output is not supported in this browser."); return; }
   const clean = text.replace(/```[\s\S]*?```/g, " code block. ").replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/[*#`_>~]/g, "").replace(/\s+/g, " ").trim();
@@ -96,7 +131,16 @@ function speak(text){
 function unlockSound(){ if (window.speechSynthesis){ const u = new SpeechSynthesisUtterance(" "); u.volume = 0; speechSynthesis.speak(u); } }
 $("voiceBtn2").onclick = () => { voiceOn = true; greet = 1; unlockSound(); $("voice").classList.add("on"); setFace("", "Tap the mic and speak"); mouthFor(""); robotStart(); };
 $("mic").onclick = () => { spk++; if (window.speechSynthesis) speechSynthesis.cancel(); unlockSound(); if (listening){ rec.stop(); } else { setFace("", "Tap the mic and speak"); listen(); } };
-$("closeVoice").onclick = () => { voiceOn = false; spk++; $("voice").classList.remove("on"); if (window.speechSynthesis) speechSynthesis.cancel(); try { rec && rec.abort(); } catch(e){} robotStop(); };
+$("closeVoice").onclick = () => { cancelThinkingCue(); voiceOn = false; spk++; $("voice").classList.remove("on"); if (window.speechSynthesis) speechSynthesis.cancel(); try { rec && rec.abort(); } catch(e){} robotStop(); };
+
+if (typeof send === "function"){
+  const _send = send;
+  send = function(text, spoken){
+    if (spoken && voiceOn && text && String(text).trim()) queueThinkingCue();
+    else cancelThinkingCue();
+    return _send.apply(this, arguments);
+  };
+}
 
 const PRESETS = [
   {id:"female", label:"Female", g:"f", slot:0, pitch:1, rate:1},
