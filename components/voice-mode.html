@@ -52,8 +52,7 @@ function emotion(t){
 }
 var mood = "", greet = 0;
 function mouthFor(c){ mood = c; }
-
-var thinkingCue = null;
+var thinkingCue = null, pendingConfirmationText = "", pendingConfirmationMode = false;
 function playThinkingTone(){
   try {
     const Ctx = window.AudioContext || window.webkitAudioContext;
@@ -85,15 +84,60 @@ function queueThinkingCue(){
 }
 function cancelThinkingCue(){ clearTimeout(thinkingCue); thinkingCue = null; }
 
+function maybeConfirmTranscript(text, confidence){
+  const low = typeof confidence !== "number" ? false : confidence < 0.5;
+  if (!low) return false;
+  pendingConfirmationText = text;
+  pendingConfirmationMode = true;
+  setFace("problem", 'Did you say "' + text + '"? Say “yes” to send or “no” to retry.');
+  return true;
+}
+
 function listen(){
   if (!voiceOn || busy || listening) return;
   if (!SR){ setFace("", "Voice input needs Chrome or Edge. You can still hear replies."); return; }
   try { rec && rec.abort(); } catch(e){}
   cancelThinkingCue();
-  rec = new SR(); rec.lang = "en-US"; rec.interimResults = false; rec.maxAlternatives = 1;
+  rec = new SR(); rec.lang = "en-US"; rec.interimResults = false; rec.maxAlternatives = 3;
   let got = false;
   rec.onstart = () => { listening = true; $("mic").classList.add("live"); $("mic").textContent = "Listening..."; setFace("listening", "Listening..."); mouthFor(""); };
-  rec.onresult = e => { got = true; const t = (e.results[0][0].transcript || "").trim(); if (t && window.speechSynthesis && speechSynthesis.speaking && (!window.ROBOT_AUDIO_LEVEL || window.ROBOT_AUDIO_LEVEL >= .35)) { spk++; speechSynthesis.cancel(); } setFace("thinking", "You said: " + t); send(t, true); };
+  rec.onresult = e => {
+    const result = e.results[e.resultIndex] || [];
+    const first = result[0] || {};
+    const t = (first.transcript || "").trim();
+    const confidence = typeof first.confidence === "number" ? first.confidence : 1;
+    if (!t) return;
+    if (pendingConfirmationMode) {
+      const text = t.toLowerCase();
+      if (/^(yes|yep|yeah|correct|sure|confirm|send|go ahead)$/i.test(text)) {
+        pendingConfirmationMode = false;
+        const final = pendingConfirmationText;
+        pendingConfirmationText = "";
+        got = true;
+        setFace("thinking", "Sending your confirmed message...");
+        send(final, true);
+        return;
+      }
+      if (/^(no|nope|cancel|retry|ignore|not really|wrong)$/i.test(text)) {
+        pendingConfirmationMode = false;
+        pendingConfirmationText = "";
+        got = true;
+        setFace("", "Okay, try again.");
+        return;
+      }
+      pendingConfirmationText = t;
+      setFace("problem", 'Did you say "' + t + '"? Say “yes” to send or “no” to retry.');
+      return;
+    }
+    if (confidence < 0.5) {
+      got = true;
+      maybeConfirmTranscript(t, confidence);
+      return;
+    }
+    got = true;
+    if (window.speechSynthesis && speechSynthesis.speaking && (!window.ROBOT_AUDIO_LEVEL || window.ROBOT_AUDIO_LEVEL >= .35)) { spk++; speechSynthesis.cancel(); }
+    setFace("thinking", "You said: " + t); send(t, true);
+  };
   rec.onerror = e => {
     const m = (e.error === "not-allowed" || e.error === "service-not-allowed") ? "Microphone blocked. Allow it in your browser, then tap the mic."
       : e.error === "network" ? "Speech recognition needs an internet connection."
@@ -102,7 +146,7 @@ function listen(){
   };
   rec.onend = () => {
     listening = false; $("mic").classList.remove("live"); $("mic").textContent = "Start talking";
-    if (!got) setFace("", "I did not hear anything. Tap the mic to try again.");
+    if (!got && !pendingConfirmationMode) setFace("", "I did not hear anything. Tap the mic to try again.");
   };
   try { rec.start(); } catch(e){ listening = false; }
 }
@@ -131,7 +175,7 @@ function speak(text){
 function unlockSound(){ if (window.speechSynthesis){ const u = new SpeechSynthesisUtterance(" "); u.volume = 0; speechSynthesis.speak(u); } }
 $("voiceBtn2").onclick = () => { voiceOn = true; greet = 1; unlockSound(); $("voice").classList.add("on"); setFace("", "Tap the mic and speak"); mouthFor(""); robotStart(); };
 $("mic").onclick = () => { spk++; if (window.speechSynthesis) speechSynthesis.cancel(); unlockSound(); if (listening){ rec.stop(); } else { setFace("", "Tap the mic and speak"); listen(); } };
-$("closeVoice").onclick = () => { cancelThinkingCue(); voiceOn = false; spk++; $("voice").classList.remove("on"); if (window.speechSynthesis) speechSynthesis.cancel(); try { rec && rec.abort(); } catch(e){} robotStop(); };
+$("closeVoice").onclick = () => { cancelThinkingCue(); pendingConfirmationMode = false; pendingConfirmationText = ""; voiceOn = false; spk++; $("voice").classList.remove("on"); if (window.speechSynthesis) speechSynthesis.cancel(); try { rec && rec.abort(); } catch(e){} robotStop(); };
 
 if (typeof send === "function"){
   const _send = send;
