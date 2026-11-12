@@ -378,10 +378,10 @@ body.tpg .lg .ant{animation:aoTyAnt .9s ease-in-out infinite}
 #welcome h2,#welcome p{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 </style>
 <script data-ao-scope="app">
-const HLR = /(\/\/.*|#.*)|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*')|\b(\d+(?:\.\d+)?)\b|\b(function|const|let|var|return|if|else|for|while|class|import|from|export|new|try|catch|async|await|def|i[...]
+const HLR = /(\/\/.*|#.*)|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*')|\b(\d+(?:\.\d+)?)\b|\b(function|const|let|var|return|if|else|for|while|class|import|from|export|new|try|catch|async|await|def|in|is|not|and|or|true|false|null|None|True|False|this|typeof|switch|case|break|continue|throw|extends|static|void)\b/g;
 function hl(h, lg){
   const hash = /^(py|python|yaml|yml|sh|bash|shell|rb|ruby|ps1|toml)$/i.test(lg || "");
-  return h.replace(HLR, (m, c, st, n) => c ? ((c[0] === "#" && !hash) ? m : '<span class="tc">' + m + '</span>') : st ? '<span class="ts2">' + m + '</span>' : n ? '<span class="tn">' + m + '</span>' : m);
+  return h.replace(HLR, (m, c, st, n) => c ? ((c[0] === "#" && !hash) ? m : '<span class="tc">' + m + '</span>') : st ? '<span class="ts2">' + m + '</span>' : n ? '<span class="tn">' + m + '</span>' : '<span class="tk">' + m + '</span>');
 }
 function md(src){
   const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
