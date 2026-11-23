@@ -1,0 +1,6 @@
+# Replace with your real GitHub usernames or teams.
+# Last matching pattern wins. Each owner gets review requests and the review issue.
+*            @richard1-hue
+/frontend/   @richard1-hue
+/backend/    @richard1-hue
+/docs/       @richar1-hue
