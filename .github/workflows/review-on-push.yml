@@ -1,0 +1,82 @@
+name: Request code review on push
+
+on:
+  push:
+    branches-ignore: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  request-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const branch = context.ref.replace('refs/heads/', '');
+            const base = context.payload.repository.default_branch;
+            const pusher = context.payload.pusher.name;
+
+            // 1. Find or create a pull request for this branch.
+            //    Opening it makes GitHub auto-request review from CODEOWNERS.
+            let pr;
+            const open = await github.rest.pulls.list({
+              owner, repo, head: `${owner}:${branch}`, state: 'open',
+            });
+            if (open.data.length) {
+              pr = open.data[0];
+            } else {
+              try {
+                pr = (await github.rest.pulls.create({
+                  owner, repo, head: branch, base,
+                  title: `Review: ${branch}`,
+                  body: `Automated PR for branch \`${branch}\`, pushed by @${pusher}.`,
+                })).data;
+              } catch (e) {
+                core.warning(`Could not create PR (no diff vs ${base}?): ${e.message}`);
+                return;
+              }
+              await new Promise(r => setTimeout(r, 5000)); // let CODEOWNERS requests land
+            }
+
+            // 2. Skip if a review issue already exists for this PR.
+            const issues = await github.rest.issues.listForRepo({
+              owner, repo, state: 'open', labels: 'code-review', per_page: 100,
+            });
+            if (issues.data.some(i => i.body && i.body.includes(`PR #${pr.number}`))) {
+              core.info('Review issue already exists.');
+              return;
+            }
+
+            // 3. Work out the code owner(s): requested reviewers, else repo owner.
+            const reviewers = await github.rest.pulls.listRequestedReviewers({
+              owner, repo, pull_number: pr.number,
+            });
+            let assignees = reviewers.data.users.map(u => u.login);
+            if (!assignees.length && context.payload.repository.owner.type === 'User') {
+              assignees = [owner];
+            }
+
+            // 4. Create the review issue and assign it.
+            const issue = await github.rest.issues.create({
+              owner, repo,
+              title: `Code review needed: ${branch}`,
+              labels: ['code-review'],
+              assignees,
+              body: [
+                `@${pusher} pushed changes to \`${branch}\`.`,
+                ``,
+                `Please review PR #${pr.number}: ${pr.html_url}`,
+                `Approving the PR will merge it into \`${base}\` automatically.`,
+              ].join('\n'),
+            });
+
+            // 5. Link the issue so it closes when the PR merges.
+            await github.rest.pulls.update({
+              owner, repo, pull_number: pr.number,
+              body: `${pr.body || ''}\n\nCloses #${issue.data.number}`,
+            });
